@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, brand with context %}
+{% block title %}{{ title }}{% endblock %}
+{% block body_class %}portal-body{% endblock %}
+{% block shell %}
+<header class="portal-header"><a class="brand" href="{{ url_for('login') }}">{{ brand() }}</a><span class="portal-header-label">{{ icon('shield', 12) }}Private workspace</span></header>
+<main class="error-page" id="main"><div class="empty-icon">{{ icon('link' if status == 404 else 'alert', 27) }}</div><span class="error-code">{{ status }}</span><h1>{{ title }}</h1><p>{{ message }}</p>{% if logged_in %}<div class="actions" style="justify-content:center"><button class="btn" type="button" data-go-back="{{ url_for('dashboard') }}">{{ icon('arrow-left', 15) }}Go back</button><a class="btn btn-primary" href="{{ url_for('dashboard') }}">Open workspace</a></div>{% else %}<a class="btn" href="{{ url_for('login') }}">{{ icon('arrow-left', 15) }}Back to sign in</a>{% endif %}</main>
+{% endblock %}

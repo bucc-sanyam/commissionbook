@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, brand with context %}
+{% block title %}{{ 'Screenshot scanner' if admin else 'Send your trades' }}{% endblock %}
+{% block body_class %}{{ 'app-body' if admin else 'portal-body' }}{% endblock %}
+{% block breadcrumb %}Screenshot scanner{% endblock %}
+{% block shell %}
+{% if admin %}
+  {{ super() }}
+{% else %}
+  <header class="portal-header"><div class="brand" aria-label="Commission Book">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
+  <main class="portal-main" id="main">
+    <div class="portal-intro"><p class="eyebrow">{{ business_name if business_name else 'A LITTLE LESS PAPERWORK' }}</p><h1>You make the trades.<br><em>We'll take care of the details.</em></h1><p>Upload your trade screenshots, check the numbers, and send them in. No account needed. No complicated spreadsheets.</p></div>
+    <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-upload"><b>1</b>Add screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-review"><b>2</b>Check the details</span><span class="portal-step-line"></span><span class="portal-step" id="step-send"><b>3</b>Send your trades</span></div>
+    {% include "_flashes.html" %}
+    {{ self.upload_workspace() }}
+    <div class="portal-safety"><span>{{ icon('lock', 12) }}Private submission</span><span>{{ icon('scan', 12) }}Text read on your device</span><span>{{ icon('shield', 12) }}No AI service receives your images</span></div>
+  </main>
+  <footer class="portal-footer">A little order. A lot of clarity. <span class="footer-dot"></span> Commission Book</footer>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">GOODBYE, MANUAL RE-ENTRY</p><h1>From screenshot to spreadsheet<span class="accent-period">.</span></h1><p>A little on-device OCR. A quick review. Another trade in the books.</p></div><a class="btn" href="{{ url_for('settings_page') }}#client-portal">{{ icon('link', 15) }}Client upload link</a></div>
+{{ self.upload_workspace() }}
+{% endblock %}
+{% block upload_workspace %}
+<noscript><div class="no-js">JavaScript is needed to read screenshots and submit this form. Enable it, then reload this page.</div></noscript>
+<form id="upload-form" novalidate>
+  <fieldset id="upload-fields" style="border:0;margin:0;padding:0;min-width:0">
+    <section class="card upload-card upload-identity">
+      <div class="upload-identity-label"><span>{{ icon('users', 18) }}</span><div><h2>{{ 'The client' if admin else 'First, who is this for?' }}</h2><p>So every trade finds the right home.</p></div></div>
+      <div class="form-grid{{ ' single' if not need_code }}">
+        <label class="field" for="name"><span>{{ 'Client name' if admin else 'Your full name' }}</span><input id="name" required maxlength="120" placeholder="{{ 'Enter the client name' if admin else 'The name your administrator knows you by' }}" autocomplete="name"></label>
+        {% if need_code %}<label class="field" for="code"><span>Upload code</span><input id="code" required maxlength="100" placeholder="The code shared with you" autocomplete="off"></label>{% endif %}
+      </div>
+    </section>
+    <section class="card upload-card">
+      <div class="upload-section-header"><div><h2>01 &nbsp; Add your screenshots</h2><p>Completed orders and trade-book screens give the best results.</p></div><div class="broker-chips"><span class="broker-chip">Groww</span><span class="broker-chip">Zerodha</span><span class="broker-chip">Other brokers</span></div></div>
+      <div class="dropzone" id="drop" role="button" tabindex="0" aria-label="Choose trade screenshots">
+        <span class="dropzone-icon">{{ icon('upload', 25) }}</span>
+        <strong>Drop your screenshots here, or <span>browse files</span></strong>
+        <p>You can also paste an image with Ctrl+V or Command+V.</p>
+        <small>PNG, JPG or WebP · Up to 10 images · 10 MB each</small>
+      </div>
+      <input type="file" id="files" accept="image/png,image/jpeg,image/webp" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="scan-progress" id="scan-progress" hidden><div class="progress-track" role="progressbar" aria-label="Reading screenshot" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div><div class="scan-progress-label"><span id="progress-label">Reading your screenshot...</span><span id="progress-percent">0%</span></div></div>
+      <div class="upload-status" id="scan-status" role="status" aria-live="polite"></div>
+      <div class="upload-instructions">{{ icon('shield', 14) }}<span>The scanner runs in your browser, without AI API calls. Images are uploaded to this workspace only when you send your trades. Large images may be compressed on your device.</span></div>
+    </section>
+    <section class="card upload-card">
+      <div class="upload-section-header"><div><h2>02 &nbsp; Make sure it all adds up</h2><p>Click any cell to correct it, or add trades manually.</p></div><button class="btn btn-sm" id="add-row" type="button">{{ icon('plus', 14) }}Add row</button></div>
+      <div class="review-intro"><p>OCR is a starting point, not a guarantee. Check the stock, quantity, prices and dates. Leave sell details blank for an open position.</p><span class="badge" id="platform-badge" hidden></span></div>
+      <div class="sheet-wrap"><table class="sheet" aria-label="Extracted trades, editable spreadsheet">
+        <thead><tr><th scope="col">#</th><th scope="col">Stock</th><th scope="col">Qty</th><th scope="col">Buy price</th><th scope="col">Sell price</th><th scope="col">Buy date</th><th scope="col">Sell date</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead>
+        <tbody id="trade-rows"></tbody>
+      </table></div>
+      <div class="review-footer"><span id="row-summary">Add a screenshot or enter your first trade.</span><div class="actions"><button class="btn btn-ghost btn-sm" id="reparse" type="button" hidden>{{ icon('repeat', 13) }}Re-extract</button><button class="btn btn-ghost btn-sm" id="download-rows" type="button">{{ icon('download', 13) }}Download CSV</button></div></div>
+      <details class="raw-text-details"><summary>{{ icon('chevron-right', 12) }}Behind the scan: raw extracted text</summary><pre class="ocr-text" id="ocr-text">Scanned text will appear here. No AI service is involved.</pre></details>
+    </section>
+    <div class="submit-bar"><label class="review-consent"><input id="reviewed" type="checkbox" required><span>I have checked every row against my actual trades. I understand that these details and any attached screenshots will be saved in this workspace.</span></label><button class="btn btn-primary" id="submit-trades" type="submit">{{ icon('arrow-right', 16) }}{{ 'Save to ledger' if admin else 'Send my trades' }}</button></div>
+  </fieldset>
+  <div class="submission-result" id="submission-result" role="alert" aria-live="assertive"></div>
+  <button class="btn btn-primary" id="retry-submit" type="button" hidden>{{ icon('repeat', 15) }}Retry save safely</button>
+</form>
+<section class="card submission-success" id="submission-success" hidden tabindex="-1">
+  <div class="success-mark">{{ icon('check', 37) }}</div><p class="eyebrow">ONE LESS THING ON YOUR LIST</p><h2>Your trades are in good hands.</h2><p id="success-message"></p><div class="success-receipt">{{ icon('check-circle', 14) }}<span id="success-reference"></span></div><div class="actions" style="justify-content:center"><button class="btn btn-primary" type="button" id="send-another">{{ icon('plus', 15) }}Send another trade</button>{% if admin %}<a class="btn" href="{{ url_for('trades_list') }}">Open ledger{{ icon('arrow-right', 15) }}</a>{% endif %}</div>
+</section>
+<dialog class="modal modal-sm" id="reparse-dialog"><div class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">A FRESH EXTRACTION</span><h2>Replace the table rows?</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">We'll read all scanned text together to match buys and sells across your screenshots. Any manual changes in the table will be replaced. Download the CSV first if you want to keep them.</p><div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Keep my edits</button><button class="btn btn-primary" type="button" id="confirm-reparse">Replace rows</button></div></div></dialog>
+{% endblock %}
+{% block scripts %}
+<script id="upload-config" type="application/json">{{ {'needCode': need_code, 'admin': admin, 'portalToken': portal_token|default(''), 'parseUrl': url_for('api_parse'), 'submitUrl': url_for('api_submit'), 'signUrl': '/api/uploads/sign'}|tojson }}</script>
+<script src="{{ url_for('static', filename='upload.js') }}" defer></script>
+{% endblock %}

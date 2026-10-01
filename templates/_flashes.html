@@ -1,0 +1,6 @@
+{% from "_macros.html" import icon %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ icon('alert' if category == 'error' else 'check-circle', 18) }}<span>{{ message }}</span><button class="icon-btn" type="button" data-dismiss-flash aria-label="Dismiss message">{{ icon('x', 16) }}</button></div>
+  {% endfor %}
+{% endwith %}

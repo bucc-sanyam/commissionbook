@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, pnl, csrf, trade_table, empty_state, payment_fields with context %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block breadcrumb %}Clients / {{ client.name }}{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div class="client-heading">{{ avatar(client.name, client.id) }}<div><span class="eyebrow">CLIENT AT A GLANCE</span><h1>{{ client.name }}<span class="accent-period">.</span></h1><div class="client-contact"><span>{{ icon('users', 13) }}Client #{{ client.id }}</span>{% if client.email %}<span>{{ icon('mail', 13) }}{{ client.email }}</span>{% endif %}{% if client.phone %}<span>{{ client.phone }}</span>{% endif %}</div></div></div>
+  <div class="heading-actions"><a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a><a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name) }}">{{ icon('plus', 16) }}Add trade</a></div>
+</div>
+<div class="kpi-grid">
+  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ s.commission|money }}</div><div class="kpi-bottom">{{ rule }}</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ s.paid|money }}</div><div class="kpi-bottom">{{ payments|length }} payment{{ 's' if payments|length != 1 }} on record</div></section>
+  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">{{ 'Client credit' if s.outstanding < 0 else 'Still to collect' }}</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ (s.outstanding|abs)|money }}</div><div class="kpi-bottom">{{ 'Paid ahead of commissions earned' if s.outstanding < 0 else 'Commission less payments received' }}</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Their realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div><div class="kpi-value {{ 'neg' if s.pnl < 0 else 'pos' }}">{{ s.pnl|money }}</div><div class="kpi-bottom">{{ s.wins }} profitable · {{ s.losses }} losing trades</div></section>
+</div>
+<section class="card">
+  <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · {{ s.invested_open|money }} invested</p></div><span class="badge">{{ rule }}</span></div>
+  {{ trade_table(trades, s, show_client=False) }}
+</section>
+<div class="detail-grid">
+  <section class="card">
+    <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div>
+    {% if payments %}
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    {% for p in payments %}
+      <tr><td class="date-cell">{{ p.paid_on }}</td><td>{{ p.mode or 'Not specified' }}{% if p.notes %}<span class="cell-secondary" title="{{ p.notes }}">{{ p.notes|truncate(32) }}</span>{% endif %}</td><td class="r pos tabular strong">{{ p.amount|money }}</td><td><form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment">{{ icon('trash', 15) }}</button></form></td></tr>
+    {% endfor %}</tbody></table></div>
+    {% else %}{{ empty_state('Ready when they settle up', 'Record a payment to keep the outstanding balance up to date.', 'wallet', compact=True) }}{% endif %}
+    <div class="card-footer"><span>Total received</span><strong class="pos tabular">{{ s.paid|money }}</strong></div>
+  </section>
+  <div class="stack">
+    <section class="card card-pad">
+      <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="icon-btn" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 17) }}</button></div>
+      <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
+      <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
+      <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
+      {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
+      <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
+    </section>
+    {% if uploads %}
+    <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
+    {% endif %}
+  </div>
+</div>
+<dialog class="modal" id="payment-dialog"><form method="post" action="{{ url_for('payments_list') }}" class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>{{ payment_fields([], amount=s.outstanding, locked_client=client, back=url_for('client_detail', cid=client.id)) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div></form></dialog>
+<dialog class="modal" id="edit-client-dialog"><form method="post" class="modal-inner">
+  {{ csrf() }}
+  <div class="modal-heading"><div><span class="eyebrow">KEEP THINGS CURRENT</span><h2>Edit client details</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+  <div class="form-grid">
+    <label class="field full">Client name<input name="name" value="{{ client.name }}" required maxlength="120"></label>
+    <label class="field">Email<input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>
+    <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40"></label>
+    <label class="field">Commission rule<select name="commission_type" data-rule-select="edit-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}" {{ 'selected' if client.commission_type == key }}>{{ label }}</option>{% endfor %}</select></label>
+    <label class="field">Rate<input id="edit-client-rate" name="commission_rate" type="number" step="any" min="0" value="{{ client.commission_rate if client.commission_rate is not none else '' }}"></label>
+    <label class="field full">Notes<textarea name="notes" rows="3" maxlength="2000">{{ client.notes or '' }}</textarea></label>
+  </div>
+  <div class="helper-box">{{ icon('file', 15) }}<span>New trades keep their rule at entry. Changing this rate does not change those existing fees. Older trades without a captured rule follow the legacy policy described in Settings.</span></div>
+  <div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">Save changes</button></div>
+</form></dialog>
+{% if merge_clients %}
+<dialog class="modal modal-sm" id="merge-dialog"><form method="post" action="{{ url_for('client_merge', cid=client.id) }}" class="modal-inner" data-confirm="Merge this client? Their trades and payments will move to the selected client and this profile will be removed.">
+  {{ csrf() }}
+  <div class="modal-heading"><div><span class="eyebrow">TIDY UP DUPLICATES</span><h2>Merge {{ client.name }}</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">Move this client's trades, payments and submissions into another profile. This cannot be undone.</p>
+  <label class="field">Keep this client<select name="target_id" required><option value="">Choose a different client</option>{% for other in merge_clients %}<option value="{{ other.id }}">{{ other.name }}</option>{% endfor %}</select></label><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-danger">Merge clients</button></div>
+</form></dialog>
+{% endif %}
+<form method="post" action="{{ url_for('client_delete', cid=client.id) }}" data-confirm="Permanently delete {{ client.name }} and all their trades and payments? This cannot be undone." class="actions" style="margin-top:25px">{{ csrf() }}<a class="btn btn-ghost btn-sm" href="{{ url_for('clients_list') }}">{{ icon('arrow-left', 13) }}All clients</a><button class="btn btn-ghost btn-sm">{{ icon('trash', 13) }}Delete this client</button></form>
+{% endblock %}

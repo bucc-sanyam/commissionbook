@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, csrf with context %}
+{% block title %}Settings{% endblock %}
+{% block breadcrumb %}Settings{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">MAKE YOURSELF AT HOME</p><h1>Your workspace. Your way<span class="accent-period">.</span></h1><p>Set the rules, share the right link, and keep everything secure.</p></div></div>
+<div class="settings-layout">
+  <form method="post" class="stack">
+    {{ csrf() }}
+    <section class="card card-pad">
+      <div class="settings-heading"><span class="settings-glyph">{{ icon('coins', 20) }}</span><div><h2>Default commission</h2><p>The starting point for every new client.</p></div></div>
+      <div class="form-grid">
+        <label class="field">Commission type<select name="default_commission_type">{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}" {{ 'selected' if s.default_commission_type == key }}>{{ label }}</option>{% endfor %}</select></label>
+        <label class="field">Rate<input name="default_commission_rate" type="number" step="any" min="0" required value="{{ s.default_commission_rate }}"><span class="field-hint">Percentage, or currency amount for a flat fee.</span></label>
+        <label class="field">Currency symbol<input name="currency" value="{{ s.currency }}" maxlength="8" required><span class="field-hint">Display only. Amounts are never currency-converted.</span></label>
+        <label class="field">Workspace name <span class="optional">Optional</span><input name="business_name" value="{{ s.business_name|default('') }}" maxlength="120" placeholder="Personal workspace"><span class="field-hint">Also shown on your client submission portal.</span></label>
+      </div>
+      <div class="helper-box">{{ icon('file', 16) }}<span>New trades keep the commission rule captured at entry, even when a position is closed later. Changing rates does not change these existing fees. A client's personal rule takes priority over the workspace default.</span></div>
+      {% if legacy_commission_count|default(0) > 0 %}<div class="helper-box amber">{{ icon('alert', 16) }}<span>{{ legacy_commission_count }} older trade{{ 's' if legacy_commission_count != 1 }} from the previous version {{ 'still use' if legacy_commission_count != 1 else 'still uses' }} current commission rules. Changing rates can affect those balances. Set a custom commission on each older trade to fix its fee permanently.</span></div>{% endif %}
+      <p class="field-hint">Profit-based commission applies only to positive realised profit. Turnover is the combined buy and sell value. Automatic fees apply to closed trades.</p>
+    </section>
+    <section class="card card-pad" id="client-portal">
+      <div class="settings-heading"><span class="settings-glyph">{{ icon('link', 20) }}</span><div><h2>A separate door for your clients</h2><p>No admin login. No access to your private books.</p></div></div>
+      <label class="field">Client submission link<div class="copy-field"><input readonly value="{{ upload_url }}" id="portal-url"><button class="btn" type="button" data-copy="portal-url">{{ icon('copy', 15) }}Copy</button></div><span class="field-hint">Anyone with this link can submit trades, but cannot see your ledger, payments, or other clients.</span></label>
+      <div class="actions" style="margin:15px 0 21px"><a class="text-link" href="{{ upload_url }}" target="_blank" rel="noopener noreferrer">Preview client portal{{ icon('arrow-up-right', 14) }}</a><button class="btn btn-ghost btn-sm" type="button" data-dialog="rotate-link-dialog">{{ icon('repeat', 13) }}Reset link</button></div>
+      <label class="field">Extra upload code <span class="optional">Optional</span><input name="upload_code" value="{{ s.upload_code }}" maxlength="100" placeholder="An extra code to share with your clients" autocomplete="off"><span class="field-hint">Clients must enter this code before scanning or submitting. Leave blank to use the private link alone.</span></label>
+    </section>
+    <section class="card card-pad">
+      <div class="settings-heading"><span class="settings-glyph">{{ icon('lock', 19) }}</span><div><h2>Administrator access</h2><p>Your financial details stay behind a password.</p></div></div>
+      {% if admin_password_managed|default(False) %}
+      <div class="helper-box">{{ icon('shield', 16) }}<span>Your admin password is managed in your deployment's environment variables. Update it there and redeploy to change your login.</span></div>
+      {% else %}
+      <label class="field">New password<input name="new_password" type="password" minlength="10" autocomplete="new-password" placeholder="Leave blank to keep your current password"><span class="field-hint">Use at least 10 characters. A unique passphrase works well.</span></label>
+      {% endif %}
+    </section>
+    <div class="settings-actions"><small>{{ icon('shield', 13) }}Only the administrator can change these settings.</small><button class="btn btn-primary">{{ icon('check', 16) }}Save changes</button></div>
+  </form>
+  <aside class="stack settings-aside">
+    <section class="card connection-card">
+      <div class="connection-header"><span class="connection-logo vercel"><svg width="20" height="18" viewBox="0 0 20 18" fill="currentColor" aria-hidden="true"><path d="m10 0 10 18H0Z"/></svg></span><div><h3>Vercel</h3><p>Application hosting</p></div></div>
+      <div class="connection-status"><span>{{ 'Running on Vercel' if deployed|default(False) else 'Local environment' }}</span><span class="badge {{ 'badge-green' if deployed|default(False) else '' }}"><span class="status-dot"></span>{{ 'Deployed' if deployed|default(False) else 'Local' }}</span></div>
+    </section>
+    <section class="card connection-card">
+      <div class="connection-header"><span class="connection-logo supabase">{{ icon('server', 20) }}</span><div><h3>Supabase</h3><p>Database &amp; private image storage</p></div></div>
+      <div class="connection-status"><span>{{ 'PostgreSQL + Storage' if backend_mode|default('local') == 'supabase' else 'Using SQLite locally' }}</span><span class="badge {{ 'badge-green' if backend_mode|default('local') == 'supabase' else '' }}"><span class="status-dot"></span>{{ 'Cloud mode' if backend_mode|default('local') == 'supabase' else 'Local mode' }}</span></div>
+    </section>
+    <div class="aside-card">{{ icon('cloud', 25) }}<h3>Built to go with you.</h3><p>Your deployed app uses Supabase for durable records and private screenshots. No financial data is stored on Vercel's temporary filesystem.</p><div class="aside-list"><div><strong>Keep secrets on the server</strong><span>Database credentials and the Supabase service key belong in Vercel environment variables, never in a browser.</span></div><div><strong>A private client link</strong><span>Send your submission URL, not the admin login. Reset it here if you ever need to revoke access.</span></div><div><strong>The setup is documented</strong><span>Follow the deployment steps in the project's README and use .env.example as your configuration guide.</span></div></div></div>
+  </aside>
+</div>
+<dialog class="modal modal-sm" id="rotate-link-dialog"><form class="modal-inner" method="post" action="{{ url_for('rotate_upload_link') }}">
+  {{ csrf() }}<div class="modal-heading"><div><span class="eyebrow">START WITH A FRESH LINK</span><h2>Reset client access?</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">The current submission link will stop working immediately. You'll need to share the new link with your clients. Existing trades and screenshots stay in your books.</p><div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Keep current link</button><button class="btn btn-danger">{{ icon('repeat', 14) }}Reset link</button></div>
+</form></dialog>
+{% endblock %}

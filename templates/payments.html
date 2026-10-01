@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, csrf, empty_state, payment_fields with context %}
+{% block title %}Payments{% endblock %}
+{% block breadcrumb %}Payments{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">THE REWARD FOR YOUR WORK</p><h1>Payments, in order<span class="accent-period">.</span></h1><p>Keep track of what's come in, without losing track of who sent it.</p></div><button class="btn btn-primary" type="button" data-dialog="payment-dialog">{{ icon('plus', 16) }}Record payment</button></div>
+<div class="kpi-grid">
+  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Total received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ total|money }}</div><div class="kpi-bottom">All-time commission collections</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments recorded</h2><span class="kpi-icon">{{ icon('check-circle', 17) }}</span></div><div class="kpi-value">{{ payments|length }}</div><div class="kpi-bottom">Every settlement, accounted for</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Paying clients</h2><span class="kpi-icon">{{ icon('users', 17) }}</span></div><div class="kpi-value">{{ payments|map(attribute='client_id')|unique|list|length }}</div><div class="kpi-bottom">Clients with recorded payments</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Average payment</h2><span class="kpi-icon">{{ icon('coins', 17) }}</span></div><div class="kpi-value">{{ (total / payments|length if payments else 0)|money }}</div><div class="kpi-bottom">Across all recorded payments</div></section>
+</div>
+<section class="card">
+  <div class="card-header"><div><h2>Your payment history</h2><p id="payment-search-count">Most recent first. Always up to date.</p></div><label class="search-field">{{ icon('search', 15) }}<input type="search" placeholder="Find a payment..." aria-label="Search payments" data-table-search="#payments-table" data-search-count="payment-search-count" data-search-empty="payment-search-empty"></label></div>
+  {% if payments %}
+  <div class="table-wrap"><table class="data-table" id="payments-table">
+    <thead><tr><th>Client</th><th>Payment date</th><th>Method</th><th>Note / reference</th><th class="r">Amount received</th><th></th></tr></thead>
+    <tbody>{% for payment in payments %}
+      <tr><td><a class="client-cell" href="{{ url_for('client_detail', cid=payment.client_id) }}">{{ avatar(payment.client_name, payment.client_id, True) }}<span>{{ payment.client_name }}</span></a></td>
+        <td class="date-cell">{{ payment.paid_on }}</td><td><span class="source-tag">{{ icon('bank' if payment.mode == 'Bank transfer' else 'wallet', 14) }}{{ payment.mode or 'Not specified' }}</span></td>
+        <td class="muted" title="{{ payment.notes or '' }}">{{ (payment.notes or '—')|truncate(44) }}</td><td class="r pos strong tabular">+{{ payment.amount|money }}</td>
+        <td class="r"><form method="post" action="{{ url_for('payment_delete', pid=payment.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment from {{ payment.client_name }}">{{ icon('trash', 16) }}</button></form></td></tr>
+    {% endfor %}</tbody>
+    <tfoot><tr><td colspan="4">Total received · all time</td><td class="r tabular">{{ total|money }}</td><td></td></tr></tfoot>
+  </table></div>
+  <div id="payment-search-empty" hidden>{{ empty_state('No matching payments', 'Try a client name, payment method or reference.', 'search', compact=True) }}</div>
+  {% else %}{{ empty_state('The best kind of incoming', 'When a client pays your commission, record it here. Their balance will update automatically.', 'wallet') }}{% endif %}
+  <div class="card-footer"><span>{{ icon('shield', 12) }}A private record, not a payment processor.</span><a class="text-link" href="{{ url_for('clients_list') }}">View client balances{{ icon('arrow-right', 13) }}</a></div>
+</section>
+<dialog class="modal" id="payment-dialog" data-auto-open="{{ 'true' if preset else 'false' }}">
+  <form method="post" class="modal-inner">
+    <div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    {% if clients %}{{ payment_fields(clients, preset=preset) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div>
+    {% else %}<p class="muted">Add a client before recording your first payment.</p><a class="btn btn-primary" href="{{ url_for('clients_list') }}">{{ icon('plus', 15) }}Add a client</a>{% endif %}
+  </form>
+</dialog>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, empty_state with context %}
+{% block title %}Submissions{% endblock %}
+{% block breadcrumb %}Submissions{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">FROM THEIR SCREEN TO YOUR BOOKS</p><h1>The submission inbox<span class="accent-period">.</span></h1><p>Every screenshot, its extracted details, and a clear trail back to the source.</p></div><a class="btn btn-primary" href="{{ url_for('settings_page') }}#client-portal">{{ icon('link', 15) }}Get client upload link</a></div>
+<section class="card">
+  <div class="card-header"><div><h2>Incoming trade records</h2><p>{{ uploads|length }} submission{{ 's' if uploads|length != 1 }} · reviewed by the submitter before saving</p></div><a class="btn btn-sm" href="{{ url_for('admin_scan') }}">{{ icon('scan', 14) }}Scan a screenshot</a></div>
+  {% if uploads %}
+  <div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Submitted by</th><th>Received</th><th>Platform</th><th class="r">Trades</th><th>Source images</th><th>Extracted text</th></tr></thead>
+    <tbody>{% for upload in uploads %}
+      <tr>
+        <td><div class="client-cell">{{ avatar(upload.client_name, upload.id, True) }}<span>{{ upload.client_name }}<small>Submission #{{ upload.id }}</small></span></div></td>
+        <td class="date-cell">{{ upload.created_at }}</td>
+        <td><span class="badge">{{ (upload.platform or 'Manual entry')|capitalize }}</span></td>
+        <td class="r"><span class="badge badge-green">{{ icon('check', 11) }}{{ upload.trade_count }} saved</span></td>
+        <td><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="Open source image {{ loop.index }} for {{ upload.client_name }}">{{ icon('image', 14) }}{{ loop.index }}</a>{% else %}<span class="muted">No images</span>{% endfor %}</div></td>
+        <td>{% if upload.ocr_text %}<button class="btn btn-sm btn-ghost" type="button" data-dialog="ocr-{{ upload.id }}">{{ icon('file', 14) }}View text</button>{% else %}<span class="muted">Entered manually</span>{% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <div class="card-footer"><span>{{ icon('shield', 12) }}Original screenshots are private and visible only to you.</span><a class="text-link" href="{{ url_for('trades_list') }}">Open ledger{{ icon('arrow-right', 13) }}</a></div>
+  {% else %}
+  {{ empty_state('Your inbox is ready', 'Share the client submission link. Their screenshots and confirmed trade details will arrive right here.', 'inbox', url_for('settings_page') ~ '#client-portal', 'Get your upload link') }}
+  {% endif %}
+</section>
+{% for upload in uploads if upload.ocr_text %}
+<dialog class="modal" id="ocr-{{ upload.id }}"><div class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">SOURCE TRANSCRIPT</span><h2>{{ upload.client_name }} · #{{ upload.id }}</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Close">{{ icon('x') }}</button></div><p class="muted">This is the raw OCR result. The client may have corrected the extracted trade rows before submitting.</p><pre class="ocr-text">{{ upload.ocr_text }}</pre></div></dialog>
+{% endfor %}
+{% endblock %}

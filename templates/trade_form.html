@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, csrf with context %}
+{% block title %}{{ 'Edit trade' if trade and trade.id else 'Add trade' }}{% endblock %}
+{% block breadcrumb %}Trade ledger / {{ 'Edit trade' if trade and trade.id else 'Add trade' }}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">A PLACE FOR EVERY TRADE</p><h1>{{ 'A little fine-tuning' if trade and trade.id else 'Add to your ledger' }}<span class="accent-period">.</span></h1><p>{{ 'Update the details. Your totals will follow.' if trade and trade.id else 'The details go here. We will take care of the numbers.' }}</p></div><a class="btn btn-ghost" href="{{ url_for('trades_list') }}">{{ icon('arrow-left', 15) }}Back to ledger</a></div>
+<div class="content-with-aside">
+<form method="post" class="card" data-trade-form>
+  {{ csrf() }}
+  <input type="hidden" name="back" value="{{ back if back and trade and trade.id else '' }}">
+  <section class="form-section">
+    <div class="form-section-heading"><span class="section-number">01</span><div><h2>The essentials</h2><p>Who made the trade, and what did they buy?</p></div></div>
+    <div class="form-grid">
+      <label class="field">Client name<input name="client_name" list="clientList" required maxlength="120" autocomplete="off" value="{{ trade.client_name if trade else preset_client }}" placeholder="Choose or add a client"><datalist id="clientList">{% for c in clients %}<option value="{{ c.name }}">{% endfor %}</datalist><span class="field-hint">New names create a client automatically.</span></label>
+      <label class="field">Stock name or symbol<input name="stock" required maxlength="120" value="{{ trade.stock if trade else '' }}" placeholder="e.g. RELIANCE" autocomplete="off"></label>
+      <label class="field">Quantity<input name="quantity" type="number" step="any" min="0.000001" required value="{{ trade.quantity if trade else '' }}" placeholder="Number of shares" inputmode="decimal"></label>
+    </div>
+  </section>
+  <section class="form-section">
+    <div class="form-section-heading"><span class="section-number">02</span><div><h2>The buy and the sell</h2><p>Prices are per share. Add the sale later if the position is still open.</p></div></div>
+    <div class="form-grid">
+      <label class="field">Buy price<input name="buy_price" type="number" step="any" min="0" value="{{ trade.buy_price if trade and trade.buy_price is not none else '' }}" placeholder="0.00" inputmode="decimal"></label>
+      <label class="field">Buy date<input name="buy_date" type="date" value="{{ (trade.buy_date or '') if trade else '' }}"></label>
+      <label class="field">Sell price <span class="optional">Leave blank for an open position</span><input name="sell_price" type="number" step="any" min="0" value="{{ trade.sell_price if trade and trade.sell_price is not none else '' }}" placeholder="0.00" inputmode="decimal"></label>
+      <label class="field">Sell date <span class="optional">Required when a sell price is entered</span><input name="sell_date" type="date" value="{{ (trade.sell_date or '') if trade else '' }}"></label>
+    </div>
+  </section>
+  <section class="form-section">
+    <div class="form-section-heading"><span class="section-number">03</span><div><h2>The finishing touches</h2><p>A custom commission, or a note for your future self.</p></div></div>
+    <div class="form-grid">
+      <label class="field">Custom commission <span class="optional">Optional</span><input name="commission_override" type="number" step="any" min="0" placeholder="Calculated from the client's rule" inputmode="decimal" value="{{ trade.commission_override if trade and trade.commission_override is not none else '' }}"><span class="field-hint">A fixed fee for this trade, instead of the calculated fee.</span></label>
+      <label class="field">Notes <span class="optional">Optional</span><textarea name="notes" rows="3" maxlength="2000" placeholder="Anything worth remembering...">{{ (trade.notes or '') if trade else '' }}</textarea></label>
+    </div>
+  </section>
+  <div class="form-footer"><p>{{ icon('shield', 13) }}Only you can view or edit your ledger.</p><div class="actions">{% if not (trade and trade.id) %}<button class="btn" name="add_another" value="1">Save &amp; add another</button>{% endif %}<button class="btn btn-primary">{{ icon('check', 15) }}{{ 'Save changes' if trade and trade.id else 'Save trade' }}</button></div></div>
+</form>
+<aside class="aside-card">
+  {{ icon('sparkle', 25) }}<h3>A little help with the maths.</h3><p>Once you have a buy and sell price, your realised profit and commission are calculated for you.</p>
+  <div class="aside-list">
+    <div><strong>Profit share</strong><span>A percentage of positive profit. Losing trades carry no commission under this rule.</span></div>
+    <div><strong>Turnover fee</strong><span>A percentage of the buy and sell values combined, multiplied by quantity.</span></div>
+    <div><strong>Flat fee</strong><span>A fixed commission for each closed trade, regardless of the result.</span></div>
+  </div>
+  <div class="section-divider"></div><a class="text-link" href="{{ url_for('admin_scan') }}">{{ icon('scan', 16) }}Have a screenshot instead?</a>
+</aside>
+</div>
+{% endblock %}

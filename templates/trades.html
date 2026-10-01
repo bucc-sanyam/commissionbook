@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, trade_table, csrf with context %}
+{% block title %}Trade ledger{% endblock %}
+{% block breadcrumb %}Trade ledger{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">EVERY DETAIL, ACCOUNTED FOR</p><h1>Trade ledger<span class="accent-period">.</span></h1><p>Every buy, every sell, and every commission in between.</p></div>
+  <div class="heading-actions">
+    <button class="btn" type="button" data-dialog="import-dialog">{{ icon('upload', 15) }}Import</button>
+    <a class="btn" href="{{ url_for('export_trades', **args) }}">{{ icon('download', 15) }}Export</a>
+    <a class="btn btn-primary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
+  </div>
+</div>
+<section class="card">
+  <div class="ledger-summary">
+    <div class="ledger-summary-item"><span>Trades in view</span><strong>{{ total.count }}</strong></div>
+    <div class="ledger-summary-item"><span>Realised P&amp;L</span><strong class="{{ 'neg' if total.pnl < 0 else 'pos' }}">{{ total.pnl|money }}</strong></div>
+    <div class="ledger-summary-item"><span>Commission earned</span><strong>{{ total.commission|money }}</strong></div>
+    <div class="ledger-summary-item"><span>Open positions</span><strong>{{ total.open }}</strong></div>
+  </div>
+  <form class="filter-bar" method="get">
+    <label class="field"><span>Stock</span><input name="stock" value="{{ args.stock }}" placeholder="Search a stock..." aria-label="Filter by stock"></label>
+    <label class="field"><span>Client</span><select name="client_id"><option value="">All clients</option>{% for c in clients %}<option value="{{ c.id }}" {{ 'selected' if args.client_id == c.id|string }}>{{ c.name }}</option>{% endfor %}</select></label>
+    <label class="field"><span>Status</span><select name="status"><option value="">All trades</option><option value="closed" {{ 'selected' if args.status == 'closed' }}>Closed</option><option value="open" {{ 'selected' if args.status == 'open' }}>Open</option></select></label>
+    <label class="field"><span>From</span><input type="date" name="from" value="{{ args['from'] }}"></label>
+    <label class="field"><span>To</span><input type="date" name="to" value="{{ args['to'] }}"></label>
+    <div class="filter-actions"><button class="btn btn-primary btn-sm">{{ icon('filter', 13) }}Apply</button><a class="btn btn-ghost btn-sm" href="{{ url_for('trades_list') }}">Reset</a></div>
+  </form>
+  {{ trade_table(trades, total, selectable=True) }}
+  <div class="card-footer"><span>{{ total.count }} trade{{ 's' if total.count != 1 }} · dates use sell date, or buy date for open trades</span><form id="bulkForm" method="post" action="{{ url_for('trades_bulk_delete') }}" data-confirm="Delete the selected trades? These entries will be permanently removed from your ledger.">{{ csrf() }}<button class="btn btn-danger btn-sm" id="bulk-delete" disabled>{{ icon('trash', 13) }}Delete selected<span id="selected-count"></span></button></form></div>
+</section>
+<dialog class="modal modal-sm" id="import-dialog">
+  <form class="modal-inner" method="post" action="{{ url_for('import_trades') }}" enctype="multipart/form-data">
+    {{ csrf() }}
+    <div class="modal-heading"><div><span class="eyebrow">BRING YOUR BOOKS ALONG</span><h2>Import from Excel</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    <p class="muted">Use the template to organise your trades. Include a client name, stock, quantity, price and date for each entry.</p>
+    <a class="text-link" href="{{ url_for('export_template') }}">{{ icon('download', 15) }}Download the import template</a>
+    <div class="section-divider"></div>
+    <label class="field">Choose your spreadsheet<input type="file" name="file" accept=".xlsx" required><span class="field-hint">.xlsx files only. Import adds new entries, so avoid re-importing the same trades.</span></label>
+    <div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('upload', 15) }}Import trades</button></div>
+  </form>
+</dialog>
+{% endblock %}

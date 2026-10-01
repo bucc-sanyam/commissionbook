@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, pnl, csrf, empty_state with context %}
+{% block title %}Clients{% endblock %}
+{% block breadcrumb %}Clients{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">THE PEOPLE BEHIND THE NUMBERS</p><h1>Your clients<span class="accent-period">.</span></h1><p>Clear statements. Personal commission rules. Better relationships.</p></div><button class="btn btn-primary" type="button" data-dialog="client-dialog">{{ icon('plus', 16) }}Add client</button></div>
+<div class="kpi-grid">
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Your client book</h2><span class="kpi-icon">{{ icon('users', 17) }}</span></div><div class="kpi-value">{{ clients|length }}</div><div class="kpi-bottom">All clients in your workspace</div></section>
+  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='commission')|money }}</div><div class="kpi-bottom">Across your entire client book</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='paid')|money }}</div><div class="kpi-bottom">All-time collected commission</div></section>
+  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">Net balance</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='outstanding')|money }}</div><div class="kpi-bottom">Negative balances are client credit</div></section>
+</div>
+<section class="card">
+  <div class="card-header"><div><h2>Client directory</h2><p id="client-search-count">{{ clients|length }} client{{ 's' if clients|length != 1 }}</p></div><label class="search-field">{{ icon('search', 15) }}<input type="search" placeholder="Find a client..." aria-label="Search clients" data-table-search="#clients-table" data-search-count="client-search-count" data-search-empty="client-search-empty"></label></div>
+  {% if clients %}
+  <div class="table-wrap"><table class="data-table" id="clients-table">
+    <thead><tr><th>Client</th><th>Commission rule</th><th class="r">Trades</th><th class="r">Client P&amp;L</th><th class="r">Earned</th><th class="r">Received</th><th class="r">Balance</th><th></th></tr></thead>
+    <tbody>{% for c in clients %}
+      <tr><td><a class="client-cell" href="{{ url_for('client_detail', cid=c.id) }}">{{ avatar(c.name, c.id) }}<span>{{ c.name }}<small>{{ c.email or c.phone or 'Client #' ~ c.id }}</small></span></a></td>
+        <td><span class="badge">{{ c.rule }}</span></td><td class="r tabular">{{ c.count }}<span class="cell-secondary">{{ c.open }} open</span></td>
+        <td class="r tabular">{{ pnl(c.pnl) }}</td><td class="r tabular strong">{{ c.commission|money }}</td><td class="r tabular muted">{{ c.paid|money }}</td>
+        <td class="r tabular {{ 'neg' if c.outstanding > 0.005 else 'pos' }}">{{ c.outstanding|money }}<span class="cell-secondary">{{ 'Credit' if c.outstanding < -0.005 else 'To collect' if c.outstanding > 0.005 else 'Settled' }}</span></td>
+        <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=c.id) }}" aria-label="View {{ c.name }}">{{ icon('arrow-up-right', 17) }}</a></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <div id="client-search-empty" hidden>{{ empty_state('No clients found', 'Try a different name or clear your search.', 'search', compact=True) }}</div>
+  <div class="card-footer"><span>All balances are calculated across the full ledger.</span><span>{{ icon('shield', 12) }}Private to you</span></div>
+  {% else %}
+  {{ empty_state('Good bookkeeping starts with people', 'Add your first client to set a commission rule and keep all their trades together.', 'users') }}
+  {% endif %}
+</section>
+<dialog class="modal" id="client-dialog">
+  <form method="post" class="modal-inner">
+    {{ csrf() }}
+    <div class="modal-heading"><div><span class="eyebrow">GROW YOUR CLIENT BOOK</span><h2>Meet your next client.</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    <div class="form-grid">
+      <label class="field full">Client name<input name="name" required maxlength="120" autocomplete="name" placeholder="Their full name"></label>
+      <label class="field">Email <span class="optional">Optional</span><input name="email" type="email" maxlength="254" placeholder="name@example.com" autocomplete="email"></label>
+      <label class="field">Phone <span class="optional">Optional</span><input name="phone" type="tel" maxlength="40" placeholder="+91" autocomplete="tel"></label>
+      <label class="field">Commission rule<select name="commission_type" data-rule-select="new-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+      <label class="field">Rate<input id="new-client-rate" name="commission_rate" type="number" min="0" step="any" placeholder="Uses workspace default"></label>
+      <label class="field full">Notes <span class="optional">Optional</span><textarea name="notes" rows="2" maxlength="2000" placeholder="A little context for later..."></textarea></label>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('plus', 15) }}Add client</button></div>
+  </form>
+</dialog>
+{% endblock %}

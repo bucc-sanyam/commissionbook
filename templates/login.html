@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, brand, csrf with context %}
+{% block title %}{{ 'Set up your workspace' if first_run else 'Welcome back' }}{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+{% block shell %}
+<main class="auth-layout" id="main">
+  <section class="auth-story">
+    <a class="brand" href="{{ url_for('login') }}" aria-label="Commission Book">{{ brand() }}</a>
+    <div class="auth-story-main">
+      <span class="eyebrow">A LITTLE ORDER. A LOT OF CLARITY.</span>
+      <h1>Your trades.<br>Your people.<br><em>All in balance.</em></h1>
+      <p>A thoughtful little workspace for the trades you track and the commissions you earn.</p>
+      <div class="auth-art" aria-hidden="true"><div class="auth-art-label"><span>The bigger picture</span>{{ icon('trend', 17) }}</div><strong>Every detail counts.</strong><div class="auth-art-line"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="auth-art-caption"><span>Less busywork.</span><span>More peace of mind.</span></div></div>
+    </div>
+    <div class="auth-story-footer">{{ icon('shield', 14) }}Your books are personal. Let's keep them that way.</div>
+  </section>
+  <section class="auth-form-panel">
+    <div class="auth-form">
+      <span class="eyebrow">YOUR PRIVATE WORKSPACE</span>
+      <h2>{{ 'Make yourself at home.' if first_run else 'Good to see you again.' }}</h2>
+      <p>{{ 'Choose a strong admin password to start your personal bookkeeping workspace.' if first_run else 'Sign in to see how your trading book is coming along.' }}</p>
+      {% include "_flashes.html" %}
+      <form method="post">
+        {{ csrf() }}
+        <label class="field" for="password">Admin password<div class="password-wrap"><input id="password" name="password" type="password" required {% if first_run %}minlength="10"{% endif %} autocomplete="{{ 'new-password' if first_run else 'current-password' }}" placeholder="{{ 'At least 10 characters' if first_run else 'Enter your password' }}"><button type="button" class="icon-btn" data-toggle-password="password" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button></div></label>
+        {% if first_run %}<label class="field">Confirm password<input type="password" name="confirm" autocomplete="new-password" minlength="10" required placeholder="One more time, just to be sure"></label>{% endif %}
+        <button class="btn btn-primary btn-wide">{{ 'Create my workspace' if first_run else 'Open my workspace' }}{{ icon('arrow-right', 16) }}</button>
+      </form>
+      <div class="auth-form-footnote">{{ icon('lock', 15) }}<span>Here to submit a trade? Use the private upload link shared with you. You don't need an admin account.</span></div>
+    </div>
+  </section>
+</main>
+{% endblock %}
