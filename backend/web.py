@@ -1031,7 +1031,7 @@ def create_app(config=None):
         legacy_count = get_db().execute(
             "SELECT COUNT(*) AS total FROM trades WHERE commission_type_snapshot IS NULL"
         ).fetchone()["total"]
-        base = app.config["PUBLIC_BASE_URL"] or url_for("dashboard", _external=True).rstrip("/")
+        base = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
         short_url = base + url_for("short_upload_link")
         return render_template(
             "settings.html", s={key: setting(key, "") for key in keys}, upload_url=portal_url(),
