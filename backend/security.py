@@ -54,6 +54,9 @@ def configure_app(app, overrides=None):
         missing = [key for key in required if not app.config.get(key)]
         if not app.config["ADMIN_PASSWORD"] and not app.config["ADMIN_PASSWORD_HASH"]:
             missing.append("ADMIN_PASSWORD or ADMIN_PASSWORD_HASH")
+        if secret and len(secret) < 32:
+            secret = hashlib.sha256(secret.encode()).hexdigest()
+            config["SECRET_KEY"] = secret
         if missing:
             raise RuntimeError("Production configuration is incomplete: " + ", ".join(missing))
         if len(app.config["SECRET_KEY"]) < 32:

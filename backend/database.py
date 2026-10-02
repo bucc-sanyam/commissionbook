@@ -169,13 +169,14 @@ def get_db():
     if "db" not in g:
         config = current_app.config
         if config["BACKEND_MODE"] == "supabase":
-            connection = psycopg.connect(
-                config["DATABASE_URL"],
-                sslmode="require",
-                prepare_threshold=None,
-                connect_timeout=10,
-                row_factory=dict_row,
-            )
+            conn_kwargs = {
+                "prepare_threshold": None,
+                "connect_timeout": 10,
+                "row_factory": dict_row,
+            }
+            if "sslmode" not in config["DATABASE_URL"]:
+                conn_kwargs["sslmode"] = "require"
+            connection = psycopg.connect(config["DATABASE_URL"], **conn_kwargs)
             g.db = Database(connection, postgres=True)
         else:
             connection = sqlite3.connect(config["DATABASE"], timeout=15)
