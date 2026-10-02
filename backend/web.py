@@ -1031,9 +1031,11 @@ def create_app(config=None):
         legacy_count = get_db().execute(
             "SELECT COUNT(*) AS total FROM trades WHERE commission_type_snapshot IS NULL"
         ).fetchone()["total"]
+        base = app.config["PUBLIC_BASE_URL"] or url_for("dashboard", _external=True).rstrip("/")
+        short_url = base + url_for("short_upload_link")
         return render_template(
             "settings.html", s={key: setting(key, "") for key in keys}, upload_url=portal_url(),
-            legacy_commission_count=legacy_count,
+            short_url=short_url, legacy_commission_count=legacy_count,
         )
 
     @app.route("/settings/rotate-link", methods=["POST"])
@@ -1042,6 +1044,13 @@ def create_app(config=None):
         set_setting("upload_token", secrets.token_urlsafe(32))
         flash("A new submission link is ready. The old link and its pending image authorizations no longer work.", "success")
         return redirect(url_for("settings_page"))
+
+    @app.route("/go")
+    def short_upload_link():
+        token = setting("upload_token", "")
+        if not token:
+            abort(404, description="No submission link has been set up yet.")
+        return redirect(url_for("public_upload", token=token), 302)
 
     @app.route("/upload", defaults={"token": None})
     @app.route("/submit/<token>")

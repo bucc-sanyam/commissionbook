@@ -147,11 +147,6 @@ def trade_values(values, *, public=False):
     }
     if result["buy_price"] is None and result["sell_price"] is None:
         raise ValidationError("Enter at least one buy or sell price.")
-    for side in ("buy", "sell"):
-        has_price = result[f"{side}_price"] is not None
-        has_date = result[f"{side}_date"] is not None
-        if has_price != has_date:
-            raise ValidationError(f"{side.title()} price and {side} date must both be populated.")
     if result["buy_date"] and result["sell_date"] and result["sell_date"] < result["buy_date"]:
         raise ValidationError("Sell date cannot be before buy date.")
     return result

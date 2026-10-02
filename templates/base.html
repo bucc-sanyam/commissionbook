@@ -6,8 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#142a2a">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="description" content="A clear view of your trades, your clients and every commission earned.">
+  <meta name="description" content="{% block meta_description %}A clear view of your trades, your clients and every commission earned.{% endblock %}">
   <title>{% block title %}Overview{% endblock %} · Commission Book</title>
+  <!-- Open Graph / WhatsApp / Telegram -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Commission Book">
+  <meta property="og:title" content="{% block og_title %}Commission Book{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Send your trades in seconds. No account needed.{% endblock %}">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{% block twitter_title %}Commission Book{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Send your trades in seconds. No account needed.{% endblock %}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preload" href="{{ url_for('static', filename='fonts/dm-sans-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-latin.woff2') }}" as="font" type="font/woff2" crossorigin>

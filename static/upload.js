@@ -131,10 +131,7 @@
     }
     for (const side of ["buy", "sell"]) {
       const price = data[`${side}_price`];
-      const date = data[`${side}_date`];
       if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) errors[`${side}_price`] = "Price must be zero or greater.";
-      if (price !== "" && !date) errors[`${side}_date`] = `Enter the ${side} date.`;
-      if (date && price === "") errors[`${side}_price`] = `Enter the price for this ${side} date.`;
     }
     if (data.buy_date && data.sell_date && data.sell_date < data.buy_date) errors.sell_date = "Sell date cannot be earlier than buy date.";
     if (show) {

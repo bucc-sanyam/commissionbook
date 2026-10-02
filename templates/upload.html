@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, brand with context %}
-{% block title %}{{ 'Screenshot scanner' if admin else 'Send your trades' }}{% endblock %}
+{% block title %}{{ 'Screenshot scanner' if admin else 'Send Your Trades' }}{% endblock %}
+{% block og_title %}Commission Book – Send Your Trades{% endblock %}
+{% block og_description %}Submit your trades in seconds. Just fill in the share name and amount — no account needed.{% endblock %}
+{% block twitter_title %}Commission Book – Send Your Trades{% endblock %}
+{% block twitter_description %}Submit your trades in seconds. Just fill in the share name and amount — no account needed.{% endblock %}
 {% block body_class %}{{ 'app-body' if admin else 'portal-body' }}{% endblock %}
 {% block breadcrumb %}Screenshot scanner{% endblock %}
 {% block shell %}
@@ -52,7 +56,7 @@
       <div class="upload-section-header"><div><h2>02 &nbsp; Make sure it all adds up</h2><p>Click any cell to correct it, or add trades manually.</p></div><button class="btn btn-sm" id="add-row" type="button">{{ icon('plus', 14) }}Add row</button></div>
       <div class="review-intro"><p>OCR is a starting point, not a guarantee. Check the stock, quantity, prices and dates. Leave sell details blank for an open position.</p><span class="badge" id="platform-badge" hidden></span></div>
       <div class="sheet-wrap"><table class="sheet" aria-label="Extracted trades, editable spreadsheet">
-        <thead><tr><th scope="col">#</th><th scope="col">Stock</th><th scope="col">Qty</th><th scope="col">Buy price</th><th scope="col">Sell price</th><th scope="col">Buy date</th><th scope="col">Sell date</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead>
+        <thead><tr><th scope="col">#</th><th scope="col">Stock</th><th scope="col">Qty</th><th scope="col">Buy price</th><th scope="col">Sell price</th><th scope="col">Buy date <span class="optional" style="font-weight:400;font-size:0.75em;opacity:0.6">(optional)</span></th><th scope="col">Sell date <span class="optional" style="font-weight:400;font-size:0.75em;opacity:0.6">(optional)</span></th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead>
         <tbody id="trade-rows"></tbody>
       </table></div>
       <div class="review-footer"><span id="row-summary">Add a screenshot or enter your first trade.</span><div class="actions"><button class="btn btn-ghost btn-sm" id="reparse" type="button" hidden>{{ icon('repeat', 13) }}Re-extract</button><button class="btn btn-ghost btn-sm" id="download-rows" type="button">{{ icon('download', 13) }}Download CSV</button></div></div>
