@@ -370,6 +370,12 @@
       return false;
     }
     $("name").setCustomValidity("");
+    if (!$("phone").value.trim()) {
+      $("phone").setCustomValidity("Please enter the client's phone number.");
+      $("phone").reportValidity();
+      return false;
+    }
+    $("phone").setCustomValidity("");
     if (config.needCode && !$("code").value.trim()) {
       $("code").setCustomValidity("Enter the upload code shared with you.");
       $("code").reportValidity();
@@ -378,6 +384,7 @@
     return true;
   }
   $("name").addEventListener("input", () => { $("name").setCustomValidity(""); $("reviewed").checked = false; });
+  $("phone").addEventListener("input", () => { $("phone").setCustomValidity(""); $("reviewed").checked = false; });
   $("code")?.addEventListener("input", () => $("code").setCustomValidity(""));
 
   async function parseImages() {
@@ -633,7 +640,7 @@
     try {
       await storeImages();
       state.pendingPayload = {
-        ...authorization(), name: $("name").value.trim(), rows,
+        ...authorization(), name: $("name").value.trim(), phone: $("phone").value.trim(), rows,
         platform: state.images.length ? state.platform : "manual",
         ocr_text: state.images.map((item) => item.text).join("\n\n"),
         images: state.images.map((item) => item.receipt),

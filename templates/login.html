@@ -15,9 +15,21 @@
     <div class="auth-story-footer">{{ icon('shield', 14) }}Your books are personal. Let's keep them that way.</div>
   </section>
   <section class="auth-form-panel">
-    <div class="auth-form">
+    <div class="auth-form" id="options-view">
       <span class="eyebrow">YOUR PRIVATE WORKSPACE</span>
-      <h2>{{ 'Make yourself at home.' if first_run else 'Good to see you again.' }}</h2>
+      <h2>{{ 'Make yourself at home.' if first_run else 'Welcome.' }}</h2>
+      <p>Select how you want to proceed.</p>
+      {% include "_flashes.html" %}
+      
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-primary btn-wide" onclick="showAdminLogin()">Admin Login</button>
+        <button type="button" class="btn btn-secondary btn-wide" onclick="showClientUpload()">Are you a client?</button>
+      </div>
+    </div>
+
+    <div class="auth-form" id="admin-login-view" style="display: none;">
+      <span class="eyebrow">ADMIN LOGIN</span>
+      <h2>{{ 'Set up your workspace.' if first_run else 'Good to see you again.' }}</h2>
       <p>{{ 'Choose a strong admin password to start your personal bookkeeping workspace.' if first_run else 'Sign in to see how your trading book is coming along.' }}</p>
       {% include "_flashes.html" %}
       <form method="post">
@@ -26,8 +38,41 @@
         {% if first_run %}<label class="field">Confirm password<input type="password" name="confirm" autocomplete="new-password" minlength="10" required placeholder="One more time, just to be sure"></label>{% endif %}
         <button class="btn btn-primary btn-wide">{{ 'Create my workspace' if first_run else 'Open my workspace' }}{{ icon('arrow-right', 16) }}</button>
       </form>
-      <div class="auth-form-footnote">{{ icon('lock', 15) }}<span>Here to submit a trade? Use the private upload link shared with you. You don't need an admin account.</span></div>
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="showOptions()">{{ icon('arrow-left', 14) }} Back</button>
+      </div>
     </div>
+
+    <div class="auth-form" id="client-upload-view" style="display: none;">
+      <span class="eyebrow">CLIENT ACCESS</span>
+      <h2>Ping us to know more.</h2>
+      <p>Enter your phone number to proceed to the upload portal.</p>
+      <form action="{{ url_for('public_upload', token=public_token) }}" method="GET" id="client-form">
+        <label class="field" for="client-phone">Phone Number<input id="client-phone" name="phone" type="tel" required placeholder="Enter your mobile number"></label>
+        <button type="submit" class="btn btn-primary btn-wide">Proceed to Upload{{ icon('arrow-right', 16) }}</button>
+      </form>
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="showOptions()">{{ icon('arrow-left', 14) }} Back</button>
+      </div>
+    </div>
+
+    <script>
+      function showAdminLogin() {
+        document.getElementById('options-view').style.display = 'none';
+        document.getElementById('client-upload-view').style.display = 'none';
+        document.getElementById('admin-login-view').style.display = 'block';
+      }
+      function showClientUpload() {
+        document.getElementById('options-view').style.display = 'none';
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('client-upload-view').style.display = 'block';
+      }
+      function showOptions() {
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('client-upload-view').style.display = 'none';
+        document.getElementById('options-view').style.display = 'block';
+      }
+    </script>
   </section>
 </main>
 {% endblock %}

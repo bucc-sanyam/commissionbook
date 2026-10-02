@@ -135,20 +135,30 @@ def get_client(cid):
     return client
 
 
-def get_or_create_client(name):
+def get_or_create_client(name, phone=None):
     name = client_name(name)
     database = get_db()
+    if phone:
+        phone = text(phone, "Phone", limit=80)
+        row = database.execute("SELECT id FROM clients WHERE phone=?", (phone,)).fetchone()
+        if row:
+            return row["id"]
+        row = database.execute(
+            "INSERT INTO clients(name, phone) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING id", (name, phone)
+        ).fetchone()
+        if row:
+            return row["id"]
+        row = database.execute("SELECT id FROM clients WHERE phone=?", (phone,)).fetchone()
+        if not row:
+            abort(409, description="The user changed while this request was being saved. Please retry.")
+        return row["id"]
+
     row = database.execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone()
     if row:
         return row["id"]
     row = database.execute(
-        "INSERT INTO clients(name) VALUES (?) ON CONFLICT DO NOTHING RETURNING id", (name,)
+        "INSERT INTO clients(name) VALUES (?) RETURNING id", (name,)
     ).fetchone()
-    if row:
-        return row["id"]
-    row = database.execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone()
-    if not row:
-        abort(409, description="The user changed while this request was being saved. Please retry.")
     return row["id"]
 
 
@@ -560,7 +570,7 @@ def create_app(config=None):
             session["admin"], session["auth_version"] = True, version
             session.permanent = True
             return redirect(safe_redirect_target(request.args.get("next"), url_for("dashboard")))
-        return render_template("login.html", first_run=first_run)
+        return render_template("login.html", first_run=first_run, public_token=portal_token())
 
     @app.route("/logout", methods=["POST"])
     def logout():
@@ -1110,6 +1120,9 @@ def create_app(config=None):
         data = json_object()
         authorization = authorize_upload(data)
         name = client_name(data.get("name"))
+        phone = data.get("phone")
+        if not phone:
+            raise ValidationError("Phone number is required.")
         submission_id = submission_uuid(data.get("submission_id"))
         rows = data.get("rows")
         if not isinstance(rows, list) or not 1 <= len(rows) <= MAX_ROWS:
@@ -1135,7 +1148,7 @@ def create_app(config=None):
         ocr_text = text(data.get("ocr_text"), "OCR text", limit=MAX_TEXT, multiline=True)
         platform = text(data.get("platform"), "Platform", limit=80) or None
         normalized = {
-            "name": name, "rows": validated, "images": images, "ocr_text": ocr_text,
+            "name": name, "phone": phone, "rows": validated, "images": images, "ocr_text": ocr_text,
             "platform": platform, "scope": authorization["scope"],
         }
         digest = hashlib.sha256(json.dumps(
@@ -1148,7 +1161,7 @@ def create_app(config=None):
         storage = get_storage()
         for asset in assets:
             storage.verify(asset)
-        cid = get_or_create_client(name)
+        cid = get_or_create_client(name, phone)
         row = get_db().execute(
             """INSERT INTO uploads(
                 client_name,client_id,filename,platform,ocr_text,trade_count,
