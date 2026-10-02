@@ -6,6 +6,8 @@ import os
 import secrets
 import sqlite3
 import time
+import urllib.request
+import urllib.parse
 import uuid
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP, localcontext
@@ -79,15 +81,38 @@ def set_setting(key, value):
     settings_values()[key] = value
 
 
+def shorten_url(long_url):
+    """Call the free is.gd API to get a short URL. Returns None on any failure."""
+    try:
+        api = "https://is.gd/create.php?format=simple&url=" + urllib.parse.quote(long_url, safe="")
+        with urllib.request.urlopen(api, timeout=4) as resp:
+            short = resp.read().decode().strip()
+        if short.startswith("https://is.gd/") or short.startswith("http://is.gd/"):
+            return short
+    except Exception:
+        pass
+    return None
+
+
 def portal_token():
     token = setting("upload_token")
     if not token:
+        new_token = secrets.token_urlsafe(32)
         get_db().execute(
             "INSERT INTO settings(key,value) VALUES ('upload_token',?) ON CONFLICT(key) DO NOTHING",
-            (secrets.token_urlsafe(32),),
+            (new_token,),
         )
         g.pop("settings_values", None)
         token = setting("upload_token")
+        # Generate a short URL (build directly to avoid circular portal_url call)
+        try:
+            base = current_app.config["PUBLIC_BASE_URL"]
+            long = (base + url_for("public_upload", token=token)) if base else url_for("public_upload", token=token, _external=True)
+            short = shorten_url(long)
+            if short:
+                set_setting("upload_short_url", short)
+        except Exception:
+            pass
     return token
 
 
@@ -1032,7 +1057,8 @@ def create_app(config=None):
             "SELECT COUNT(*) AS total FROM trades WHERE commission_type_snapshot IS NULL"
         ).fetchone()["total"]
         base = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
-        short_url = base + url_for("short_upload_link")
+        go_url = base + url_for("short_upload_link")
+        short_url = setting("upload_short_url") or go_url
         return render_template(
             "settings.html", s={key: setting(key, "") for key in keys}, upload_url=portal_url(),
             short_url=short_url, legacy_commission_count=legacy_count,
@@ -1041,7 +1067,18 @@ def create_app(config=None):
     @app.route("/settings/rotate-link", methods=["POST"])
     @login_required
     def rotate_upload_link():
-        set_setting("upload_token", secrets.token_urlsafe(32))
+        new_token = secrets.token_urlsafe(32)
+        set_setting("upload_token", new_token)
+        g.pop("settings_values", None)
+        # Regenerate the short URL for the new token
+        try:
+            short = shorten_url(portal_url())
+            if short:
+                set_setting("upload_short_url", short)
+            else:
+                set_setting("upload_short_url", "")
+        except Exception:
+            set_setting("upload_short_url", "")
         flash("A new submission link is ready. The old link and its pending image authorizations no longer work.", "success")
         return redirect(url_for("settings_page"))
 
