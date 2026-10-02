@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS clients (
     name TEXT NOT NULL UNIQUE COLLATE NOCASE,
     phone TEXT, email TEXT, commission_type TEXT, commission_rate NUMERIC,
     notes TEXT, active INTEGER NOT NULL DEFAULT 1,
+    portfolio_amount NUMERIC DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS uploads (
@@ -135,6 +136,9 @@ def init_local(connection):
         "trades": {
             "commission_type_snapshot": "TEXT",
             "commission_rate_snapshot": "NUMERIC",
+        },
+        "clients": {
+            "portfolio_amount": "NUMERIC DEFAULT 0",
         },
     }
     for table, columns in additions.items():

@@ -19,7 +19,7 @@
 </section>
 <div class="detail-grid">
   <section class="card">
-    <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div>
+    <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
     {% if payments %}
     <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for p in payments %}
@@ -33,6 +33,7 @@
       <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="icon-btn" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 17) }}</button></div>
       <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
       <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
+      <div class="details-line"><span>Idle Amount</span><strong>{{ client.portfolio_amount|money }}</strong></div>
       <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
       {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
       <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
@@ -50,6 +51,7 @@
     <label class="field full">Client name<input name="name" value="{{ client.name }}" required maxlength="120"></label>
     <label class="field">Email<input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>
     <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40"></label>
+    <label class="field">Idle Amount<input name="portfolio_amount" type="number" step="any" min="0" value="{{ client.portfolio_amount if client.portfolio_amount is not none else '' }}"></label>
     <label class="field">Commission rule<select name="commission_type" data-rule-select="edit-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}" {{ 'selected' if client.commission_type == key }}>{{ label }}</option>{% endfor %}</select></label>
     <label class="field">Rate<input id="edit-client-rate" name="commission_rate" type="number" step="any" min="0" value="{{ client.commission_rate if client.commission_rate is not none else '' }}"></label>
     <label class="field full">Notes<textarea name="notes" rows="3" maxlength="2000">{{ client.notes or '' }}</textarea></label>

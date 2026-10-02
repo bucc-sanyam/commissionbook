@@ -282,6 +282,7 @@ def client_values(values, name):
         name, text(values.get("phone"), "Phone", limit=80) or None,
         text(values.get("email"), "Email", limit=254) or None, ctype, rate,
         text(values.get("notes"), "Notes", multiline=True) or None,
+        number(values.get("portfolio_amount"), "Portfolio amount", positive=True) if values.get("portfolio_amount") else ZERO,
     )
 
 
@@ -379,6 +380,10 @@ def authorize_upload(data):
 
 def receipt_signer():
     return URLSafeTimedSerializer(current_app.secret_key, salt="commission-upload-v1")
+
+
+def payment_signer():
+    return URLSafeTimedSerializer(current_app.secret_key, salt="commission-pay-v1")
 
 
 def decode_receipt(receipt):
@@ -822,7 +827,7 @@ def create_app(config=None):
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone():
                 raise ValidationError("A user with that name already exists.")
             get_db().execute(
-                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes) VALUES (?,?,?,?,?,?)",
+                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount) VALUES (?,?,?,?,?,?,?)",
                 values,
             )
             flash(f"Added {name}.", "success")
@@ -847,7 +852,7 @@ def create_app(config=None):
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?) AND id<>?", (name, cid)).fetchone():
                 raise ValidationError("Another user already has that name.")
             get_db().execute(
-                "UPDATE clients SET name=?,phone=?,email=?,commission_type=?,commission_rate=?,notes=? WHERE id=?",
+                "UPDATE clients SET name=?,phone=?,email=?,commission_type=?,commission_rate=?,notes=?,portfolio_amount=? WHERE id=?",
                 (*values, cid),
             )
             flash("User updated.", "success")
@@ -863,6 +868,7 @@ def create_app(config=None):
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
+            payment_token=payment_signer().dumps(cid),
         )
 
     @app.route("/clients/<int:cid>/delete", methods=["POST"])
@@ -1002,6 +1008,44 @@ def create_app(config=None):
         return render_template(
             "upload.html", admin=False, need_code=bool(setting("upload_code")), portal_token=token,
         )
+
+    @app.route("/pay/<token>", methods=["GET", "POST"])
+    def client_pay(token):
+        try:
+            cid = payment_signer().loads(token, max_age=30*24*3600)
+        except Exception:
+            abort(404, description="Invalid or expired payment link.")
+            
+        client = get_client(cid)
+        trades = query_trades({"client_id": cid})
+        summary = summarize(trades)
+        paid = sum((dec(payment["amount"]) for payment in get_db().execute("SELECT amount FROM payments WHERE client_id=?", (cid,)).fetchall()), ZERO)
+        outstanding = summary["commission"] - paid
+        
+        if request.method == "POST":
+            import smtplib
+            from email.message import EmailMessage
+            admin_email = os.environ.get("ADMIN_EMAIL")
+            if admin_email:
+                try:
+                    msg = EmailMessage()
+                    msg.set_content(f"Client {client['name']} marked their outstanding balance of {outstanding} as paid.\nCheck progress at: {url_for('client_detail', cid=client['id'], _external=True)}")
+                    msg['Subject'] = f"Payment marked as done by {client['name']}"
+                    msg['From'] = admin_email
+                    msg['To'] = admin_email
+                    
+                    s = smtplib.SMTP(os.environ.get("SMTP_SERVER", "smtp.gmail.com"), int(os.environ.get("SMTP_PORT", 587)))
+                    s.starttls()
+                    s.login(os.environ.get("SMTP_USER", admin_email), os.environ.get("SMTP_PASSWORD", ""))
+                    s.send_message(msg)
+                    s.quit()
+                except Exception as e:
+                    app.logger.error(f"Failed to send email: {e}")
+            
+            flash("Thank you, payment marked as done. The admin has been notified.", "success")
+            return redirect(url_for("client_pay", token=token))
+            
+        return render_template("pay.html", client=client, outstanding=outstanding)
 
     @app.route("/api/parse", methods=["POST"])
     def api_parse():

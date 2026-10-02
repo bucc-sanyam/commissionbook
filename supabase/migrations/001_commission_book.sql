@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.clients (
     commission_rate numeric(20,6) CHECK (commission_rate BETWEEN 0 AND 999999999999),
     notes text,
     active integer NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
+    portfolio_amount numeric(20,6) DEFAULT 0,
     created_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT clients_rule_pair CHECK ((commission_type IS NULL) = (commission_rate IS NULL))
 );

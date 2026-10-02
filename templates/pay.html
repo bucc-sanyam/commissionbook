@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Payment for {{ client.name }}{% endblock %}
+{% block header %}{% endblock %}
+{% block content %}
+<div class="card card-pad" style="max-width:400px;margin:100px auto;text-align:center;">
+    <h1 style="margin-bottom:10px;">Payment for {{ client.name }}</h1>
+    <p style="margin-bottom:20px;color:var(--text-secondary);">Your current outstanding balance is:</p>
+    <div style="font-size:2em;font-weight:bold;margin-bottom:30px;color:var(--text-primary);">
+        {{ outstanding|money }}
+    </div>
+    <form method="post" action="{{ url_for('client_pay', token=request.view_args['token']) }}">
+        {{ csrf() }}
+        <!-- We will add payment details here later -->
+        <button type="submit" class="btn btn-primary" style="width:100%;">Mark as Paid</button>
+    </form>
+</div>
+{% endblock %}
