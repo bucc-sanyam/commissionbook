@@ -20,8 +20,8 @@ SQLITE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    phone TEXT, email TEXT, commission_type TEXT, commission_rate NUMERIC,
+    name TEXT NOT NULL COLLATE NOCASE,
+    phone TEXT UNIQUE, email TEXT, commission_type TEXT, commission_rate NUMERIC,
     notes TEXT, active INTEGER NOT NULL DEFAULT 1,
     portfolio_amount NUMERIC DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -150,7 +150,7 @@ def init_local(connection):
                     backfill_upload_clients = True
     connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_uploads_submission ON uploads(submission_id)")
     connection.execute("CREATE INDEX IF NOT EXISTS idx_uploads_client ON uploads(client_id)")
-    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_name_ci ON clients(lower(name))")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_clients_name_ci ON clients(lower(name))")
     if backfill_upload_clients:
         connection.execute(
             """UPDATE uploads SET client_id=(

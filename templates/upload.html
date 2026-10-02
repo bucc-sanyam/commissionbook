@@ -30,6 +30,7 @@
       <div class="upload-identity-label"><span>{{ icon('users', 18) }}</span><div><h2>{{ 'The client' if admin else 'First, who is this for?' }}</h2><p>So every trade finds the right home.</p></div></div>
       <div class="form-grid{{ ' single' if not need_code }}">
         <label class="field" for="name"><span>{{ 'Client name' if admin else 'Your full name' }}</span><input id="name" required maxlength="120" placeholder="{{ 'Enter the client name' if admin else 'The name your administrator knows you by' }}" autocomplete="name"></label>
+        <label class="field" for="phone"><span>Phone Number</span><input id="phone" value="{{ request.args.get('phone', '') }}" required maxlength="80" type="tel" placeholder="Your mobile number for identification" autocomplete="tel"></label>
         {% if need_code %}<label class="field" for="code"><span>Upload code</span><input id="code" required maxlength="100" placeholder="The code shared with you" autocomplete="off"></label>{% endif %}
       </div>
     </section>
