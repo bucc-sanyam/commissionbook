@@ -1065,6 +1065,8 @@ def create_app(config=None):
         owner_hash()
         return render_template(
             "upload.html", admin=False, need_code=bool(setting("upload_code")), portal_token=token,
+            og_title="Commission Book – Send Your Trades",
+            og_description="Submit your trades in seconds. Just fill in the share name and amount — no account needed.",
         )
 
     @app.route("/pay/<token>", methods=["GET", "POST"])
