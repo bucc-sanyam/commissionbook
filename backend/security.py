@@ -150,6 +150,9 @@ def require_csrf():
     origin = request.headers.get("Origin")
     if origin:
         allowed = {request.host_url.rstrip("/"), current_app.config["PUBLIC_BASE_URL"]}
+        for host in current_app.config.get("TRUSTED_HOSTS", []):
+            allowed.add(f"https://{host}")
+            allowed.add(f"http://{host}")
         null_origin_from_local_browser = (
             origin == "null"
             and not current_app.config["PRODUCTION"]
