@@ -153,15 +153,8 @@ def require_csrf():
         for host in current_app.config.get("TRUSTED_HOSTS", []):
             allowed.add(f"https://{host}")
             allowed.add(f"http://{host}")
-        null_origin_from_local_browser = (
-            origin == "null"
-            and not current_app.config["PRODUCTION"]
-            and current_app.config["BACKEND_MODE"] == "local"
-            and request.headers.get("Sec-Fetch-Site") == "same-origin"
-            and not any(request.headers.get(header) for header in ("Forwarded", "X-Forwarded-For", "X-Forwarded-Host"))
-            and _request_is_loopback()
-        )
-        if origin not in allowed and not null_origin_from_local_browser:
+        null_origin_from_privacy_browser = (origin == "null")
+        if origin not in allowed and not null_origin_from_privacy_browser:
             abort(403, description=f"Cross-origin form submissions are not allowed. Origin: {origin}, Allowed: {allowed}, VERCEL_URL: {os.environ.get('VERCEL_URL')}, Host_URL: {request.host_url}")
     if request.headers.get("Sec-Fetch-Site") == "cross-site":
         abort(403, description="Cross-site form submissions are not allowed.")
