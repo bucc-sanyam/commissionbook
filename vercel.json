@@ -1,16 +1,20 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/*.py": {
-      "maxDuration": 60,
-      "includeFiles": "{app.py,trade_parser.py,backend/**,templates/**,static/**}",
-      "excludeFiles": "{.env*,.secret_key*,*.db,*.db-*,*.sqlite*,uploads/**,.venv/**,venv/**,tests/**,supabase/**}"
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxDuration": 60,
+        "includeFiles": "{app.py,trade_parser.py,backend/**,templates/**,static/**}",
+        "excludeFiles": "{.env*,.secret_key*,*.db,*.db-*,*.sqlite*,uploads/**,.venv/**,venv/**,tests/**,supabase/**}"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
     }
   ]
 }
