@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/index.py": {
+    "api/*.py": {
       "maxDuration": 60,
       "includeFiles": "{app.py,trade_parser.py,backend/**,templates/**,static/**}",
       "excludeFiles": "{.env*,.secret_key*,*.db,*.db-*,*.sqlite*,uploads/**,.venv/**,venv/**,tests/**,supabase/**}"
