@@ -116,7 +116,7 @@ def configure_app(app, overrides=None):
         if app.config["PRODUCTION"] and parsed.scheme != "https":
             raise RuntimeError("Production PUBLIC_BASE_URL must use HTTPS.")
     if os.environ.get("VERCEL") == "1":
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
     trusted = [value.strip() for value in os.environ.get("TRUSTED_HOSTS", "").split(",") if value.strip()]
     if base_url:
         trusted.append(urlsplit(base_url).hostname)
