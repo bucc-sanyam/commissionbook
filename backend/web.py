@@ -910,7 +910,7 @@ def create_app(config=None):
         ).fetchall()
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
         
-        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades if trade["status"] == "Closed"), ZERO)
+        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
         cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
         summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
 
