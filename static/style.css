@@ -241,7 +241,7 @@ input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--green); 
 .filter-actions { align-self: flex-end; display: flex; gap: 5px; }
 .search-field { position: relative; flex: 1; min-width: 180px; max-width: 300px; }
 .search-field > .icon { position: absolute; top: 50%; left: 13px; transform: translateY(-50%); color: #9ba58f; }
-.search-field input { padding-left: 37px; width: 100%; font-size: 11px; }
+
 .record-count { color: var(--muted); font-size: 11px; }
 .record-count strong { color: var(--ink); font-weight: 600; }
 .ledger-summary { display: flex; gap: 31px; align-items: center; border-bottom: 1px solid var(--line); padding: 18px 23px; overflow-x: auto; }
@@ -263,6 +263,7 @@ input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--green); 
 .field .optional { color: #a0ac95; font-weight: 400; font-size: 10px; }
 .field-hint { color: #94a086; font-size: 10px; font-weight: 400; line-height: 1.8; }
 input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-width: 0; width: 100%; border: 1px solid #e0e8d8; border-radius: 7px; padding: 10px 12px; background: #fff; color: #506648; min-height: 41px; font-size: 12px; line-height: 1.5; transition: border-color .15s, box-shadow .15s; }
+.search-field input { padding-left: 37px; width: 100%; font-size: 11px; }
 input::placeholder, textarea::placeholder { color: #b0baa4; font-size: 11px; opacity: 1; }
 input[type="date"] { font-variant-numeric: tabular-nums; }
 input[type="file"] { padding: 8px; }

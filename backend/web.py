@@ -278,6 +278,11 @@ def payments_by_client():
     return {row["client_id"]: dec(row["total"]) for row in rows}
 
 
+def funds_by_client():
+    rows = get_db().execute("SELECT client_id,SUM(amount) AS total FROM funds GROUP BY client_id").fetchall()
+    return {row["client_id"]: dec(row["total"]) for row in rows}
+
+
 def rule_label(ctype, rate):
     if not ctype or rate is None:
         return "Default"
@@ -874,8 +879,19 @@ def create_app(config=None):
         ).fetchall()
         summary["paid"] = sum((dec(payment["amount"]) for payment in payments), ZERO)
         summary["outstanding"] = summary["commission"] - summary["paid"]
+
+        funds = get_db().execute(
+            "SELECT * FROM funds WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
+        ).fetchall()
+        total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
+        
+        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades if trade["status"] == "Closed"), ZERO)
+        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
+        summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
+            funds=funds, total_funds=total_funds,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
@@ -937,6 +953,29 @@ def create_app(config=None):
             abort(404)
         flash("Payment deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("payments_list")))
+
+    @app.route("/funds", methods=["POST"])
+    @login_required
+    def add_fund():
+        cid = identifier(request.form.get("client_id"))
+        amount = number(request.form.get("amount"), "Fund amount", required=True, positive=True, places=2)
+        added_on = valid_date(request.form.get("added_on"), "Date", required=True)
+        notes = text(request.form.get("notes"), "Notes", multiline=True) or None
+        get_client(cid)
+        get_db().execute(
+            "INSERT INTO funds(client_id,amount,added_on,notes) VALUES (?,?,?,?)",
+            (cid, amount, added_on, notes),
+        )
+        flash("Funds added.", "success")
+        return redirect(safe_redirect_target(request.form.get("back"), url_for("client_detail", cid=cid)))
+
+    @app.route("/funds/<int:fid>/delete", methods=["POST"])
+    @login_required
+    def fund_delete(fid):
+        if get_db().execute("DELETE FROM funds WHERE id=?", (fid,)).rowcount != 1:
+            abort(404)
+        flash("Funds deleted.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("dashboard")))
 
     @app.route("/uploads")
     @login_required
