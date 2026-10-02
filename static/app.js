@@ -109,7 +109,7 @@
       try {
         if (!navigator.clipboard) throw new Error("Clipboard unavailable");
         await navigator.clipboard.writeText(input.value);
-        notify("Upload link copied. Ready to share.");
+        notify(button.dataset.copyMessage || "Copied to clipboard.");
       } catch {
         input.focus();
         input.select();

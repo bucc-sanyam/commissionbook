@@ -6,6 +6,8 @@ import os
 import secrets
 import sqlite3
 import time
+import urllib.request
+import urllib.parse
 import uuid
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP, localcontext
@@ -79,15 +81,38 @@ def set_setting(key, value):
     settings_values()[key] = value
 
 
+def shorten_url(long_url):
+    """Call the free is.gd API to get a short URL. Returns None on any failure."""
+    try:
+        api = "https://is.gd/create.php?format=simple&url=" + urllib.parse.quote(long_url, safe="")
+        with urllib.request.urlopen(api, timeout=4) as resp:
+            short = resp.read().decode().strip()
+        if short.startswith("https://is.gd/") or short.startswith("http://is.gd/"):
+            return short
+    except Exception:
+        pass
+    return None
+
+
 def portal_token():
     token = setting("upload_token")
     if not token:
+        new_token = secrets.token_urlsafe(32)
         get_db().execute(
             "INSERT INTO settings(key,value) VALUES ('upload_token',?) ON CONFLICT(key) DO NOTHING",
-            (secrets.token_urlsafe(32),),
+            (new_token,),
         )
         g.pop("settings_values", None)
         token = setting("upload_token")
+        # Generate a short URL (build directly to avoid circular portal_url call)
+        try:
+            base = current_app.config["PUBLIC_BASE_URL"]
+            long = (base + url_for("public_upload", token=token)) if base else url_for("public_upload", token=token, _external=True)
+            short = shorten_url(long)
+            if short:
+                set_setting("upload_short_url", short)
+        except Exception:
+            pass
     return token
 
 
@@ -275,6 +300,11 @@ def summarize(trades):
 
 def payments_by_client():
     rows = get_db().execute("SELECT client_id,SUM(amount) AS total FROM payments GROUP BY client_id").fetchall()
+    return {row["client_id"]: dec(row["total"]) for row in rows}
+
+
+def funds_by_client():
+    rows = get_db().execute("SELECT client_id,SUM(amount) AS total FROM funds GROUP BY client_id").fetchall()
     return {row["client_id"]: dec(row["total"]) for row in rows}
 
 
@@ -874,8 +904,19 @@ def create_app(config=None):
         ).fetchall()
         summary["paid"] = sum((dec(payment["amount"]) for payment in payments), ZERO)
         summary["outstanding"] = summary["commission"] - summary["paid"]
+
+        funds = get_db().execute(
+            "SELECT * FROM funds WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
+        ).fetchall()
+        total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
+        
+        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades if trade["status"] == "Closed"), ZERO)
+        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
+        summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
+            funds=funds, total_funds=total_funds,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
@@ -938,6 +979,29 @@ def create_app(config=None):
         flash("Payment deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("payments_list")))
 
+    @app.route("/funds", methods=["POST"])
+    @login_required
+    def add_fund():
+        cid = identifier(request.form.get("client_id"))
+        amount = number(request.form.get("amount"), "Fund amount", required=True, positive=True, places=2)
+        added_on = valid_date(request.form.get("added_on"), "Date", required=True)
+        notes = text(request.form.get("notes"), "Notes", multiline=True) or None
+        get_client(cid)
+        get_db().execute(
+            "INSERT INTO funds(client_id,amount,added_on,notes) VALUES (?,?,?,?)",
+            (cid, amount, added_on, notes),
+        )
+        flash("Funds added.", "success")
+        return redirect(safe_redirect_target(request.form.get("back"), url_for("client_detail", cid=cid)))
+
+    @app.route("/funds/<int:fid>/delete", methods=["POST"])
+    @login_required
+    def fund_delete(fid):
+        if get_db().execute("DELETE FROM funds WHERE id=?", (fid,)).rowcount != 1:
+            abort(404)
+        flash("Funds deleted.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("dashboard")))
+
     @app.route("/uploads")
     @login_required
     def uploads_list():
@@ -992,17 +1056,38 @@ def create_app(config=None):
         legacy_count = get_db().execute(
             "SELECT COUNT(*) AS total FROM trades WHERE commission_type_snapshot IS NULL"
         ).fetchone()["total"]
+        base = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
+        go_url = base + url_for("short_upload_link")
+        short_url = setting("upload_short_url") or go_url
         return render_template(
             "settings.html", s={key: setting(key, "") for key in keys}, upload_url=portal_url(),
-            legacy_commission_count=legacy_count,
+            short_url=short_url, legacy_commission_count=legacy_count,
         )
 
     @app.route("/settings/rotate-link", methods=["POST"])
     @login_required
     def rotate_upload_link():
-        set_setting("upload_token", secrets.token_urlsafe(32))
+        new_token = secrets.token_urlsafe(32)
+        set_setting("upload_token", new_token)
+        g.pop("settings_values", None)
+        # Regenerate the short URL for the new token
+        try:
+            short = shorten_url(portal_url())
+            if short:
+                set_setting("upload_short_url", short)
+            else:
+                set_setting("upload_short_url", "")
+        except Exception:
+            set_setting("upload_short_url", "")
         flash("A new submission link is ready. The old link and its pending image authorizations no longer work.", "success")
         return redirect(url_for("settings_page"))
+
+    @app.route("/go")
+    def short_upload_link():
+        token = setting("upload_token", "")
+        if not token:
+            abort(404, description="No submission link has been set up yet.")
+        return redirect(url_for("public_upload", token=token), 302)
 
     @app.route("/upload", defaults={"token": None})
     @app.route("/submit/<token>")
@@ -1017,6 +1102,8 @@ def create_app(config=None):
         owner_hash()
         return render_template(
             "upload.html", admin=False, need_code=bool(setting("upload_code")), portal_token=token,
+            og_title="Commission Book – Send Your Trades",
+            og_description="Submit your trades in seconds. Just fill in the share name and amount — no account needed.",
         )
 
     @app.route("/pay/<token>", methods=["GET", "POST"])
