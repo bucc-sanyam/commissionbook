@@ -162,7 +162,7 @@ def require_csrf():
             and _request_is_loopback()
         )
         if origin not in allowed and not null_origin_from_local_browser:
-            abort(403, description="Cross-origin form submissions are not allowed.")
+            abort(403, description=f"Cross-origin form submissions are not allowed. Origin: {origin}, Allowed: {allowed}, VERCEL_URL: {os.environ.get('VERCEL_URL')}, Host_URL: {request.host_url}")
     if request.headers.get("Sec-Fetch-Site") == "cross-site":
         abort(403, description="Cross-site form submissions are not allowed.")
 
