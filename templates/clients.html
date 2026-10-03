@@ -36,7 +36,7 @@
     <div class="form-grid">
       <label class="field full">Client name<input name="name" required maxlength="120" autocomplete="name" placeholder="Their full name"></label>
       <label class="field">Email <span class="optional">Optional</span><input name="email" type="email" maxlength="254" placeholder="name@example.com" autocomplete="email"></label>
-      <label class="field">Phone <span class="optional">Optional</span><input name="phone" type="tel" maxlength="40" placeholder="+91" autocomplete="tel"></label>
+      <label class="field">Phone<input name="phone" type="tel" maxlength="40" placeholder="+91" autocomplete="tel" required></label>
       <label class="field">Commission rule<select name="commission_type" data-rule-select="new-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
       <label class="field">Rate<input id="new-client-rate" name="commission_rate" type="number" min="0" step="any" placeholder="Uses workspace default"></label>
       <label class="field full">Notes <span class="optional">Optional</span><textarea name="notes" rows="2" maxlength="2000" placeholder="A little context for later..."></textarea></label>

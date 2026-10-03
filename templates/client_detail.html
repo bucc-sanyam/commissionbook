@@ -61,7 +61,7 @@
   <div class="form-grid">
     <label class="field full">Client name<input name="name" value="{{ client.name }}" required maxlength="120"></label>
     <label class="field">Email<input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>
-    <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40"></label>
+    <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40" required></label>
     <!-- Idle amount removed, using dynamic money_in_bank -->
     <label class="field">Commission rule<select name="commission_type" data-rule-select="edit-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}" {{ 'selected' if client.commission_type == key }}>{{ label }}</option>{% endfor %}</select></label>
     <label class="field">Rate<input id="edit-client-rate" name="commission_rate" type="number" step="any" min="0" value="{{ client.commission_rate if client.commission_rate is not none else '' }}"></label>
