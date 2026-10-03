@@ -311,10 +311,10 @@ def funds_by_client():
 def rule_label(ctype, rate):
     if not ctype or rate is None:
         return "Default"
-    r = dec(rate).normalize()
+    r = f"{dec(rate):f}".rstrip('0').rstrip('.')
     if ctype == "flat":
-        return f"{r:g} flat/trade"
-    return f"{r:g}{COMMISSION_TYPES[ctype]}"
+        return f"{r} flat/trade"
+    return f"{r}{COMMISSION_TYPES[ctype]}"
 
 
 def client_values(values, name):
