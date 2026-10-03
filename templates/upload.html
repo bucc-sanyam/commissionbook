@@ -10,7 +10,7 @@
   <header class="portal-header"><div class="brand" aria-label="Commission Book">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
   <main class="portal-main" id="main">
     <div class="portal-intro"><p class="eyebrow">{{ business_name if business_name else 'A LITTLE LESS PAPERWORK' }}</p><h1>You make the trades.<br><em>We'll take care of the details.</em></h1><p>Upload your trade screenshots, check the numbers, and send them in. No account needed. No complicated spreadsheets.</p></div>
-    <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-nav-1"><b>1</b>Your details</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-2"><b>2</b>Screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-3"><b>3</b>Trades</span></div>
+    <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-nav-1" onclick="window.wizardGoto(1)" role="button" tabindex="0"><b>1</b>Your details</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-2" onclick="window.wizardGoto(2)" role="button" tabindex="0"><b>2</b>Screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-3" onclick="window.wizardGoto(3)" role="button" tabindex="0"><b>3</b>Trades</span></div>
     {% include "_flashes.html" %}
     {{ self.upload_workspace() }}
     <div class="portal-safety"><span>{{ icon('lock', 12) }}Private submission</span><span>{{ icon('scan', 12) }}Text read on your device</span><span>{{ icon('shield', 12) }}No AI service receives your images</span></div>
@@ -49,7 +49,7 @@
       <div class="thumbs" id="thumbs"></div>
       <div class="scan-progress" id="scan-progress" hidden><div class="progress-track" role="progressbar" aria-label="Reading screenshot" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div><div class="scan-progress-label"><span id="progress-label">Reading your screenshot...</span><span id="progress-percent">0%</span></div></div>
       <div class="upload-status" id="scan-status" role="status" aria-live="polite"></div>
-      <div class="upload-instructions">{{ icon('shield', 14) }}<span>The scanner runs in your browser, without AI API calls. Images are uploaded to this workspace only when you send your trades. Large images may be compressed on your device.</span></div>
+      <div class="upload-instructions">{{ icon('image', 14) }}<span>Screenshots are optional but appreciated to help us verify the trades.</span></div>
       <div class="wizard-actions">
         <button type="button" class="btn btn-ghost" onclick="window.wizardGoto(1)">{{ icon('arrow-left', 14) }} Back</button>
         <button type="button" class="btn btn-primary" onclick="window.wizardGoto(3)">Next step {{ icon('arrow-right', 14) }}</button>
