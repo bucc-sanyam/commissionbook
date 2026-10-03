@@ -10,7 +10,7 @@
   <header class="portal-header"><div class="brand" aria-label="Commission Book">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
   <main class="portal-main" id="main">
     <div class="portal-intro"><p class="eyebrow">{{ business_name if business_name else 'A LITTLE LESS PAPERWORK' }}</p><h1>You make the trades.<br><em>We'll take care of the details.</em></h1><p>Upload your trade screenshots, check the numbers, and send them in. No account needed. No complicated spreadsheets.</p></div>
-    <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-upload"><b>1</b>Add screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-review"><b>2</b>Check the details</span><span class="portal-step-line"></span><span class="portal-step" id="step-send"><b>3</b>Send your trades</span></div>
+    <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-nav-1"><b>1</b>Your details</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-2"><b>2</b>Screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-3"><b>3</b>Trades</span></div>
     {% include "_flashes.html" %}
     {{ self.upload_workspace() }}
     <div class="portal-safety"><span>{{ icon('lock', 12) }}Private submission</span><span>{{ icon('scan', 12) }}Text read on your device</span><span>{{ icon('shield', 12) }}No AI service receives your images</span></div>
@@ -26,15 +26,18 @@
 <noscript><div class="no-js">JavaScript is needed to read screenshots and submit this form. Enable it, then reload this page.</div></noscript>
 <form id="upload-form" novalidate>
   <fieldset id="upload-fields" style="border:0;margin:0;padding:0;min-width:0">
-    <section class="card upload-card upload-identity">
+    <section class="card upload-card upload-identity wizard-step" id="step-1">
       <div class="upload-identity-label"><span>{{ icon('users', 18) }}</span><div><h2>{{ 'The client' if admin else 'First, who is this for?' }}</h2><p>So every trade finds the right home.</p></div></div>
       <div class="form-grid{{ ' single' if not need_code }}">
         <label class="field" for="name"><span>{{ 'Client name' if admin else 'Your full name' }}</span><input id="name" required maxlength="120" placeholder="{{ 'Enter the client name' if admin else 'The name your administrator knows you by' }}" autocomplete="name"></label>
         <label class="field" for="phone"><span>Phone Number</span><input id="phone" value="{{ request.args.get('phone', '') }}" required maxlength="80" type="tel" placeholder="Your mobile number for identification" autocomplete="tel"></label>
         {% if need_code %}<label class="field" for="code"><span>Upload code</span><input id="code" required maxlength="100" placeholder="The code shared with you" autocomplete="off"></label>{% endif %}
       </div>
+      <div class="wizard-actions">
+        <button type="button" class="btn btn-primary" onclick="window.wizardGoto(2)">Next step {{ icon('arrow-right', 14) }}</button>
+      </div>
     </section>
-    <section class="card upload-card">
+    <section class="card upload-card wizard-step" id="step-2" hidden>
       <div class="upload-section-header"><div><h2>01 &nbsp; Add your screenshots</h2><p>Completed orders and trade-book screens give the best results.</p></div><div class="broker-chips"><span class="broker-chip">Groww</span><span class="broker-chip">Zerodha</span><span class="broker-chip">Other brokers</span></div></div>
       <div class="dropzone" id="drop" role="button" tabindex="0" aria-label="Choose trade screenshots">
         <span class="dropzone-icon">{{ icon('upload', 25) }}</span>
@@ -47,8 +50,12 @@
       <div class="scan-progress" id="scan-progress" hidden><div class="progress-track" role="progressbar" aria-label="Reading screenshot" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div><div class="scan-progress-label"><span id="progress-label">Reading your screenshot...</span><span id="progress-percent">0%</span></div></div>
       <div class="upload-status" id="scan-status" role="status" aria-live="polite"></div>
       <div class="upload-instructions">{{ icon('shield', 14) }}<span>The scanner runs in your browser, without AI API calls. Images are uploaded to this workspace only when you send your trades. Large images may be compressed on your device.</span></div>
+      <div class="wizard-actions">
+        <button type="button" class="btn btn-ghost" onclick="window.wizardGoto(1)">{{ icon('arrow-left', 14) }} Back</button>
+        <button type="button" class="btn btn-primary" onclick="window.wizardGoto(3)">Next step {{ icon('arrow-right', 14) }}</button>
+      </div>
     </section>
-    <section class="card upload-card">
+    <section class="card upload-card wizard-step" id="step-3" hidden>
       <div class="upload-section-header"><div><h2>02 &nbsp; Make sure it all adds up</h2><p>Click any cell to correct it, or add trades manually.</p></div><button class="btn btn-sm" id="add-row" type="button">{{ icon('plus', 14) }}Add row</button></div>
       <div class="review-intro"><p>OCR is a starting point, not a guarantee. Check the stock, quantity, prices and dates. Leave sell details blank for an open position.</p><span class="badge" id="platform-badge" hidden></span></div>
       <div class="sheet-wrap"><table class="sheet" aria-label="Extracted trades, editable spreadsheet">
@@ -57,8 +64,11 @@
       </table></div>
       <div class="review-footer"><span id="row-summary">Add a screenshot or enter your first trade.</span><div class="actions"><button class="btn btn-ghost btn-sm" id="reparse" type="button" hidden>{{ icon('repeat', 13) }}Re-extract</button><button class="btn btn-ghost btn-sm" id="download-rows" type="button">{{ icon('download', 13) }}Download CSV</button></div></div>
       <details class="raw-text-details"><summary>{{ icon('chevron-right', 12) }}Behind the scan: raw extracted text</summary><pre class="ocr-text" id="ocr-text">Scanned text will appear here. No AI service is involved.</pre></details>
+      <div class="wizard-actions">
+        <button type="button" class="btn btn-ghost" onclick="window.wizardGoto(2)">{{ icon('arrow-left', 14) }} Back</button>
+      </div>
     </section>
-    <div class="submit-bar"><label class="review-consent"><input id="reviewed" type="checkbox" required><span>I have checked every row against my actual trades. I understand that these details and any attached screenshots will be saved in this workspace.</span></label><button class="btn btn-primary" id="submit-trades" type="submit">{{ icon('arrow-right', 16) }}{{ 'Save to ledger' if admin else 'Send my trades' }}</button></div>
+    <div class="submit-bar wizard-step" id="step-3-submit" hidden><label class="review-consent"><input id="reviewed" type="checkbox" required><span>I have checked every row against my actual trades. I understand that these details and any attached screenshots will be saved in this workspace.</span></label><button class="btn btn-primary" id="submit-trades" type="submit">{{ icon('arrow-right', 16) }}{{ 'Save to ledger' if admin else 'Send my trades' }}</button></div>
   </fieldset>
   <div class="submission-result" id="submission-result" role="alert" aria-live="assertive"></div>
   <button class="btn btn-primary" id="retry-submit" type="button" hidden>{{ icon('repeat', 15) }}Retry save safely</button>
@@ -71,4 +81,19 @@
 {% block scripts %}
 <script id="upload-config" type="application/json">{{ {'needCode': need_code, 'admin': admin, 'portalToken': portal_token|default(''), 'parseUrl': url_for('api_parse'), 'submitUrl': url_for('api_submit'), 'signUrl': '/api/uploads/sign'}|tojson }}</script>
 <script src="{{ url_for('static', filename='upload.js') }}" defer></script>
+<script>
+window.wizardGoto = function(step) {
+  document.querySelectorAll('.wizard-step').forEach(el => el.hidden = true);
+  const target = document.getElementById('step-' + step);
+  if (target) target.hidden = false;
+  if (step === 3) {
+    const submit = document.getElementById('step-3-submit');
+    if (submit) submit.hidden = false;
+  }
+  document.querySelectorAll('.portal-step').forEach(el => el.classList.remove('active'));
+  const nav = document.getElementById('step-nav-' + step);
+  if (nav) nav.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+</script>
 {% endblock %}

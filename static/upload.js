@@ -95,10 +95,13 @@
     $("reviewed").checked = false;
   }
   function setStep(step) {
-    ["upload", "review", "send"].forEach((name, index) => {
-      const element = $(`step-${name}`);
-      if (element) element.classList.toggle("active", index <= step);
-    });
+    if (window.wizardGoto) {
+      // old step 0 (upload) -> wizard 2 (Screenshots)
+      // old step 1 (review) -> wizard 3 (Trades)
+      // old step 2 (send)   -> wizard 3 (Trades, but maybe disabled)
+      if (step === 0) window.wizardGoto(2);
+      if (step === 1 || step === 2) window.wizardGoto(3);
+    }
   }
 
   function rowData(row) {
@@ -172,6 +175,7 @@
     row.append(indexCell);
     columns.forEach((column) => {
       const cell = document.createElement("td");
+      cell.dataset.label = column.label;
       const input = document.createElement("input");
       input.type = column.type;
       input.dataset.column = column.key;
