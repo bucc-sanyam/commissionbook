@@ -478,6 +478,8 @@ pre.ocr-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break
 .success-receipt { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; background: #f4f8ed; color: #9baf86; border-radius: 6px; font-size: 10px; margin-bottom: 23px; overflow-wrap: anywhere; }
 .no-js { background: #fff5ed; color: #af8d74; border: 1px solid #e9d9c9; padding: 13px; border-radius: 8px; margin: 16px 0; font-size: 11px; }
 .error-page { min-height: 75vh; display: grid; place-content: center; text-align: center; padding: 35px; }
+.wizard-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 0 25px 25px; padding-top: 18px; border-top: 1px solid #e6eddc; }
+.wizard-actions .btn { font-size: 10px; padding: 10px 14px; }
 .error-page .empty-icon { margin: 0 auto 22px; }
 .error-code { color: #91a780; letter-spacing: 4px; font-size: 11px; margin-bottom: 9px; }
 .error-page h1 { font-size: 30px; color: #637e50; }
@@ -630,10 +632,22 @@ pre.ocr-text { color: #60734f; }
   .upload-identity .form-grid { gap: 12px; }
   .upload-section-header { padding: 20px; }
   .dropzone { margin: 0 20px 20px; }
-  .sheet { min-width: 750px; }
+  
+  /* Vertical card layout for table on mobile */
+  .sheet-wrap { border: none; background: transparent; padding: 0 20px; }
+  .sheet, .sheet thead, .sheet tbody, .sheet th, .sheet td, .sheet tr { display: block; width: 100%; box-sizing: border-box; }
+  .sheet thead tr { position: absolute; top: -9999px; left: -9999px; }
+  .sheet tr { border: 1px solid #e6eddc; border-radius: 8px; margin-bottom: 12px; background: #fff; padding: 10px; position: relative; }
+  .sheet td { border: none; border-bottom: 1px solid #f2f6eb; padding: 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .sheet td:last-child { border-bottom: none; }
+  .sheet td::before { content: attr(data-label); font-weight: 500; color: #8ea67a; font-size: 10px; min-width: 80px; }
+  .sheet input:not([type="checkbox"]) { padding: 8px 10px; min-height: 36px; border: 1px solid #edf2e5; border-radius: 6px; text-align: right; background: #fafdf7; }
+  .sheet td:first-child { background: transparent; border: none; display: none; }
+  .sheet .row-delete { position: absolute; top: 10px; right: 10px; background: #fff5ee; color: #bf896c; border-radius: 4px; padding: 4px; }
+
   .review-intro { padding: 0 20px 16px; }
-  .submit-bar { padding: 19px 20px; }
-  .review-footer { padding: 12px 20px; }
+  .submit-bar { padding: 19px 20px; flex-direction: column; align-items: stretch; gap: 14px; }
+  .review-footer { padding: 12px 20px; flex-direction: column; gap: 12px; align-items: flex-start; }
   .portal-safety { gap: 12px; font-size: 8px; }
 }
 @media (max-width: 500px) {
