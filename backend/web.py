@@ -311,15 +311,19 @@ def funds_by_client():
 def rule_label(ctype, rate):
     if not ctype or rate is None:
         return "Default"
+    r = dec(rate).normalize()
     if ctype == "flat":
-        return f"{dec(rate):g} flat/trade"
-    return f"{dec(rate):g}{COMMISSION_TYPES[ctype]}"
+        return f"{r:g} flat/trade"
+    return f"{r:g}{COMMISSION_TYPES[ctype]}"
 
 
 def client_values(values, name):
     ctype, rate = rule_values(values.get("commission_type"), values.get("commission_rate"), allow_default=True)
+    phone = text(values.get("phone"), "Phone", limit=80)
+    if not phone:
+        raise ValidationError("Phone number is required.")
     return (
-        name, text(values.get("phone"), "Phone", limit=80) or None,
+        name, phone,
         text(values.get("email"), "Email", limit=254) or None, ctype, rate,
         text(values.get("notes"), "Notes", multiline=True) or None,
         number(values.get("portfolio_amount"), "Portfolio amount", positive=True) if values.get("portfolio_amount") else ZERO,
@@ -905,9 +909,12 @@ def create_app(config=None):
         summary["paid"] = sum((dec(payment["amount"]) for payment in payments), ZERO)
         summary["outstanding"] = summary["commission"] - summary["paid"]
 
-        funds = get_db().execute(
-            "SELECT * FROM funds WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
-        ).fetchall()
+        try:
+            funds = get_db().execute(
+                "SELECT * FROM funds WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
+            ).fetchall()
+        except Exception:
+            funds = []
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
         
         cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
