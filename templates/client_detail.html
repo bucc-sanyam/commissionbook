@@ -40,7 +40,7 @@
   </section>
   <div class="stack">
     <section class="card card-pad">
-      <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="icon-btn" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 17) }}</button></div>
+      <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
       <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
       <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
       <div class="details-line"><span>Money in Bank</span><strong>{{ s.money_in_bank|money }}</strong></div>
