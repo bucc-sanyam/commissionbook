@@ -101,6 +101,7 @@
       <td><span class="source-tag">{{ icon('scan' if t.source == 'upload' else 'download' if t.source == 'import' else 'edit', 13) }}{{ 'Screenshot' if t.source == 'upload' else t.source|capitalize }}</span></td>
       <td class="date-cell">{{ (t.created_at|string)[:16] if t.created_at else '—' }}</td>
       <td><div class="row-actions">
+        <button class="icon-btn" type="button" data-dialog="payment-dialog" onclick="document.getElementById('payment-dialog').querySelector('[name=client_id]').value='{{ t.client_id }}'" aria-label="Record payment for this client" title="Record payment">{{ icon('wallet', 15) }}</button>
         <a class="icon-btn" href="{{ url_for('trade_form', tid=t.id) }}" aria-label="Edit {{ t.stock }} trade" title="Edit trade">{{ icon('edit', 16) }}</a>
         {% if t.status == 'Open' and t.buy_price is not none %}
         <button class="icon-btn" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}" aria-label="Close {{ t.stock }} position" title="Close position">{{ icon('check-circle', 17) }}</button>
