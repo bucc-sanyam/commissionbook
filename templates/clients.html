@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, avatar, pnl, csrf, empty_state with context %}
+{% from "_macros.html" import icon, avatar, pnl, csrf, empty_state, payment_fields with context %}
 {% block title %}Clients{% endblock %}
 {% block breadcrumb %}Clients{% endblock %}
 {% block content %}
@@ -20,7 +20,7 @@
         <td><span class="badge">{{ c.rule }}</span></td><td class="r tabular">{{ c.count }}<span class="cell-secondary">{{ c.open }} open</span></td>
         <td class="r tabular">{{ pnl(c.pnl) }}</td><td class="r tabular strong">{{ c.commission|money }}</td><td class="r tabular muted">{{ c.paid|money }}</td>
         <td class="r tabular {{ 'neg' if c.outstanding > 0.005 else 'pos' }}">{{ c.outstanding|money }}<span class="cell-secondary">{{ 'Credit' if c.outstanding < -0.005 else 'To collect' if c.outstanding > 0.005 else 'Settled' }}</span></td>
-        <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=c.id) }}" aria-label="View {{ c.name }}">{{ icon('arrow-up-right', 17) }}</a></td></tr>
+        <td class="r"><div class="row-actions"><button type="button" class="icon-btn" data-dialog="payment-dialog" onclick="document.getElementById('payment-dialog').querySelector('[name=client_id]').value='{{ c.id }}'" aria-label="Record payment for {{ c.name }}" title="Record payment">{{ icon('wallet', 16) }}</button><a class="icon-btn" href="{{ url_for('client_detail', cid=c.id) }}" aria-label="View {{ c.name }}" title="View client">{{ icon('arrow-up-right', 17) }}</a></div></td></tr>
     {% endfor %}</tbody>
   </table></div>
   <div id="client-search-empty" hidden>{{ empty_state('No clients found', 'Try a different name or clear your search.', 'search', compact=True) }}</div>
@@ -42,6 +42,14 @@
       <label class="field full">Notes <span class="optional">Optional</span><textarea name="notes" rows="2" maxlength="2000" placeholder="A little context for later..."></textarea></label>
     </div>
     <div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('plus', 15) }}Add client</button></div>
+  </form>
+</dialog>
+<dialog class="modal" id="payment-dialog">
+  <form method="post" action="{{ url_for('payments_list') }}" class="modal-inner">
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    {% if clients %}{{ payment_fields(clients) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div>
+    {% else %}<p class="muted">Add a client before recording your first payment.</p><a class="btn btn-primary" href="{{ url_for('clients_list') }}">{{ icon('plus', 15) }}Add a client</a>{% endif %}
   </form>
 </dialog>
 {% endblock %}
