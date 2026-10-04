@@ -82,7 +82,7 @@
     {% if show_client %}<th>Client</th>{% endif %}
     <th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">Sell price</th>
     <th>Buy date</th><th>Sell date</th><th>Status</th><th class="r">Realised P&amp;L</th>
-    <th class="r">Commission</th><th>Source</th><th class="r">Actions</th>
+    <th class="r">Commission</th><th>Source</th><th>Added on</th><th class="r">Actions</th>
   </tr></thead>
   <tbody>
   {% for t in trades %}
@@ -99,6 +99,7 @@
       <td class="r tabular">{% if t.status == 'Closed' %}{{ pnl(t.pnl) }}<span class="cell-secondary">{{ '%+.2f'|format(t.pnl_pct) }}%</span>{% else %}<span class="muted">Unrealised</span>{% endif %}</td>
       <td class="r tabular strong">{{ t.commission|money }}{% if t.commission_override is not none %}<span class="cell-secondary">Custom fee</span>{% endif %}</td>
       <td><span class="source-tag">{{ icon('scan' if t.source == 'upload' else 'download' if t.source == 'import' else 'edit', 13) }}{{ 'Screenshot' if t.source == 'upload' else t.source|capitalize }}</span></td>
+      <td class="date-cell">{{ (t.created_at|string)[:16] if t.created_at else '—' }}</td>
       <td><div class="row-actions">
         <a class="icon-btn" href="{{ url_for('trade_form', tid=t.id) }}" aria-label="Edit {{ t.stock }} trade" title="Edit trade">{{ icon('edit', 16) }}</a>
         {% if t.status == 'Open' and t.buy_price is not none %}

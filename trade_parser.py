@@ -588,6 +588,12 @@ def _same_day_compatible(buy, sell):
 
 def pair_orders(orders, _warnings=None):
     """Chronological FIFO, using only identified, dated, explicitly sized orders."""
+    if len(orders) == 2:
+        buy = next((o for o in orders if o["side"] == "buy"), None)
+        sell = next((o for o in orders if o["side"] == "sell"), None)
+        if buy and sell and buy["qty"] == sell["qty"] and buy["qty"] > 0:
+            sym = buy["symbol"] or sell["symbol"] or ""
+            return [_trade(sym, buy["qty"], buy, sell)]
     trades, books = [], {}
     ordered = sorted(orders, key=lambda o: (
         _known_date(o["date"]) or "9999", o.get("_time") or "", 0 if o["side"] == "buy" else 1))
