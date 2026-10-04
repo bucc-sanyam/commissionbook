@@ -639,7 +639,7 @@ pre.ocr-text { color: #60734f; }
   .sheet-wrap { border: none; background: transparent; padding: 0 20px; }
   .sheet, .sheet thead, .sheet tbody, .sheet th, .sheet td, .sheet tr { display: block; width: 100%; box-sizing: border-box; }
   .sheet thead tr { position: absolute; top: -9999px; left: -9999px; }
-  .sheet tr { border: 1px solid #e6eddc; border-radius: 8px; margin-bottom: 12px; background: #fff; padding: 10px; position: relative; }
+  .sheet tr { border: 1px solid #e6eddc; border-radius: 8px; margin-bottom: 12px; background: #fff; padding: 10px 10px 10px; padding-top: 38px; position: relative; }
   .sheet td { border: none; border-bottom: 1px solid #f2f6eb; padding: 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .sheet td:last-child { border-bottom: none; }
   .sheet td::before { content: attr(data-label); font-weight: 500; color: #8ea67a; font-size: 10px; min-width: 80px; }

@@ -83,6 +83,9 @@
 <script src="{{ url_for('static', filename='upload.js') }}" defer></script>
 <script>
 window.wizardGoto = function(step) {
+  const nav = document.getElementById('step-nav-' + step);
+  if (nav && nav.classList.contains('active')) return;
+  
   document.querySelectorAll('.wizard-step').forEach(el => el.hidden = true);
   const target = document.getElementById('step-' + step);
   if (target) target.hidden = false;
@@ -91,7 +94,6 @@ window.wizardGoto = function(step) {
     if (submit) submit.hidden = false;
   }
   document.querySelectorAll('.portal-step').forEach(el => el.classList.remove('active'));
-  const nav = document.getElementById('step-nav-' + step);
   if (nav) nav.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
