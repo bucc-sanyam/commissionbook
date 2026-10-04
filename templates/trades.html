@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, trade_table, csrf with context %}
+{% from "_macros.html" import icon, trade_table, csrf, payment_fields with context %}
 {% block title %}Trade ledger{% endblock %}
 {% block breadcrumb %}Trade ledger{% endblock %}
 {% block content %}
@@ -7,6 +7,7 @@
   <div><p class="eyebrow">EVERY DETAIL, ACCOUNTED FOR</p><h1>Trade ledger<span class="accent-period">.</span></h1><p>Every buy, every sell, and every commission in between.</p></div>
   <div class="heading-actions">
     <button class="btn" type="button" data-dialog="import-dialog">{{ icon('upload', 15) }}Import</button>
+    <button class="btn" type="button" data-dialog="payment-dialog">{{ icon('wallet', 15) }}Record payment</button>
     <a class="btn" href="{{ url_for('export_trades', **args) }}">{{ icon('download', 15) }}Export</a>
     <a class="btn btn-primary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
@@ -38,6 +39,14 @@
     <div class="section-divider"></div>
     <label class="field">Choose your spreadsheet<input type="file" name="file" accept=".xlsx" required><span class="field-hint">.xlsx files only. Import adds new entries, so avoid re-importing the same trades.</span></label>
     <div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('upload', 15) }}Import trades</button></div>
+  </form>
+</dialog>
+<dialog class="modal" id="payment-dialog">
+  <form method="post" action="{{ url_for('payments_list') }}" class="modal-inner">
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    {% if clients %}{{ payment_fields(clients, preset=args.client_id) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div>
+    {% else %}<p class="muted">Add a client before recording your first payment.</p><a class="btn btn-primary" href="{{ url_for('clients_list') }}">{{ icon('plus', 15) }}Add a client</a>{% endif %}
   </form>
 </dialog>
 {% endblock %}
