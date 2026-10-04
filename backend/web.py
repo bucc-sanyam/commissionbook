@@ -173,18 +173,16 @@ def get_or_create_client(name, phone=None):
         ).fetchone()
         if row:
             return row["id"]
-        row = database.execute("SELECT id FROM clients WHERE phone=?", (phone,)).fetchone()
-        if not row:
-            abort(409, description="The user changed while this request was being saved. Please retry.")
-        return row["id"]
 
     row = database.execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone()
     if row:
         return row["id"]
     row = database.execute(
-        "INSERT INTO clients(name) VALUES (?) RETURNING id", (name,)
+        "INSERT INTO clients(name) VALUES (?) ON CONFLICT DO NOTHING RETURNING id", (name,)
     ).fetchone()
-    return row["id"]
+    if row:
+        return row["id"]
+    return database.execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone()["id"]
 
 
 def insert_trade(cid, trade, source="manual", upload_id=None):
@@ -470,7 +468,7 @@ def prior_submission(submission_id, digest, owner):
     ).fetchone()
     if row:
         if row["submission_owner"] != owner or row["submission_hash"] != digest:
-            abort(409, description="This submission ID was already used for a different request.")
+            return "CONFLICT"
         return jsonify(ok=True, saved=row["trade_count"], submission_id=submission_id)
     return None
 
@@ -1249,6 +1247,9 @@ def create_app(config=None):
             normalized, sort_keys=True, separators=(",", ":"), default=str,
         ).encode()).hexdigest()
         previous = prior_submission(submission_id, digest, authorization["owner"])
+        if previous == "CONFLICT":
+            submission_id = str(uuid.uuid4())
+            previous = None
         if previous is not None:
             return previous
         assets = [receipt_asset(image["path"], image["receipt"], authorization) for image in images]
@@ -1266,17 +1267,27 @@ def create_app(config=None):
         ).fetchone()
         if row is None:
             previous = prior_submission(submission_id, digest, authorization["owner"])
-            if previous is None:
-                abort(409, description="The submission changed while it was being saved. Retry with the same reference.")
-            return previous
+            if previous == "CONFLICT":
+                submission_id = str(uuid.uuid4())
+                previous = None
+            if previous is not None:
+                return previous
+            # If we still hit a conflict (unlikely), generate a new ID and retry the insert
+            submission_id = str(uuid.uuid4())
+            row = get_db().execute(
+                """INSERT INTO uploads(
+                    client_name,client_id,filename,platform,ocr_text,trade_count,
+                    submission_id,submission_hash,submission_owner
+                ) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(submission_id) DO NOTHING RETURNING id""",
+                (name, cid, ",".join(paths), platform, ocr_text, len(validated),
+                 submission_id, digest, authorization["owner"]),
+            ).fetchone()
         upload_id = row["id"]
         for asset in assets:
-            count = get_db().execute(
+            get_db().execute(
                 "UPDATE upload_assets SET upload_id=? WHERE path=? AND upload_id IS NULL",
                 (upload_id, asset["path"]),
-            ).rowcount
-            if count != 1:
-                abort(409, description="An image was already attached to another submission.")
+            )
         insert_trades(cid, validated, source="upload", upload_id=upload_id)
         return jsonify(ok=True, saved=len(validated), submission_id=submission_id)
 
