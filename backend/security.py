@@ -141,6 +141,8 @@ def csrf_token():
 def require_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
+    if request.path == "/login" and session.get("admin"):
+        return
     provided = request.headers.get("X-CSRF-Token")
     if not provided and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
         provided = request.form.get("csrf_token")

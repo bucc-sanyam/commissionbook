@@ -580,6 +580,8 @@ def create_app(config=None):
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        if session.get("admin"):
+            return redirect(url_for("dashboard"))
         password_hash, version = admin_credentials()
         first_run = not password_hash
         if first_run and not local_setup_allowed():
