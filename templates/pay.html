@@ -1,18 +1,52 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf %}
+{% from "_macros.html" import icon, brand, csrf, empty_state %}
 {% block title %}Payment for {{ client.name }}{% endblock %}
-{% block header %}{% endblock %}
-{% block content %}
-<div class="card card-pad" style="max-width:400px;margin:100px auto;text-align:center;">
-    <h1 style="margin-bottom:10px;">Payment for {{ client.name }}</h1>
-    <p style="margin-bottom:20px;color:var(--text-secondary);">Your current outstanding balance is:</p>
-    <div style="font-size:2em;font-weight:bold;margin-bottom:30px;color:var(--text-primary);">
-        {{ outstanding|money }}
-    </div>
-    <form method="post" action="{{ url_for('client_pay', token=request.view_args['token']) }}">
-        {{ csrf() }}
-        <!-- We will add payment details here later -->
-        <button type="submit" class="btn btn-primary" style="width:100%;">Mark as Paid</button>
-    </form>
-</div>
+{% block body_class %}portal-body{% endblock %}
+{% block shell %}
+<header class="portal-header"><div class="brand" aria-label="Commission Book">{{ brand() }}</div><span class="portal-header-label">{{ icon('wallet', 12) }}Client payment portal</span></header>
+<main class="portal-main" id="main" style="max-width: 600px; margin: 0 auto; padding-top: 40px; padding-bottom: 40px;">
+  <div class="card card-pad" style="text-align: center;">
+    {% if outstanding <= 0 %}
+      <div style="padding: 40px 0;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#eafff3;color:#1e9752;border-radius:50%;margin-bottom:20px;">
+          {{ icon('check', 32) }}
+        </span>
+        <h1 style="margin-bottom:10px;font-size:28px;">All settled up!</h1>
+        <p style="color:var(--text-secondary);font-size:15px;">Your outstanding balance is completely cleared.</p>
+      </div>
+    {% else %}
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#f3f4f6;color:var(--text-primary);border-radius:50%;margin-bottom:20px;">
+        {{ icon('wallet', 32) }}
+      </span>
+      <h1 style="margin-bottom:10px;font-size:24px;">Payment for {{ client.name }}</h1>
+      <p style="margin-bottom:20px;color:var(--text-secondary);font-size:15px;">Your current outstanding balance is:</p>
+      <div style="font-size:42px;font-weight:bold;margin-bottom:30px;color:var(--text-primary);letter-spacing:-0.5px;">
+          {{ outstanding|money }}
+      </div>
+      
+      <div style="background:#fafafa; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: left; border: 1px solid #edf2e5;">
+        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 15px; border-bottom: 1px solid #edf2e5; padding-bottom: 8px;">Breakdown</h3>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span>Total Commission</span>
+          <strong>{{ s.commission|money }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #1e9752;">
+          <span>Payments Received</span>
+          <strong>-{{ s.paid|money }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #edf2e5; font-size: 16px; font-weight: bold;">
+          <span>Outstanding</span>
+          <span>{{ outstanding|money }}</span>
+        </div>
+      </div>
+
+      <form method="post" action="{{ url_for('client_pay', token=request.view_args['token']) }}">
+          {{ csrf() }}
+          <button type="submit" class="btn btn-primary" style="width:100%; height: 48px; font-size: 16px;">{{ icon('check', 18) }} Mark as Paid</button>
+      </form>
+    {% endif %}
+  </div>
+  {% include "_flashes.html" %}
+</main>
+<footer class="portal-footer">A little order. A lot of clarity. <span class="footer-dot"></span> Commission Book</footer>
 {% endblock %}
