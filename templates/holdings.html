@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
+{% block title %}Holdings{% endblock %}
+{% block breadcrumb %}Holdings{% endblock %}
+{% block content %}
+<section class="card" id="main">
+  <div class="card-header">
+    <div>
+      <h2>Client Holdings</h2>
+      <p id="holdings-search-count">{{ holdings|length }} holding{{ 's' if holdings|length != 1 }}</p>
+    </div>
+    <form method="get" action="{{ url_for('holdings_list') }}" class="search-field" style="display: flex; gap: 8px; max-width: 400px; width: 100%;">
+      <div style="position: relative; flex: 1;">
+        {{ icon('search', 15) }}
+        <input type="search" name="stock" value="{{ query }}" placeholder="Search a stock..." aria-label="Search stock" style="padding-left: 37px; width: 100%; font-size: 12px; min-height: 36px; border-radius: 6px; border: 1px solid #edf2e5;">
+      </div>
+      <button type="submit" class="btn btn-primary" style="padding: 0 16px;">Search</button>
+      {% if query %}<a href="{{ url_for('holdings_list') }}" class="btn btn-ghost" style="padding: 0 16px;">Clear</a>{% endif %}
+    </form>
+  </div>
+  {% if holdings %}
+  <div class="table-wrap">
+    <table class="data-table" id="holdings-table">
+      <thead>
+        <tr>
+          <th>Stock</th>
+          <th>Client</th>
+          <th class="r">Quantity</th>
+          <th class="r">Buy price</th>
+          <th class="r">Added on</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in holdings %}
+        <tr>
+          <td><strong>{{ h.stock }}</strong></td>
+          <td><a class="client-cell" href="{{ url_for('client_detail', cid=h.client_id) }}">{{ avatar(h.client_name, h.client_id) }}<span>{{ h.client_name }}</span></a></td>
+          <td class="r tabular">{{ h.quantity or '—' }}</td>
+          <td class="r pos tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
+          <td class="r date-cell">{{ h.added_on[:10] }}</td>
+          <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=h.client_id) }}" aria-label="View {{ h.client_name }}">{{ icon('arrow-up-right', 17) }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% if query %}
+      {{ empty_state('No holdings found', 'No clients are currently holding this stock.', 'search') }}
+    {% else %}
+      {{ empty_state('No holdings recorded', 'Go to a client profile to add their current holdings.', 'trend') }}
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

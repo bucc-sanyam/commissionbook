@@ -862,6 +862,28 @@ def create_app(config=None):
         flash(f"Imported {len(validated)} trade(s).", "success")
         return redirect(url_for("trades_list"))
 
+    @app.route("/holdings")
+    @login_required
+    def holdings_list():
+        stock_query = request.args.get("stock", "").strip().upper()
+        if stock_query:
+            holdings = get_db().execute(
+                """SELECT h.*, c.name as client_name, c.id as client_id 
+                   FROM client_shares h 
+                   JOIN clients c ON c.id = h.client_id 
+                   WHERE h.stock LIKE ?
+                   ORDER BY h.stock, lower(c.name)""", 
+                (f"%{stock_query}%",)
+            ).fetchall()
+        else:
+            holdings = get_db().execute(
+                """SELECT h.*, c.name as client_name, c.id as client_id 
+                   FROM client_shares h 
+                   JOIN clients c ON c.id = h.client_id 
+                   ORDER BY h.stock, lower(c.name)"""
+            ).fetchall()
+        return render_template("holdings.html", holdings=holdings, query=stock_query)
+
     @app.route("/clients", methods=["GET", "POST"])
     @login_required
     def clients_list():

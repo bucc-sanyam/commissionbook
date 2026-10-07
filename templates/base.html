@@ -38,7 +38,8 @@
       ('dashboard', 'Overview', 'grid', ep == 'dashboard'),
       ('trades_list', 'Trade ledger', 'book', ep in ('trades_list', 'trade_form')),
       ('clients_list', 'Clients', 'users', ep in ('clients_list', 'client_detail')),
-      ('payments_list', 'Payments', 'wallet', ep == 'payments_list')
+      ('payments_list', 'Payments', 'wallet', ep == 'payments_list'),
+      ('holdings_list', 'Holdings', 'trend', ep == 'holdings_list')
     ] %}
     <a class="nav-link{{ ' active' if active }}" href="{{ url_for(endpoint) }}" {% if active %}aria-current="page"{% endif %}>{{ icon(glyph, 19) }}<span>{{ label }}</span>{% if active %}<span class="nav-active-dot"></span>{% endif %}</a>
     {% endfor %}
