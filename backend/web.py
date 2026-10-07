@@ -1007,7 +1007,7 @@ def create_app(config=None):
             
         sell_qty = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
         sell_price = number(request.form.get("sell_price"), "Sell Price", required=True, positive=True)
-        sell_date = valid_date(request.form.get("sell_date")) or datetime.utcnow().strftime("%Y-%m-%d")
+        sell_date = valid_date(request.form.get("sell_date")) or date.today().isoformat()
         
         new_qty = (holding["quantity"] or ZERO) - sell_qty
         if new_qty <= 0:
@@ -1015,7 +1015,7 @@ def create_app(config=None):
         else:
             get_db().execute("UPDATE client_shares SET quantity=? WHERE id=?", (new_qty, sid))
             
-        buy_date = holding["added_on"][:10] if holding["added_on"] else datetime.utcnow().strftime("%Y-%m-%d")
+        buy_date = holding["added_on"][:10] if holding["added_on"] else date.today().isoformat()
         
         insert_trades(cid, [{
             "stock": holding["stock"],
@@ -1232,7 +1232,7 @@ def create_app(config=None):
             if outstanding > 0:
                 get_db().execute(
                     "INSERT INTO payments(client_id,amount,paid_on,mode,notes) VALUES (?,?,?,?,?)",
-                    (cid, outstanding, datetime.utcnow().strftime("%Y-%m-%d"), "Client Link", "Marked as paid via client link"),
+                    (cid, outstanding, date.today().isoformat(), "Client Link", "Marked as paid via client link"),
                 )
                 
             import smtplib
