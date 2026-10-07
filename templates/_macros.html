@@ -44,7 +44,9 @@
   'repeat': '<path d="m17 2 4 4-4 4M3 10V6h18M7 22l-4-4 4-4M21 14v4H3"/>',
   'trend': '<path d="m3 17 6-6 4 4L21 5M15 5h6v6"/>',
   'pie': '<path d="M10 3a9 9 0 1 0 11 11H10V3ZM14 2v8h8a9 9 0 0 0-8-8Z"/>',
-  'mail': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>'
+  'mail': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
+  'message-circle': '<path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>',
+  'send': '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
 } %}
 <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true">{{ paths.get(name, paths['file'])|safe }}</svg>
 {%- endmacro %}
