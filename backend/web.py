@@ -983,6 +983,53 @@ def create_app(config=None):
         flash("Holding deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
 
+    @app.route("/clients/<int:cid>/shares/<int:sid>/edit", methods=["POST"])
+    @login_required
+    def client_share_edit(cid, sid):
+        stock = request.form.get("stock", "").strip()
+        quantity = number(request.form.get("quantity")) if request.form.get("quantity") else None
+        buy_price = number(request.form.get("buy_price")) if request.form.get("buy_price") else None
+        if not stock:
+            abort(400)
+        get_db().execute(
+            "UPDATE client_shares SET stock=?, quantity=?, buy_price=? WHERE id=? AND client_id=?",
+            (stock.upper(), quantity, buy_price, sid, cid)
+        )
+        flash("Holding updated.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
+
+    @app.route("/clients/<int:cid>/shares/<int:sid>/sell", methods=["POST"])
+    @login_required
+    def client_share_sell(cid, sid):
+        holding = get_db().execute("SELECT * FROM client_shares WHERE id=? AND client_id=?", (sid, cid)).fetchone()
+        if not holding:
+            abort(404)
+            
+        sell_qty = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
+        sell_price = number(request.form.get("sell_price"), "Sell Price", required=True, positive=True)
+        sell_date = valid_date(request.form.get("sell_date")) or datetime.utcnow().strftime("%Y-%m-%d")
+        
+        new_qty = (holding["quantity"] or ZERO) - sell_qty
+        if new_qty <= 0:
+            get_db().execute("DELETE FROM client_shares WHERE id=?", (sid,))
+        else:
+            get_db().execute("UPDATE client_shares SET quantity=? WHERE id=?", (new_qty, sid))
+            
+        buy_date = holding["added_on"][:10] if holding["added_on"] else datetime.utcnow().strftime("%Y-%m-%d")
+        
+        insert_trades(cid, [{
+            "stock": holding["stock"],
+            "quantity": sell_qty,
+            "buy_price": holding["buy_price"],
+            "sell_price": sell_price,
+            "buy_date": buy_date,
+            "sell_date": sell_date,
+            "notes": "Sold from Holdings"
+        }])
+        
+        flash(f"Sold {sell_qty} shares of {holding['stock']} and recorded in Trade Ledger.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
+
     @app.route("/clients/<int:cid>/delete", methods=["POST"])
     @login_required
     def client_delete(cid):

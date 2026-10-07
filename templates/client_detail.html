@@ -43,8 +43,23 @@
     {% if shares %}
     <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th></th></tr></thead><tbody>
     {% for sh in shares %}
-      <tr><td><strong>{{ sh.stock }}</strong></td><td class="r tabular">{{ sh.quantity or '—' }}</td><td class="r pos tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td><td><form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding">{{ icon('trash', 15) }}</button></form></td></tr>
+      <tr>
+        <td><strong>{{ sh.stock }}</strong></td>
+        <td class="r tabular">{{ sh.quantity or '—' }}</td>
+        <td class="r pos tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+        <td>
+          <div class="row-actions" style="justify-content: flex-end;">
+            <button class="icon-btn" type="button" data-dialog="edit-share-dialog-{{ sh.id }}" aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
+            <button class="icon-btn" type="button" data-dialog="sell-share-dialog-{{ sh.id }}" aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
+            <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
+          </div>
+        </td>
+      </tr>
     {% endfor %}</tbody></table></div>
+    {% for sh in shares %}
+      <dialog class="modal" id="edit-share-dialog-{{ sh.id }}"><form method="post" action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">UPDATE</span><h2>Edit {{ sh.stock }} holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" type="text" required value="{{ sh.stock }}"></label><label class="field">Quantity<input name="quantity" type="number" step="any" min="0" value="{{ sh.quantity or '' }}"></label><label class="field">Buy price<input name="buy_price" type="number" step="any" min="0" value="{{ sh.buy_price or '' }}"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
+      <dialog class="modal" id="sell-share-dialog-{{ sh.id }}"><form method="post" action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">RECORD SALE</span><h2>Sell {{ sh.stock }}</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p><div class="form-grid"><label class="field">Quantity to sell<input name="quantity" type="number" step="any" min="0" max="{{ sh.quantity or '' }}" required value="{{ sh.quantity or '' }}"></label><label class="field">Sell price<input name="sell_price" type="number" step="any" min="0" required></label><label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button></div></form></dialog>
+    {% endfor %}
     {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
   </section>
   <div class="stack">
