@@ -1179,8 +1179,15 @@ def create_app(config=None):
         summary = summarize(trades)
         paid = sum((dec(payment["amount"]) for payment in get_db().execute("SELECT amount FROM payments WHERE client_id=?", (cid,)).fetchall()), ZERO)
         outstanding = summary["commission"] - paid
+        summary["paid"] = paid
         
         if request.method == "POST":
+            if outstanding > 0:
+                get_db().execute(
+                    "INSERT INTO payments(client_id,amount,paid_on,mode,notes) VALUES (?,?,?,?,?)",
+                    (cid, outstanding, datetime.utcnow().strftime("%Y-%m-%d"), "Client Link", "Marked as paid via client link"),
+                )
+                
             import smtplib
             from email.message import EmailMessage
             admin_email = os.environ.get("ADMIN_EMAIL")
@@ -1200,10 +1207,10 @@ def create_app(config=None):
                 except Exception as e:
                     app.logger.error(f"Failed to send email: {e}")
             
-            flash("Thank you, payment marked as done. The admin has been notified.", "success")
+            flash("Thank you, payment marked as done.", "success")
             return redirect(url_for("client_pay", token=token))
             
-        return render_template("pay.html", client=client, outstanding=outstanding)
+        return render_template("pay.html", client=client, outstanding=outstanding, s=summary)
 
     @app.route("/api/parse", methods=["POST"])
     def api_parse():
