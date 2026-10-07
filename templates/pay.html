@@ -25,7 +25,7 @@
       </div>
       
       <div style="background:#fafafa; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: left; border: 1px solid #edf2e5;">
-        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 15px; border-bottom: 1px solid #edf2e5; padding-bottom: 8px;">Breakdown</h3>
+        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 15px; border-bottom: 1px solid #edf2e5; padding-bottom: 8px;">Summary Breakdown</h3>
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
           <span>Total Commission</span>
           <strong>{{ s.commission|money }}</strong>
@@ -39,6 +39,32 @@
           <span>{{ outstanding|money }}</span>
         </div>
       </div>
+
+      {% if trades %}
+      <div style="background:#fff; border-radius: 8px; border: 1px solid #edf2e5; margin-bottom: 30px; text-align: left; overflow: hidden;">
+        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin: 0; padding: 15px 20px; border-bottom: 1px solid #edf2e5; background: #fafafa;">Trade Ledger Details</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+          {% for t in trades %}
+            {% if t.status == 'Closed' %}
+            <div style="padding: 15px 20px; border-bottom: 1px solid #edf2e5;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                <strong style="font-size: 15px;">{{ t.stock }}</strong>
+                <span style="font-weight: 600;">{{ t.commission|money }} fee</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">
+                <span>Bought @ {{ t.buy_price|money }} &times; {{ t.quantity|num }}</span>
+                <span>Sold @ {{ t.sell_price|money }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span>Profit: {{ t.pnl|money }} <span style="color: {{ '#1e9752' if t.pnl > 0 else '#e53e3e' }}; font-weight: 500;">({{ '%+.2f'|format(t.pnl_pct) }}%)</span></span>
+                <span style="color: var(--text-secondary);">Rule: {{ t.eff_rate|num }}{{ '%' if 'pct' in t.eff_type else ' flat' }}</span>
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
 
       <form method="post" action="{{ url_for('client_pay', token=request.view_args['token']) }}">
           {{ csrf() }}
