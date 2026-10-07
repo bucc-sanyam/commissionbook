@@ -57,6 +57,17 @@
       {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
       <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
     </section>
+    <section class="card card-pad">
+      <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
+      {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
+      <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
+        {% if client.phone %}
+        <a class="btn btn-ghost btn-sm" style="flex:1; justify-content:center" href="https://wa.me/{{ client.phone|replace('+', '')|replace(' ', '')|replace('-', '') }}?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener noreferrer">{{ icon('send', 14) }}WhatsApp</a>
+        {% endif %}
+      </div>
+    </section>
     {% if uploads %}
     <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
     {% endif %}
