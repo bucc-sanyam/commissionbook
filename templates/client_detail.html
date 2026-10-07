@@ -67,7 +67,7 @@
       <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
       <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
       <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
-      <div class="details-line"><span>Money in Bank</span><strong>{{ s.money_in_bank|money }}</strong></div>
+      <div class="details-line"><span>Money in Bank</span><strong class="tabular">{{ s.money_in_bank|money }}</strong></div>
       <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
       {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
       <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
