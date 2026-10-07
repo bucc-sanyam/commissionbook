@@ -921,13 +921,44 @@ def create_app(config=None):
         cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
         summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
 
+        try:
+            shares = get_db().execute(
+                "SELECT * FROM client_shares WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
+            ).fetchall()
+        except Exception:
+            shares = []
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
-            funds=funds, total_funds=total_funds,
+            funds=funds, total_funds=total_funds, shares=shares,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
         )
+
+    @app.route("/clients/<int:cid>/shares/new", methods=["POST"])
+    @login_required
+    def client_share_add(cid):
+        get_client(cid)
+        stock = request.form.get("stock", "").strip()
+        quantity = number(request.form.get("quantity")) if request.form.get("quantity") else None
+        buy_price = number(request.form.get("buy_price")) if request.form.get("buy_price") else None
+        if not stock:
+            abort(400)
+        get_db().execute(
+            "INSERT INTO client_shares (client_id, stock, quantity, buy_price) VALUES (?, ?, ?, ?)",
+            (cid, stock.upper(), quantity, buy_price)
+        )
+        flash("Holding added.", "success")
+        return redirect(safe_redirect_target(request.form.get("back"), url_for("client_detail", cid=cid)))
+
+    @app.route("/clients/<int:cid>/shares/<int:sid>/delete", methods=["POST"])
+    @login_required
+    def client_share_delete(cid, sid):
+        if get_db().execute("DELETE FROM client_shares WHERE id=? AND client_id=?", (sid, cid)).rowcount != 1:
+            abort(404)
+        flash("Holding deleted.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
 
     @app.route("/clients/<int:cid>/delete", methods=["POST"])
     @login_required
