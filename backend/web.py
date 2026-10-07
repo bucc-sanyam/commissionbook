@@ -941,7 +941,7 @@ def create_app(config=None):
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
         
         cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
-        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
+        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades if trade.get("notes") != "Sold from Holdings"), ZERO)
         summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
 
         try:
