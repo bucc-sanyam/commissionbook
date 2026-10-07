@@ -49,8 +49,9 @@ from .validation import (
 ZERO = Decimal("0")
 CENT = Decimal("0.01")
 TRADE_SELECT = """
-SELECT t.*, c.name AS client_name, c.commission_type, c.commission_rate
+SELECT t.*, c.name AS client_name, c.commission_type, c.commission_rate, u.filename AS upload_filename
 FROM trades t JOIN clients c ON c.id=t.client_id
+LEFT JOIN uploads u ON u.id=t.upload_id
 """
 EXPORT_COLS = [
     ("Username", "client_name"), ("Stock", "stock"), ("Quantity", "quantity"),

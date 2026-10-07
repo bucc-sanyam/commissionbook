@@ -21,8 +21,19 @@
     sidebar.classList.toggle("open", open);
     sidebar.inert = mobileWidth.matches && !open;
     scrim.hidden = !open;
-    menu.setAttribute("aria-expanded", String(open));
     menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+  }
+
+  const privacyToggle = document.getElementById("privacy-toggle");
+  if (privacyToggle) {
+    const isPrivacy = localStorage.getItem("privacyMode") === "true";
+    document.body.classList.toggle("privacy-mode", isPrivacy);
+    privacyToggle.setAttribute("aria-pressed", isPrivacy);
+    privacyToggle.addEventListener("click", () => {
+      const mode = document.body.classList.toggle("privacy-mode");
+      localStorage.setItem("privacyMode", mode);
+      privacyToggle.setAttribute("aria-pressed", mode);
+    });
   }
   menu?.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
   scrim?.addEventListener("click", () => setMenu(false));

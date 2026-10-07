@@ -739,3 +739,9 @@ pre.ocr-text { color: #60734f; }
   .table-wrap { overflow: visible; }
   body { background: #fff; }
 }
+
+/* Privacy Mode */
+.privacy-mode .tabular { filter: blur(5px); transition: filter 0.2s ease; user-select: none; }
+.privacy-mode .tabular:hover { filter: blur(0); }
+.privacy-mode .kpi-value { filter: blur(7px); transition: filter 0.2s ease; user-select: none; }
+.privacy-mode .kpi-value:hover { filter: blur(0); }
