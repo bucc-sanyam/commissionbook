@@ -1210,7 +1210,7 @@ def create_app(config=None):
             flash("Thank you, payment marked as done.", "success")
             return redirect(url_for("client_pay", token=token))
             
-        return render_template("pay.html", client=client, outstanding=outstanding, s=summary)
+        return render_template("pay.html", client=client, outstanding=outstanding, s=summary, trades=trades)
 
     @app.route("/api/parse", methods=["POST"])
     def api_parse():
