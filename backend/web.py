@@ -867,22 +867,40 @@ def create_app(config=None):
     @login_required
     def holdings_list():
         stock_query = request.args.get("stock", "").strip().upper()
+        
+        base_query = """
+            SELECT stock, client_name, client_id, SUM(quantity) as quantity, AVG(buy_price) as buy_price, MIN(added_on) as added_on
+            FROM (
+                SELECT h.stock, c.name as client_name, c.id as client_id, h.quantity, h.buy_price, h.added_on
+                FROM client_shares h 
+                JOIN clients c ON c.id = h.client_id 
+                
+                UNION ALL
+                
+                SELECT t.stock, c.name as client_name, c.id as client_id, t.quantity, t.buy_price, t.buy_date as added_on
+                FROM trades t
+                JOIN clients c ON c.id = t.client_id
+                WHERE t.buy_price IS NULL OR t.sell_price IS NULL
+            ) as combined
+        """
+        
         if stock_query:
             holdings = get_db().execute(
-                """SELECT h.*, c.name as client_name, c.id as client_id 
-                   FROM client_shares h 
-                   JOIN clients c ON c.id = h.client_id 
-                   WHERE h.stock LIKE ?
-                   ORDER BY h.stock, lower(c.name)""", 
+                base_query + """
+                WHERE stock LIKE ?
+                GROUP BY stock, client_id, client_name
+                ORDER BY stock, lower(client_name)
+                """, 
                 (f"%{stock_query}%",)
             ).fetchall()
         else:
             holdings = get_db().execute(
-                """SELECT h.*, c.name as client_name, c.id as client_id 
-                   FROM client_shares h 
-                   JOIN clients c ON c.id = h.client_id 
-                   ORDER BY h.stock, lower(c.name)"""
+                base_query + """
+                GROUP BY stock, client_id, client_name
+                ORDER BY stock, lower(client_name)
+                """
             ).fetchall()
+            
         return render_template("holdings.html", holdings=holdings, query=stock_query)
 
     @app.route("/clients", methods=["GET", "POST"])
