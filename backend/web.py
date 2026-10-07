@@ -964,8 +964,8 @@ def create_app(config=None):
     def client_share_add(cid):
         get_client(cid)
         stock = request.form.get("stock", "").strip()
-        quantity = number(request.form.get("quantity")) if request.form.get("quantity") else None
-        buy_price = number(request.form.get("buy_price")) if request.form.get("buy_price") else None
+        quantity = number(request.form.get("quantity"), "Quantity") if request.form.get("quantity") else None
+        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
         if not stock:
             abort(400)
         get_db().execute(
@@ -987,8 +987,8 @@ def create_app(config=None):
     @login_required
     def client_share_edit(cid, sid):
         stock = request.form.get("stock", "").strip()
-        quantity = number(request.form.get("quantity")) if request.form.get("quantity") else None
-        buy_price = number(request.form.get("buy_price")) if request.form.get("buy_price") else None
+        quantity = number(request.form.get("quantity"), "Quantity") if request.form.get("quantity") else None
+        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
         if not stock:
             abort(400)
         get_db().execute(
