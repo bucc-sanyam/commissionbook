@@ -237,24 +237,6 @@ def get_known_stocks(db):
     except Exception:
         pass
 
-    try:
-        trade_stocks = db.execute("SELECT DISTINCT stock FROM trades WHERE stock IS NOT NULL AND stock != ''").fetchall()
-        for ts in trade_stocks:
-            stk = ts["stock"].strip().upper()
-            if stk not in mapping:
-                mapping[stk] = set()
-    except Exception:
-        pass
-
-    try:
-        price_stocks = db.execute("SELECT DISTINCT stock FROM stock_prices WHERE stock IS NOT NULL AND stock != ''").fetchall()
-        for ps in price_stocks:
-            stk = ps["stock"].strip().upper()
-            if stk not in mapping:
-                mapping[stk] = set()
-    except Exception:
-        pass
-
     result = []
     for c in sorted(mapping.keys()):
         alias_list = sorted(list(mapping[c]))
@@ -264,6 +246,64 @@ def get_known_stocks(db):
             "alias_list": alias_list,
         })
     return result
+
+
+def get_client_entered_stocks(db):
+    """Returns all distinct stock names found in trades, client holdings, and aliases with status metadata."""
+    ensure_stock_aliases_table(db)
+    all_stocks = set()
+    try:
+        rows = db.execute("SELECT DISTINCT stock FROM trades WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in rows:
+            s = r["stock"].strip().upper()
+            if s:
+                all_stocks.add(s)
+    except Exception:
+        pass
+
+    try:
+        rows = db.execute("SELECT DISTINCT stock FROM client_shares WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in rows:
+            s = r["stock"].strip().upper()
+            if s:
+                all_stocks.add(s)
+    except Exception:
+        pass
+
+    try:
+        rows = db.execute("SELECT DISTINCT canonical_name, alias FROM stock_aliases").fetchall()
+        for r in rows:
+            if r["canonical_name"]:
+                all_stocks.add(r["canonical_name"].strip().upper())
+            if r["alias"]:
+                all_stocks.add(r["alias"].strip().upper())
+    except Exception:
+        pass
+
+    # Map alias -> canonical_name and track canonical stocks
+    alias_to_canonical = {}
+    canonical_set = set()
+    try:
+        rows = db.execute("SELECT canonical_name, alias FROM stock_aliases").fetchall()
+        for r in rows:
+            c = r["canonical_name"].strip().upper()
+            a = r["alias"].strip().upper()
+            canonical_set.add(c)
+            if a and a != c:
+                alias_to_canonical[a] = c
+    except Exception:
+        pass
+
+    stocks_list = []
+    for s in sorted(all_stocks):
+        mapped = alias_to_canonical.get(s)
+        is_canonical = (s in canonical_set and mapped is None)
+        stocks_list.append({
+            "stock": s,
+            "is_canonical": is_canonical,
+            "mapped_to": mapped,
+        })
+    return stocks_list
 
 
 def get_client(cid):
@@ -1253,6 +1293,7 @@ def create_app(config=None):
             total_unrealized_pnl=total_unrealized_pnl,
             total_unrealized_pct=total_unrealized_pct,
             known_stocks=get_known_stocks(get_db()),
+            client_entered_stocks=get_client_entered_stocks(get_db()),
         )
 
     @app.route("/admin/update-prices", methods=["POST"])
@@ -1277,19 +1318,42 @@ def create_app(config=None):
         redirect_to = request.form.get("redirect_to") or url_for("holdings_list")
 
         if not canonical_raw:
-            flash("Canonical stock name/symbol is required.", "error")
+            flash("Single standard term (Canonical name) is required.", "error")
             return redirect(redirect_to)
 
         db = get_db()
         ensure_stock_aliases_table(db)
 
-        # Parse aliases: comma separated
-        alias_tokens = [t.strip().upper() for t in aliases_raw.split(",") if t.strip()]
-        if canonical_raw not in alias_tokens:
-            alias_tokens.append(canonical_raw)
+        # Collect aliases from both selected client stocks and manual input (excluding canonical name itself)
+        selected_aliases = [s.strip().upper() for s in request.form.getlist("selected_aliases") if s.strip()]
+        manual_tokens = [t.strip().upper() for t in aliases_raw.split(",") if t.strip()]
+        alias_tokens = list(set([a for a in (selected_aliases + manual_tokens) if a != canonical_raw]))
 
-        # Upsert aliases into stock_aliases
+        # If canonical_raw was previously mapped as an alias of another stock, reassign it to be its own canonical
+        try:
+            db.execute("UPDATE stock_aliases SET canonical_name=? WHERE alias=?", (canonical_raw, canonical_raw))
+        except Exception:
+            pass
+
+        # If any selected alias was previously a canonical stock, merge all its child aliases under canonical_raw
         for a in alias_tokens:
+            try:
+                db.execute("UPDATE stock_aliases SET canonical_name=? WHERE canonical_name=?", (canonical_raw, a))
+            except Exception:
+                pass
+
+        # Clean up any aliases previously mapped under canonical_raw that were unselected by admin
+        try:
+            existing_rows = db.execute("SELECT alias FROM stock_aliases WHERE canonical_name=?", (canonical_raw,)).fetchall()
+            for row in existing_rows:
+                ea = row["alias"].strip().upper()
+                if ea != canonical_raw and ea not in alias_tokens:
+                    db.execute("DELETE FROM stock_aliases WHERE canonical_name=? AND alias=?", (canonical_raw, ea))
+        except Exception:
+            pass
+
+        # Upsert canonical_raw itself and all selected aliases into stock_aliases
+        for a in [canonical_raw] + alias_tokens:
             try:
                 db.execute(
                     """INSERT INTO stock_aliases (canonical_name, alias) VALUES (?, ?)
@@ -1303,25 +1367,24 @@ def create_app(config=None):
         updated_trades = 0
         updated_shares = 0
         for a in alias_tokens:
-            if a != canonical_raw:
-                r1 = db.execute("UPDATE trades SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
-                r2 = db.execute("UPDATE client_shares SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
-                db.execute("UPDATE client_alerts SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
-                try:
-                    db.execute(
-                        "UPDATE stock_prices SET stock=? WHERE UPPER(TRIM(stock))=? AND NOT EXISTS (SELECT 1 FROM stock_prices sp2 WHERE sp2.stock=?)",
-                        (canonical_raw, a, canonical_raw)
-                    )
-                    db.execute("DELETE FROM stock_prices WHERE UPPER(TRIM(stock))=?", (a,))
-                except Exception:
-                    pass
-                if hasattr(r1, "rowcount") and r1.rowcount:
-                    updated_trades += r1.rowcount
-                if hasattr(r2, "rowcount") and r2.rowcount:
-                    updated_shares += r2.rowcount
+            r1 = db.execute("UPDATE trades SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
+            r2 = db.execute("UPDATE client_shares SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
+            db.execute("UPDATE client_alerts SET stock=? WHERE UPPER(TRIM(stock))=?", (canonical_raw, a))
+            try:
+                db.execute(
+                    "UPDATE stock_prices SET stock=? WHERE UPPER(TRIM(stock))=? AND NOT EXISTS (SELECT 1 FROM stock_prices sp2 WHERE sp2.stock=?)",
+                    (canonical_raw, a, canonical_raw)
+                )
+                db.execute("DELETE FROM stock_prices WHERE UPPER(TRIM(stock))=?", (a,))
+            except Exception:
+                pass
+            if hasattr(r1, "rowcount") and r1.rowcount:
+                updated_trades += r1.rowcount
+            if hasattr(r2, "rowcount") and r2.rowcount:
+                updated_shares += r2.rowcount
 
         flash(
-            f"Mapped stock '{canonical_raw}' with aliases: {', '.join(alias_tokens)}. Updated across {updated_trades} trade(s) and {updated_shares} holding position(s) on all client portals.",
+            f"Configured standard term '{canonical_raw}' with {len(alias_tokens)} alias(es). Updated {updated_trades} trade(s) and {updated_shares} position(s) across all client portals.",
             "success"
         )
         return redirect(redirect_to)

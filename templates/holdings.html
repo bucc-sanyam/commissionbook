@@ -129,7 +129,7 @@
               <span class="neg">{{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small></span>
             {% endif %}
           </td>
-          <td class="r date-cell">{{ h.added_on[:10] }}</td>
+          <td class="r date-cell">{{ h.added_on[:10] if h.added_on else '—' }}</td>
           <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=h.client_id) }}" aria-label="View {{ h.client_name }}">{{ icon('arrow-up-right', 17) }}</a></td>
         </tr>
         {% endfor %}
@@ -146,7 +146,7 @@
 </section>
 
 <!-- ADMIN STOCK ALIASES & NORMALIZATION MODAL -->
-<dialog class="modal modal-md" id="manage-stocks-dialog">
+<dialog class="modal modal-md" id="manage-stocks-dialog" style="width: 580px; max-width: 95vw;">
   <div class="modal-inner">
     <div class="modal-heading">
       <div>
@@ -156,30 +156,101 @@
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
     <p class="muted" style="font-size: 12px; line-height: 1.6; margin-bottom: 16px;">
-      Map multiple client variations (e.g. <code>sbc</code>, <code>sbc exports</code>) into a single standard term.
-      Saving will automatically rename all matching trades and holdings across <strong>all client portals</strong>, and provide auto-suggestions when clients enter trades.
+      Enter <strong>one standard term</strong>, then select all the client variations to map as its aliases.
+      Saving will automatically rename matching trades and positions across <strong>all client portals</strong>, and auto-suggest the standard term to clients.
     </p>
 
     <!-- Add/Update Mapping Form -->
-    <form method="post" action="{{ url_for('admin_save_stock_alias') }}" style="background: #fafbf9; border: 1.5px solid #d4ded2; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+    <form id="stock-alias-form" method="post" action="{{ url_for('admin_save_stock_alias') }}" style="background: #fafbf9; border: 1.5px solid #d4ded2; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
       {{ csrf() }}
       <input type="hidden" name="redirect_to" value="{{ url_for('holdings_list') }}">
       
-      <div style="font-weight: 700; font-size: 13px; color: #173d34; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-        {{ icon('plus', 14) }} Add or Update Stock Mapping
+      <div style="font-weight: 700; font-size: 13px; color: #173d34; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="display: flex; align-items: center; gap: 6px;">
+          {{ icon('plus', 14) }} Add or Update Stock Mapping
+        </span>
+        <button type="button" class="btn btn-ghost btn-xs" onclick="resetStockAliasForm()" style="font-size: 10.5px; padding: 2px 7px;">
+          Clear Form
+        </button>
       </div>
 
-      <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="form-grid" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Single Standard Term -->
         <label class="field" style="margin-bottom: 0;">
           <span class="field-title">Single Standard Term (Canonical Name) <span class="field-req">*</span></span>
-          <input id="alias-canonical-input" name="canonical_name" required placeholder="e.g. SBC, RELIANCE, TATAMOTORS" autocomplete="off" style="text-transform: uppercase;">
+          <input id="alias-canonical-input" name="canonical_name" required placeholder="e.g. SBC EXPORTS LIMITED, RELIANCE, TCS" autocomplete="off" style="text-transform: uppercase;">
           <small class="muted" style="font-size: 11px;">The primary standard symbol displayed everywhere across all client portals.</small>
         </label>
 
+        <!-- Selectable Client Stocks for Aliases -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="field-title" style="font-weight: 600; font-size: 12.5px; color: #173d34;">
+              Select Client Stocks to Map as Aliases
+            </span>
+            <span id="selected-aliases-count" class="badge" style="background: #eef5eb; color: #245c4d; font-size: 11px; border: 1px solid #d4e5d0;">
+              0 selected
+            </span>
+          </div>
+          <small class="muted" style="font-size: 11px; margin-top: -2px;">
+            Check the client-entered stocks below that represent variations of this standard term.
+          </small>
+
+          <!-- Search & Filter Controls -->
+          <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+            <input type="text" id="filter-client-stocks" placeholder="🔍 Search client stocks (e.g. SBC)..." autocomplete="off"
+                   style="flex: 1; padding: 6px 10px; font-size: 11.5px; border-radius: 7px; border: 1px solid #d4ded2; background: #fff;">
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-select-all-filtered" style="font-size: 10.5px; padding: 5px 8px; white-space: nowrap;">
+              Select All
+            </button>
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-selection" style="font-size: 10.5px; padding: 5px 8px; white-space: nowrap;">
+              Clear
+            </button>
+          </div>
+
+          <!-- Selectable Client Stock List -->
+          <div id="client-stocks-container" style="max-height: 200px; overflow-y: auto; background: #ffffff; border: 1px solid #d4ded2; border-radius: 8px; padding: 4px 6px; display: flex; flex-direction: column; gap: 4px;">
+            {% if client_entered_stocks %}
+              {% for s in client_entered_stocks %}
+              <div class="alias-stock-item" data-stock="{{ s.stock }}" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 6px; transition: background 0.15s; border-bottom: 1px solid #f4f7f2; gap: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; flex: 1; min-width: 0; user-select: none;">
+                  <input type="checkbox" name="selected_aliases" value="{{ s.stock }}" class="alias-stock-checkbox" style="width: 15px; height: 15px; accent-color: #173d34; cursor: pointer; flex-shrink: 0;">
+                  <strong style="font-size: 12px; color: #173d34; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.stock }}</strong>
+                  {% if s.mapped_to %}
+                    <span class="badge" style="font-size: 9.5px; background: #eef2f6; color: #475569; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                      Mapped &rarr; {{ s.mapped_to }}
+                    </span>
+                  {% elif s.is_canonical %}
+                    <span class="badge" style="font-size: 9.5px; background: #eef5eb; color: #245c4d; border: 1px solid #d4e5d0; flex-shrink: 0;">
+                      Standard
+                    </span>
+                  {% else %}
+                    <span class="badge" style="font-size: 9.5px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; flex-shrink: 0;">
+                      Unmapped
+                    </span>
+                  {% endif %}
+                </label>
+                <button type="button" class="btn btn-ghost btn-xs" onclick="setCanonicalStock('{{ s.stock }}')" style="font-size: 10px; padding: 2px 6px; color: #245c4d; border: 1px solid #d4e5d0; white-space: nowrap; flex-shrink: 0;" title="Set as Single Standard Term">
+                  Set as Standard
+                </button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="muted" style="font-size: 11px; text-align: center; padding: 14px;">
+                No stocks entered by clients yet. You can enter a standard term and optional aliases below.
+              </div>
+            {% endif %}
+            <div id="no-filtered-stocks" style="display: none; padding: 12px; text-align: center; font-size: 11px; color: #889988;">
+              No matching client stocks found.
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional Extra Aliases as text -->
         <label class="field" style="margin-bottom: 0;">
-          <span class="field-title">Variations / Aliases Entered by Clients <span class="field-req">*</span></span>
-          <input id="alias-variations-input" name="aliases" required placeholder="e.g. sbc, sbc exports, sbc ltd" autocomplete="off">
-          <small class="muted" style="font-size: 11px;">Separate multiple terms with commas. Any trade matching these will be normalized to the canonical name.</small>
+          <span class="field-title">Extra Variations (Optional)</span>
+          <input id="alias-variations-input" name="aliases" placeholder="e.g. sbc, sbc exports, sbc ltd" autocomplete="off">
+          <small class="muted" style="font-size: 11px;">Optional: Type any extra variations not yet entered by clients, separated by commas.</small>
         </label>
       </div>
 
@@ -198,7 +269,7 @@
       </div>
 
       {% if known_stocks %}
-      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; padding-right: 4px;">
         {% for s in known_stocks %}
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1px solid #e1e9de; border-radius: 8px; gap: 12px;">
           <div style="flex: 1; min-width: 0;">
@@ -245,12 +316,118 @@
 </dialog>
 
 <script>
-function prefillStockAlias(canonical, aliases) {
+function updateSelectedCount() {
+  const checked = document.querySelectorAll('.alias-stock-checkbox:checked');
+  const badge = document.getElementById('selected-aliases-count');
+  if (badge) {
+    badge.textContent = `${checked.length} selected`;
+  }
+}
+
+function setCanonicalStock(stockName) {
+  const cInput = document.getElementById('alias-canonical-input');
+  if (cInput) {
+    cInput.value = stockName;
+    cInput.focus();
+  }
+  // Uncheck this stock from aliases if checked since it is now the canonical term
+  const checkboxes = document.querySelectorAll('.alias-stock-checkbox');
+  checkboxes.forEach(cb => {
+    if (cb.value.toUpperCase() === stockName.toUpperCase()) {
+      cb.checked = false;
+    }
+  });
+  updateSelectedCount();
+}
+
+function resetStockAliasForm() {
   const cInput = document.getElementById('alias-canonical-input');
   const aInput = document.getElementById('alias-variations-input');
-  if (cInput) cInput.value = canonical;
-  if (aInput) aInput.value = aliases;
+  if (cInput) cInput.value = '';
+  if (aInput) aInput.value = '';
+  document.querySelectorAll('.alias-stock-checkbox').forEach(cb => cb.checked = false);
+  updateSelectedCount();
   cInput?.focus();
 }
+
+function prefillStockAlias(canonical, aliasesStr) {
+  const cInput = document.getElementById('alias-canonical-input');
+  if (cInput) cInput.value = canonical;
+
+  const aliasList = (aliasesStr || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+  const aliasSet = new Set(aliasList);
+
+  const checkboxes = document.querySelectorAll('.alias-stock-checkbox');
+  const matched = new Set();
+  checkboxes.forEach(cb => {
+    const val = cb.value.toUpperCase();
+    if (aliasSet.has(val) && val !== canonical.toUpperCase()) {
+      cb.checked = true;
+      matched.add(val);
+    } else {
+      cb.checked = false;
+    }
+  });
+
+  // Any aliases not present in client stocks checkboxes put into extra variations input
+  const unmatched = aliasList.filter(a => !matched.has(a) && a !== canonical.toUpperCase());
+  const aInput = document.getElementById('alias-variations-input');
+  if (aInput) {
+    aInput.value = unmatched.join(', ');
+  }
+
+  updateSelectedCount();
+  cInput?.focus();
+  document.getElementById('stock-alias-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const filterInput = document.getElementById('filter-client-stocks');
+  const items = document.querySelectorAll('.alias-stock-item');
+  const noMatch = document.getElementById('no-filtered-stocks');
+
+  if (filterInput) {
+    filterInput.addEventListener('input', function() {
+      const q = this.value.trim().toUpperCase();
+      let visible = 0;
+      items.forEach(el => {
+        const stock = el.getAttribute('data-stock') || '';
+        if (!q || stock.toUpperCase().includes(q)) {
+          el.style.display = 'flex';
+          visible++;
+        } else {
+          el.style.display = 'none';
+        }
+      });
+      if (noMatch) {
+        noMatch.style.display = (visible === 0 && items.length > 0) ? 'block' : 'none';
+      }
+    });
+  }
+
+  document.getElementById('btn-select-all-filtered')?.addEventListener('click', function() {
+    const currentCanonical = document.getElementById('alias-canonical-input')?.value.trim().toUpperCase() || '';
+    items.forEach(el => {
+      if (el.style.display !== 'none') {
+        const cb = el.querySelector('.alias-stock-checkbox');
+        if (cb && cb.value.toUpperCase() !== currentCanonical) {
+          cb.checked = true;
+        }
+      }
+    });
+    updateSelectedCount();
+  });
+
+  document.getElementById('btn-clear-selection')?.addEventListener('click', function() {
+    document.querySelectorAll('.alias-stock-checkbox').forEach(cb => cb.checked = false);
+    const aInput = document.getElementById('alias-variations-input');
+    if (aInput) aInput.value = '';
+    updateSelectedCount();
+  });
+
+  document.querySelectorAll('.alias-stock-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateSelectedCount);
+  });
+});
 </script>
 {% endblock %}
