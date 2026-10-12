@@ -1,4 +1,5 @@
 ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS password_plain TEXT;
 ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
 
 CREATE TABLE IF NOT EXISTS public.client_alerts (

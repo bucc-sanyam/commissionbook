@@ -508,6 +508,17 @@ def create_app(config=None):
     app.after_request(secure_response)
     app.jinja_env.globals["csrf_token"] = csrf_token
 
+    @app.context_processor
+    def inject_admin_context():
+        if session.get("admin"):
+            try:
+                clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+                alerts_count = get_db().execute("SELECT COUNT(*) as c FROM client_alerts WHERE active=1").fetchone()["c"]
+                return {"active_clients": clients, "active_alerts_count": alerts_count}
+            except Exception:
+                return {}
+        return {}
+
     @app.before_request
     def authorize_request():
         g.decimal_context = localcontext()
@@ -1038,11 +1049,14 @@ def create_app(config=None):
             values = client_values(request.form, name)
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone():
                 raise ValidationError("A user with that name already exists.")
+            portal_pwd = (request.form.get("portal_password") or request.form.get("client_password") or "").strip()
+            p_hash = generate_password_hash(portal_pwd) if portal_pwd else None
+            p_plain = portal_pwd if portal_pwd else None
             get_db().execute(
-                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount) VALUES (?,?,?,?,?,?,?)",
-                values,
+                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain) VALUES (?,?,?,?,?,?,?,?,?)",
+                (*values, p_hash, p_plain),
             )
-            flash(f"Added {name}.", "success")
+            flash(f"Added {name}." + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
             return redirect(url_for("clients_list"))
         trades, paid, rows = query_trades({}), payments_by_client(), []
         for client in get_db().execute("SELECT * FROM clients ORDER BY lower(name)").fetchall():
@@ -1139,19 +1153,20 @@ def create_app(config=None):
     @app.route("/clients/<int:cid>/set-password", methods=["POST"])
     @login_required
     def client_set_password(cid):
-        get_client(cid)
+        client = get_client(cid)
         pwd = request.form.get("client_password", "").strip()
         confirm = request.form.get("confirm_password", "").strip()
+        back = request.form.get("back")
         if not pwd or len(pwd) < 4:
             flash("Password must be at least 4 characters.", "error")
-            return redirect(url_for("client_detail", cid=cid))
-        if pwd != confirm:
+            return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+        if confirm and pwd != confirm:
             flash("Passwords do not match.", "error")
-            return redirect(url_for("client_detail", cid=cid))
+            return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
         p_hash = generate_password_hash(pwd)
-        get_db().execute("UPDATE clients SET password_hash=? WHERE id=?", (p_hash, cid))
-        flash("Client portal login password configured successfully.", "success")
-        return redirect(url_for("client_detail", cid=cid))
+        get_db().execute("UPDATE clients SET password_hash=?, password_plain=? WHERE id=?", (p_hash, pwd, cid))
+        flash(f"Portal password for {client['name']} updated to: {pwd}", "success")
+        return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
 
     @app.route("/clients/<int:cid>/shares/new", methods=["POST"])
     @login_required
@@ -1839,9 +1854,10 @@ def create_app(config=None):
         if action not in ("BUY", "SELL"):
             abort(400)
         stock = request.form.get("stock", "").strip().upper()
+        back = request.form.get("back")
         if not stock:
             flash("Stock symbol is required.", "error")
-            return redirect(url_for("alerts_list"))
+            return redirect(safe_redirect_target(back, url_for("alerts_list")))
         price = number(request.form.get("price"), "Price", positive=True) if request.form.get("price") else None
         target_price = number(request.form.get("target_price"), "Target Price", positive=True) if request.form.get("target_price") else None
         stop_loss = number(request.form.get("stop_loss"), "Stop Loss", positive=True) if request.form.get("stop_loss") else None
@@ -1857,8 +1873,8 @@ def create_app(config=None):
             (client_id, action, stock, price, target_price, stop_loss, message),
         )
         recipient = "All clients (Broadcast)" if client_id is None else get_client(client_id)["name"]
-        flash(f"Trade recommendation for {stock} sent to {recipient}.", "success")
-        return redirect(url_for("alerts_list"))
+        flash(f"Pop-up trade for {stock} ({action}) sent to {recipient}.", "success")
+        return redirect(safe_redirect_target(back, url_for("alerts_list")))
 
     @app.route("/alerts/<int:aid>/toggle", methods=["POST"])
     @login_required

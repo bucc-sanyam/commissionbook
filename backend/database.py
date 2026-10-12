@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS clients (
     notes TEXT, active INTEGER NOT NULL DEFAULT 1,
     portfolio_amount NUMERIC DEFAULT 0,
     password_hash TEXT,
+    password_plain TEXT,
     username TEXT UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -187,6 +188,7 @@ def init_local(connection):
         "clients": {
             "portfolio_amount": "NUMERIC DEFAULT 0",
             "password_hash": "TEXT",
+            "password_plain": "TEXT",
             "username": "TEXT",
         },
     }

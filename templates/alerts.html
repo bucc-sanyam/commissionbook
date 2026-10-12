@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
-{% block title %}Trade Advisories{% endblock %}
-{% block breadcrumb %}Trade Advisories{% endblock %}
+{% block title %}Pop-up Trades{% endblock %}
+{% block breadcrumb %}Pop-up Trades{% endblock %}
 {% block content %}
 <section class="card" id="main">
   <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
     <div>
-      <h2>Trade Advisories &amp; In-Portal Alerts</h2>
-      <p class="muted">Send compliant buy/sell alerts directly to client portals instead of WhatsApp.</p>
+      <h2>Pop-up Trade Recommendations</h2>
+      <p class="muted">Send compliant buy/sell trade popups directly to client portals (admin portal only).</p>
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-primary" onclick="document.getElementById('new-alert-dialog').showModal()">
-        {{ icon('plus', 15) }} New Recommendation
+        {{ icon('send', 15) }} Send Pop-up Trade
       </button>
     </div>
   </div>
