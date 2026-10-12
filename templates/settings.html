@@ -36,6 +36,23 @@ Dates and screenshots are optional. Takes less than a minute! 🙏</textarea><bu
       <details style="margin-bottom:16px"><summary style="cursor:pointer;font-size:0.85em;color:var(--text-secondary);list-style:none;display:flex;align-items:center;gap:6px">{{ icon('chevron-right', 12) }} Show full token link</summary><div class="copy-field" style="margin-top:10px"><input readonly value="{{ upload_url }}" id="portal-url"><button class="btn" type="button" data-copy="portal-url">{{ icon('copy', 15) }}Copy</button></div><span class="field-hint" style="font-size:0.8em">Full link with security token. Anyone with this link can submit trades without seeing your ledger.</span></details>
       <label class="field">Extra upload code <span class="optional">Optional</span><input name="upload_code" value="{{ s.upload_code }}" maxlength="100" placeholder="An extra code to share with your clients" autocomplete="off"><span class="field-hint">Clients must enter this code before scanning or submitting. Leave blank to use the private link alone.</span></label>
     </section>
+    <section class="card card-pad" id="stock-aliases">
+      <div class="settings-heading">
+        <span class="settings-glyph">{{ icon('trend', 20) }}</span>
+        <div>
+          <h2>Stock Names &amp; Aliases</h2>
+          <p>Unify multiple variations (e.g. sbc, sbc exports) into a single standard symbol across all client portals.</p>
+        </div>
+      </div>
+      <p class="muted" style="font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+        Clients often enter different variations for the same stock. Map them so all trades, holdings, and valuations are automatically normalized across all client portals and clients get instant auto-suggestions.
+      </p>
+      <div class="actions" style="margin-top: 12px;">
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('holdings_list') }}">
+          {{ icon('trend', 14) }} Manage Stock Mappings in Holdings
+        </a>
+      </div>
+    </section>
     <section class="card card-pad">
       <div class="settings-heading"><span class="settings-glyph">{{ icon('lock', 19) }}</span><div><h2>Administrator access</h2><p>Your financial details stay behind a password.</p></div></div>
       {% if admin_password_managed|default(False) %}

@@ -454,7 +454,15 @@
     <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
       <label class="field" for="trade-stock-input" style="margin-bottom: 0;">
         Stock Symbol / Name <span style="color:#e53e3e">*</span>
-        <input id="trade-stock-input" name="stock" required placeholder="e.g. RELIANCE, TCS, INFY" autocomplete="off" style="text-transform: uppercase;">
+        <input id="trade-stock-input" name="stock" list="available-stocks-list" required placeholder="e.g. SBC, RELIANCE, TCS" autocomplete="off" style="text-transform: uppercase;">
+        <datalist id="available-stocks-list">
+          {% for s in known_stocks|default([]) %}
+            <option value="{{ s.canonical_name }}">{{ s.canonical_name }}{% if s.aliases %} (Also: {{ s.aliases }}){% endif %}</option>
+            {% for a in s.alias_list %}
+              <option value="{{ a }}">{{ a }} &rarr; {{ s.canonical_name }}</option>
+            {% endfor %}
+          {% endfor %}
+        </datalist>
       </label>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">

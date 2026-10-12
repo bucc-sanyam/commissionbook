@@ -110,6 +110,14 @@ CREATE TABLE IF NOT EXISTS upload_assets (
     upload_id INTEGER REFERENCES uploads(id) ON DELETE CASCADE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS stock_aliases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    canonical_name TEXT NOT NULL,
+    alias TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_stock_aliases_canonical ON stock_aliases(canonical_name);
+CREATE INDEX IF NOT EXISTS idx_stock_aliases_alias ON stock_aliases(alias);
 CREATE INDEX IF NOT EXISTS idx_trades_client ON trades(client_id);
 CREATE INDEX IF NOT EXISTS idx_payments_client ON payments(client_id);
 CREATE INDEX IF NOT EXISTS idx_trades_dates ON trades(sell_date, buy_date);

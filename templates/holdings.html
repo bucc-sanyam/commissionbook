@@ -63,6 +63,10 @@
     </div>
     
     <div class="card-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('manage-stocks-dialog').showModal()" title="Map multiple stock names/aliases into a single term across all portals">
+        {{ icon('trend', 14) }}<span>Stock Names &amp; Aliases</span>
+      </button>
+
       <form method="post" action="{{ url_for('admin_update_prices') }}" style="margin: 0;">
         {{ csrf() }}
         <button type="submit" class="btn btn-secondary btn-sm" title="Fetch live market prices for all held stocks now">
@@ -140,4 +144,113 @@
     {% endif %}
   {% endif %}
 </section>
+
+<!-- ADMIN STOCK ALIASES & NORMALIZATION MODAL -->
+<dialog class="modal modal-md" id="manage-stocks-dialog">
+  <div class="modal-inner">
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">STOCK NORMALIZATION</span>
+        <h2>Stock Names &amp; Aliases Mapping</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted" style="font-size: 12px; line-height: 1.6; margin-bottom: 16px;">
+      Map multiple client variations (e.g. <code>sbc</code>, <code>sbc exports</code>) into a single standard term.
+      Saving will automatically rename all matching trades and holdings across <strong>all client portals</strong>, and provide auto-suggestions when clients enter trades.
+    </p>
+
+    <!-- Add/Update Mapping Form -->
+    <form method="post" action="{{ url_for('admin_save_stock_alias') }}" style="background: #fafbf9; border: 1.5px solid #d4ded2; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+      {{ csrf() }}
+      <input type="hidden" name="redirect_to" value="{{ url_for('holdings_list') }}">
+      
+      <div style="font-weight: 700; font-size: 13px; color: #173d34; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+        {{ icon('plus', 14) }} Add or Update Stock Mapping
+      </div>
+
+      <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
+        <label class="field" style="margin-bottom: 0;">
+          Single Standard Term (Canonical Name) <span style="color:#e53e3e">*</span>
+          <input id="alias-canonical-input" name="canonical_name" required placeholder="e.g. SBC, RELIANCE, TATAMOTORS" autocomplete="off" style="text-transform: uppercase;">
+          <small class="muted" style="font-size: 11px;">The primary standard symbol displayed everywhere across all client portals.</small>
+        </label>
+
+        <label class="field" style="margin-bottom: 0;">
+          Variations / Aliases Entered by Clients <span style="color:#e53e3e">*</span>
+          <input id="alias-variations-input" name="aliases" required placeholder="e.g. sbc, sbc exports, sbc ltd" autocomplete="off">
+          <small class="muted" style="font-size: 11px;">Separate multiple terms with commas. Any trade matching these will be normalized to the canonical name.</small>
+        </label>
+      </div>
+
+      <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+        <button type="submit" class="btn btn-primary btn-sm">
+          {{ icon('check', 14) }} Save &amp; Update All Client Portals
+        </button>
+      </div>
+    </form>
+
+    <!-- Currently Configured Stocks & Aliases List -->
+    <div style="margin-top: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <strong style="font-size: 13px; color: #173d34;">Configured Stocks ({{ known_stocks|default([])|length }})</strong>
+        <small class="muted" style="font-size: 11px;">Auto-suggested to clients</small>
+      </div>
+
+      {% if known_stocks %}
+      <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+        {% for s in known_stocks %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1px solid #e1e9de; border-radius: 8px; gap: 12px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="badge" style="background: #173d34; color: #d1f29c; font-size: 12px; font-weight: 750; letter-spacing: 0.5px;">{{ s.canonical_name }}</span>
+              {% if s.alias_list %}
+                <span style="font-size: 11px; color: #5d6e65;">Aliases:</span>
+                {% for a in s.alias_list %}
+                  <span class="badge" style="background: #eef5eb; color: #245c4d; font-size: 11px; border: 1px solid #d4e5d0;">{{ a }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="muted" style="font-size: 11px;">No aliases mapped yet</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+            <button type="button" class="btn btn-ghost btn-xs" onclick="prefillStockAlias('{{ s.canonical_name }}', '{{ s.aliases }}')" title="Edit this stock mapping" style="font-size: 11px; padding: 2px 7px;">
+              {{ icon('edit', 12) }} Edit
+            </button>
+            <form method="post" action="{{ url_for('admin_delete_stock_alias') }}" style="margin: 0;" onsubmit="return confirm('Remove all alias mappings for {{ s.canonical_name }}?');">
+              {{ csrf() }}
+              <input type="hidden" name="canonical_name" value="{{ s.canonical_name }}">
+              <input type="hidden" name="redirect_to" value="{{ url_for('holdings_list') }}">
+              <button type="submit" class="icon-btn icon-btn-danger" aria-label="Delete mapping" style="width: 26px; height: 26px;">
+                {{ icon('trash', 13) }}
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="helper-box" style="margin: 0; font-size: 12px;">
+        {{ icon('info', 14) }} No stock mappings configured yet. Add your first stock above.
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="modal-actions" style="margin-top: 18px; padding-top: 14px;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+function prefillStockAlias(canonical, aliases) {
+  const cInput = document.getElementById('alias-canonical-input');
+  const aInput = document.getElementById('alias-variations-input');
+  if (cInput) cInput.value = canonical;
+  if (aInput) aInput.value = aliases;
+  cInput?.focus();
+}
+</script>
 {% endblock %}
