@@ -453,7 +453,7 @@
 
     <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
       <label class="field" for="trade-stock-input" style="margin-bottom: 0;">
-        Stock Symbol / Name <span style="color:#e53e3e">*</span>
+        <span class="field-title">Stock Symbol / Name <span class="field-req">*</span></span>
         <input id="trade-stock-input" name="stock" list="available-stocks-list" required placeholder="e.g. SBC, RELIANCE, TCS" autocomplete="off" style="text-transform: uppercase;">
         <datalist id="available-stocks-list">
           {% for s in known_stocks|default([]) %}
@@ -467,33 +467,33 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label class="field" for="trade-qty-input" style="margin-bottom: 0;">
-          Quantity <span style="color:#e53e3e">*</span>
+          <span class="field-title">Quantity <span class="field-req">*</span></span>
           <input id="trade-qty-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
         </label>
         <label class="field" for="trade-buy-price" style="margin-bottom: 0;">
-          Buy Price (₹)
+          <span class="field-title">Buy Price (₹)</span>
           <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="₹ per share">
         </label>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label class="field" for="trade-buy-date" style="margin-bottom: 0;">
-          Buy Date
+          <span class="field-title">Buy Date</span>
           <input id="trade-buy-date" type="date" name="buy_date" value="{{ today }}">
         </label>
         <label class="field" for="trade-notes" style="margin-bottom: 0;">
-          Notes <span class="optional">(Optional)</span>
+          <span class="field-title">Notes <span class="optional">(Optional)</span></span>
           <input id="trade-notes" name="notes" placeholder="e.g. Swing, Intraday">
         </label>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #fafbf9; border: 1px dashed #d5ded2; border-radius: 8px;">
         <label class="field" for="trade-sell-price" style="margin-bottom: 0;">
-          Sell Price (₹) <span class="optional">(Optional)</span>
+          <span class="field-title">Sell Price (₹) <span class="optional">(Optional)</span></span>
           <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open">
         </label>
         <label class="field" for="trade-sell-date" style="margin-bottom: 0;">
-          Sell Date <span class="optional">(Optional)</span>
+          <span class="field-title">Sell Date <span class="optional">(Optional)</span></span>
           <input id="trade-sell-date" type="date" name="sell_date">
         </label>
       </div>
