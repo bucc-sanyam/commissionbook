@@ -17,7 +17,20 @@
     <thead><tr><th>Client</th><th>Portal Password</th><th>Commission rule</th><th class="r">Trades</th><th class="r">Client P&amp;L</th><th class="r">Earned</th><th class="r">Received</th><th class="r">Balance</th><th></th></tr></thead>
     <tbody>{% for c in clients %}
       <tr>
-        <td><a class="client-cell" href="{{ url_for('client_detail', cid=c.id) }}">{{ avatar(c.name, c.id) }}<span>{{ c.name }}<small>{{ c.email or c.phone or 'Client #' ~ c.id }}</small></span></a></td>
+        <td>
+          <a class="client-cell" href="{{ url_for('client_detail', cid=c.id) }}">
+            {{ avatar(c.name, c.id) }}
+            <span>
+              <strong>{{ c.name }}</strong>
+              <small style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+                {% if c.username %}
+                  <span class="badge" style="background:#eef3e8; color:#164237; font-weight:700; padding:1px 6px; font-size:11px;">@{{ c.username }}</span>
+                {% endif %}
+                <span>{{ c.phone or c.email or 'Client #' ~ c.id }}</span>
+              </small>
+            </span>
+          </a>
+        </td>
         <td>
           {% if c.password_plain %}
             <div style="display:flex; align-items:center; gap:6px;">
@@ -69,14 +82,17 @@
     <div class="modal-heading"><div><span class="eyebrow">GROW YOUR CLIENT BOOK</span><h2>Meet your next client.</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
     <div class="form-grid">
       <label class="field full">Client name<input name="name" required maxlength="120" autocomplete="name" placeholder="Their full name"></label>
-      <label class="field">Email <span class="optional">Optional</span><input name="email" type="email" maxlength="254" placeholder="name@example.com" autocomplete="email"></label>
+      <label class="field">Username <span class="optional">Unique Login Handle</span>
+        <input name="username" maxlength="60" placeholder="e.g. rahul_trader" autocomplete="off" style="font-family:monospace;">
+      </label>
       <label class="field">Phone<input name="phone" type="tel" maxlength="40" placeholder="+91" autocomplete="tel" required></label>
+      <label class="field full">Email <span class="optional">Optional</span><input name="email" type="email" maxlength="254" placeholder="name@example.com" autocomplete="email"></label>
       <label class="field">Commission rule<select name="commission_type" data-rule-select="new-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
       <label class="field">Rate<input id="new-client-rate" name="commission_rate" type="number" min="0" step="any" placeholder="Uses workspace default"></label>
-      <label class="field full">Portal Password <span class="optional">Optional</span>
+      <label class="field full">Portal Password <span class="optional">Auto-generated or custom</span>
         <div style="display:flex; gap:6px;">
-          <input name="client_password" id="new-client-pwd" placeholder="Leave empty or enter password" autocomplete="new-password">
-          <button type="button" class="btn btn-ghost btn-xs" onclick="generateRandomPassword('new-client-pwd')">{{ icon('repeat', 12) }} Generate</button>
+          <input name="client_password" id="new-client-pwd" placeholder="Leave empty or generate strong password" autocomplete="new-password" style="font-family:monospace; font-weight:600;">
+          <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('new-client-pwd')">{{ icon('repeat', 12) }} Generate Strong</button>
         </div>
       </label>
       <label class="field full">Notes <span class="optional">Optional</span><textarea name="notes" rows="2" maxlength="2000" placeholder="A little context for later..."></textarea></label>
@@ -108,12 +124,12 @@
     <p class="muted">Set or reset this client's password. It will stay viewable to you on this admin page.</p>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; margin-bottom:6px;">
-      <label for="reset-pwd-input" style="font-size:12px; font-weight:600;">New Password</label>
-      <button type="button" class="btn btn-ghost btn-xs" onclick="generateRandomPassword('reset-pwd-input')">
-        {{ icon('repeat', 12) }} Generate
+      <label for="reset-pwd-input" style="font-size:12px; font-weight:600;">New Strong Password</label>
+      <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('reset-pwd-input')">
+        {{ icon('repeat', 12) }} Generate Strong
       </button>
     </div>
-    <input type="text" id="reset-pwd-input" name="client_password" required minlength="4" placeholder="Enter new password (min 4 chars)" autocomplete="off" style="width:100%; margin-bottom:1.25rem;">
+    <input type="text" id="reset-pwd-input" name="client_password" required minlength="4" placeholder="Enter or generate strong password" autocomplete="off" style="width:100%; margin-bottom:1.25rem; font-family:monospace; font-weight:600;">
 
     <div class="modal-actions">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
@@ -157,12 +173,37 @@ function togglePasswordVisibility(id, btn) {
   }
 }
 
-function generateRandomPassword(id) {
-  const adjectives = ['swift', 'safe', 'prime', 'smart', 'gold', 'blue', 'star', 'trade', 'ace', 'apex'];
-  const numbers = Math.floor(1000 + Math.random() * 9000);
-  const word = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const inEl = document.getElementById(id);
-  if (inEl) inEl.value = word + numbers;
+function generateStrongPassword(...targetIds) {
+  if (window.generateStrongPassword) {
+    return window.generateStrongPassword(...targetIds);
+  }
+  const lowers = 'abcdefghjkmnpqrstuvwxyz';
+  const uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const nums = '23456789';
+  const syms = '!@#$%&*';
+  const all = lowers + uppers + nums + syms;
+  let pwd = [
+    lowers[Math.floor(Math.random() * lowers.length)],
+    uppers[Math.floor(Math.random() * uppers.length)],
+    nums[Math.floor(Math.random() * nums.length)],
+    syms[Math.floor(Math.random() * syms.length)],
+  ];
+  for (let i = pwd.length; i < 14; i++) {
+    pwd.push(all[Math.floor(Math.random() * all.length)]);
+  }
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  const result = pwd.join('');
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = result;
+  });
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(result);
+  }
+  return result;
 }
 </script>
 {% endblock %}

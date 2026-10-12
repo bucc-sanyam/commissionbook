@@ -227,3 +227,144 @@
   const autoDialog = document.querySelector("[data-auto-open='true']");
   if (autoDialog) showDialog(autoDialog.id);
 })();
+
+// Cryptographically Strong Password Generator
+window.generateStrongPassword = function(...targetIds) {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghijkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const symbols = "!@#$%^&*";
+  const allChars = upper + lower + digits + symbols;
+  
+  let pw = [];
+  const getRandom = (str) => {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return str[array[0] % str.length];
+  };
+  
+  pw.push(getRandom(upper));
+  pw.push(getRandom(upper));
+  pw.push(getRandom(lower));
+  pw.push(getRandom(lower));
+  pw.push(getRandom(digits));
+  pw.push(getRandom(digits));
+  pw.push(getRandom(symbols));
+  pw.push(getRandom(symbols));
+  
+  while (pw.length < 14) {
+    pw.push(getRandom(allChars));
+  }
+  
+  for (let i = pw.length - 1; i > 0; i--) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const j = array[0] % (i + 1);
+    [pw[i], pw[j]] = [pw[j], pw[i]];
+  }
+  const password = pw.join("");
+
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = password;
+  });
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(password).then(() => {
+      if (typeof showToast === "function") {
+        showToast("Strong 14-char password generated & copied to clipboard!", "success");
+      }
+    }).catch(() => {});
+  }
+  return password;
+};
+
+// Lightweight Toast Notification
+window.showToast = function(message, type = "info") {
+  let container = document.getElementById("toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    container.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:90vw;";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  const bg = type === "error" ? "#7f1d1d" : type === "success" ? "#14532d" : "#1f2937";
+  toast.style.cssText = `background:${bg};color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.35);transition:opacity 0.25s ease,transform 0.25s ease;opacity:0;transform:translateY(10px);pointer-events:auto;`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  });
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    setTimeout(() => toast.remove(), 250);
+  }, 3200);
+};
+
+// Screenshot & Mobile Privacy Protection
+(function initScreenPrivacy() {
+  let blurTimer = null;
+  function obscureScreen() {
+    document.body.classList.add("app-obscured");
+  }
+  function revealScreen() {
+    clearTimeout(blurTimer);
+    blurTimer = setTimeout(() => {
+      document.body.classList.remove("app-obscured");
+    }, 150);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      obscureScreen();
+    } else {
+      revealScreen();
+    }
+  });
+
+  window.addEventListener("blur", obscureScreen);
+  window.addEventListener("focus", revealScreen);
+  window.addEventListener("pagehide", obscureScreen);
+  window.addEventListener("pageshow", revealScreen);
+
+  // Prevent right-click / mobile long-touch save image context menus
+  document.addEventListener("contextmenu", (e) => {
+    if (!["INPUT", "TEXTAREA"].includes(e.target.tagName)) {
+      e.preventDefault();
+    }
+  });
+
+  // Detect and deter desktop screenshot shortcuts
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "PrintScreen" || e.code === "PrintScreen") {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText("").catch(() => {});
+      }
+      obscureScreen();
+      if (typeof showToast === "function") {
+        showToast("Screenshots are restricted on this private workspace.", "error");
+      }
+      setTimeout(revealScreen, 1500);
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) {
+      e.preventDefault();
+      if (typeof showToast === "function") {
+        showToast("Printing and screen exports are restricted.", "error");
+      }
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["3", "4", "5", "s", "S"].includes(e.key)) {
+      obscureScreen();
+      if (typeof showToast === "function") {
+        showToast("Screen captures are restricted for client privacy.", "error");
+      }
+      setTimeout(revealScreen, 1500);
+    }
+  });
+})();
+

@@ -636,15 +636,16 @@ def create_app(config=None):
             login_type = request.form.get("login_type", "admin")
             if login_type == "client":
                 identifier = request.form.get("identifier", "").strip()
+                clean_ident = identifier.lstrip("@").strip()
                 password = request.form.get("client_password", "")
                 if not identifier or not password:
                     flash("Please provide your ID/phone and password.", "error")
                     return render_template("login.html", first_run=first_run, active_tab="client", public_token=portal_token()), 400
                 client = get_db().execute(
                     """SELECT * FROM clients 
-                    WHERE (lower(phone)=lower(?) OR lower(email)=lower(?) OR lower(username)=lower(?) OR lower(name)=lower(?) OR CAST(id AS TEXT)=?) 
+                    WHERE (lower(phone)=lower(?) OR lower(phone)=lower(?) OR lower(email)=lower(?) OR lower(username)=lower(?) OR lower(username)=lower(?) OR lower(name)=lower(?) OR CAST(id AS TEXT)=?) 
                       AND active=1""",
-                    (identifier, identifier, identifier, identifier, identifier),
+                    (identifier, clean_ident, identifier, identifier, clean_ident, identifier, identifier),
                 ).fetchone()
                 if not client or not client.get("password_hash"):
                     flash("Invalid credentials or client password has not been configured yet.", "error")
@@ -1049,14 +1050,21 @@ def create_app(config=None):
             values = client_values(request.form, name)
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone():
                 raise ValidationError("A user with that name already exists.")
+            raw_username = request.form.get("username", "").strip()
+            username = raw_username.lstrip("@").strip() if raw_username else None
+            if username:
+                if len(username) < 3 or len(username) > 60:
+                    raise ValidationError("Username must be between 3 and 60 characters.")
+                if get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?)", (username,)).fetchone():
+                    raise ValidationError("A client with that username already exists.")
             portal_pwd = (request.form.get("portal_password") or request.form.get("client_password") or "").strip()
             p_hash = generate_password_hash(portal_pwd) if portal_pwd else None
             p_plain = portal_pwd if portal_pwd else None
             get_db().execute(
-                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain) VALUES (?,?,?,?,?,?,?,?,?)",
-                (*values, p_hash, p_plain),
+                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain,username) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (*values, p_hash, p_plain, username),
             )
-            flash(f"Added {name}." + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
+            flash(f"Added {name}." + (f" Username: @{username}." if username else "") + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
             return redirect(url_for("clients_list"))
         trades, paid, rows = query_trades({}), payments_by_client(), []
         for client in get_db().execute("SELECT * FROM clients ORDER BY lower(name)").fetchall():
@@ -1077,9 +1085,16 @@ def create_app(config=None):
             values = client_values(request.form, name)
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?) AND id<>?", (name, cid)).fetchone():
                 raise ValidationError("Another user already has that name.")
+            raw_username = request.form.get("username", "").strip()
+            username = raw_username.lstrip("@").strip() if raw_username else None
+            if username:
+                if len(username) < 3 or len(username) > 60:
+                    raise ValidationError("Username must be between 3 and 60 characters.")
+                if get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?) AND id<>?", (username, cid)).fetchone():
+                    raise ValidationError("Another client already has that username.")
             get_db().execute(
-                "UPDATE clients SET name=?,phone=?,email=?,commission_type=?,commission_rate=?,notes=?,portfolio_amount=? WHERE id=?",
-                (*values, cid),
+                "UPDATE clients SET name=?,phone=?,email=?,commission_type=?,commission_rate=?,notes=?,portfolio_amount=?,username=? WHERE id=?",
+                (*values, username, cid),
             )
             flash("User updated.", "success")
             return redirect(url_for("client_detail", cid=cid))
@@ -1142,13 +1157,47 @@ def create_app(config=None):
                 )
             shares.append(item)
 
+        try:
+            advisories = get_db().execute(
+                """
+                SELECT a.*, v.acknowledged, v.acknowledged_at
+                FROM client_alerts a
+                LEFT JOIN client_alert_views v ON v.alert_id = a.id AND v.client_id = ?
+                WHERE a.client_id = ? OR a.client_id IS NULL
+                ORDER BY a.id DESC
+                """,
+                (cid, cid),
+            ).fetchall()
+        except Exception:
+            advisories = []
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
-            funds=funds, total_funds=total_funds, shares=shares,
+            funds=funds, total_funds=total_funds, shares=shares, advisories=advisories,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
         )
+
+    @app.route("/clients/<int:cid>/set-username", methods=["POST"])
+    @login_required
+    def client_set_username(cid):
+        client = get_client(cid)
+        raw_username = request.form.get("username", "").strip()
+        username = raw_username.lstrip("@").strip() if raw_username else None
+        back = request.form.get("back")
+        if username:
+            if len(username) < 3 or len(username) > 60:
+                flash("Username must be between 3 and 60 characters.", "error")
+                return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+            existing = get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?) AND id<>?", (username, cid)).fetchone()
+            if existing:
+                flash("A client with that username already exists.", "error")
+                return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+        get_db().execute("UPDATE clients SET username=? WHERE id=?", (username, cid))
+        msg = f"Username for {client['name']} updated to: @{username}" if username else f"Username removed for {client['name']}"
+        flash(msg, "success")
+        return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
 
     @app.route("/clients/<int:cid>/set-password", methods=["POST"])
     @login_required
@@ -1765,20 +1814,9 @@ def create_app(config=None):
             LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
             WHERE (a.client_id=? OR a.client_id IS NULL)
               AND a.active=1
+              AND (v.acknowledged IS NULL OR v.acknowledged=0)
               AND (v.dismissed IS NULL OR v.dismissed=0)
-            ORDER BY a.created_at DESC
-            """,
-            (cid, cid),
-        ).fetchall()
-
-        all_alerts = get_db().execute(
-            """
-            SELECT a.*, COALESCE(v.dismissed, 0) as dismissed FROM client_alerts a
-            LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
-            WHERE (a.client_id=? OR a.client_id IS NULL)
-              AND a.active=1
-            ORDER BY a.created_at DESC
-            LIMIT 20
+            ORDER BY a.id ASC
             """,
             (cid, cid),
         ).fetchall()
@@ -1797,7 +1835,6 @@ def create_app(config=None):
             total_unrealized_pnl=total_unrealized_pnl,
             total_unrealized_pct=total_unrealized_pct,
             undismissed_alerts=undismissed_alerts,
-            all_alerts=all_alerts,
             public_token=portal_token(),
         )
 
@@ -1818,19 +1855,24 @@ def create_app(config=None):
         flash(f"Holding for {stock} added to your portfolio.", "success")
         return redirect(url_for("client_portal"))
 
+    @app.route("/api/alerts/<int:aid>/acknowledge", methods=["POST"])
     @app.route("/api/alerts/<int:aid>/dismiss", methods=["POST"])
     @client_login_required
-    def api_alert_dismiss(aid):
+    def api_alert_acknowledge(aid):
         cid = session["client_id"]
         get_db().execute(
             """
-            INSERT INTO client_alert_views (alert_id, client_id, dismissed, viewed_at)
-            VALUES (?, ?, 1, CURRENT_TIMESTAMP)
-            ON CONFLICT(alert_id, client_id) DO UPDATE SET dismissed=1, viewed_at=CURRENT_TIMESTAMP
+            INSERT INTO client_alert_views (alert_id, client_id, dismissed, acknowledged, acknowledged_at, viewed_at)
+            VALUES (?, ?, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT(alert_id, client_id) DO UPDATE SET 
+                dismissed=1,
+                acknowledged=1,
+                acknowledged_at=CURRENT_TIMESTAMP,
+                viewed_at=CURRENT_TIMESTAMP
             """,
             (aid, cid),
         )
-        return jsonify(success=True)
+        return jsonify(success=True, acknowledged=True)
 
     @app.route("/alerts", methods=["GET"])
     @login_required

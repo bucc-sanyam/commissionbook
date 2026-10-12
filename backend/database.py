@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS client_alert_views (
     client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
     viewed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dismissed INTEGER NOT NULL DEFAULT 0,
+    acknowledged INTEGER NOT NULL DEFAULT 0,
+    acknowledged_at TEXT,
     UNIQUE(alert_id, client_id)
 );
 CREATE TABLE IF NOT EXISTS stock_prices (
@@ -190,6 +192,10 @@ def init_local(connection):
             "password_hash": "TEXT",
             "password_plain": "TEXT",
             "username": "TEXT",
+        },
+        "client_alert_views": {
+            "acknowledged": "INTEGER DEFAULT 0",
+            "acknowledged_at": "TEXT",
         },
     }
     for table, columns in additions.items():

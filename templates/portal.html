@@ -14,20 +14,12 @@
       </div>
     </div>
     <div class="portal-user-actions">
-      <!-- Notification Advisory Bell -->
-      <button type="button" class="icon-btn portal-bell-btn" id="open-alerts-btn" aria-label="Trade Advisories" title="Trade Advisories">
-        {{ icon('alert', 18) }}
-        {% if undismissed_alerts %}
-          <span class="alert-badge-pulse">{{ undismissed_alerts|length }}</span>
-        {% endif %}
-      </button>
-
       <!-- Client Profile Info -->
       <div class="portal-user-chip">
         <span class="portal-avatar">{{ client.name[0]|upper }}</span>
         <div class="portal-user-meta">
           <strong>{{ client.name }}</strong>
-          <small>{{ client.phone or client.email or 'Verified Client' }}</small>
+          <small>{{ ('@' ~ client.username) if client.username else (client.phone or client.email or 'Verified Client') }}</small>
         </div>
       </div>
 
@@ -42,6 +34,10 @@
 
   <main class="client-portal-main" id="main">
     {% include "_flashes.html" %}
+
+    <!-- Security Watermark (Anti-Leak) -->
+    <div class="portal-watermark"></div>
+    <div class="portal-watermark-text">Confidential · {{ client.name }} · {{ client.phone or '' }}</div>
 
     <!-- Portfolio Summary Metrics -->
     <section class="portal-hero-metrics">
@@ -233,58 +229,59 @@
   </form>
 </dialog>
 
-<!-- IN-PORTAL POPUP ADVISORY MODAL (Lawyer-Compliant alternative to WhatsApp) -->
+<!-- MANDATORY POPUP ADVISORY MODAL (NO CLOSE / CROSS BUTTON - MUST BE ACKNOWLEDGED) -->
 {% if undismissed_alerts %}
-<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog">
-  <div class="modal-inner advisory-modal-content">
-    <div class="advisory-top-banner">
-      <div class="advisory-banner-badge">
-        {{ icon('shield', 14) }} Official Trade Recommendation
+<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog" style="padding:0; overflow:hidden; border-radius:14px; border:2px solid #2e7d32; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+  <div class="modal-inner advisory-modal-content" style="padding: 1.5rem;">
+    <div class="advisory-top-banner" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #edf2e5;">
+      <div class="advisory-banner-badge" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#1e4620; font-size:13px; text-transform:uppercase; letter-spacing:0.05em;">
+        {{ icon('shield', 16) }} Official Trade Advisory
       </div>
-      <button class="icon-btn" type="button" id="close-advisory-modal" aria-label="Close">{{ icon('x') }}</button>
+      <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:11px; font-weight:700;">Mandatory Acknowledgment</span>
+      <!-- NO CLOSE / CROSS BUTTON PER REQUIREMENT -->
     </div>
 
     {% for alert in undismissed_alerts %}
     <div class="advisory-card-item {{ 'active-alert' if loop.first else 'hidden-alert' }}" id="alert-item-{{ alert.id }}">
-      <div class="advisory-header-row">
-        <span class="advisory-action-pill {{ 'pill-buy' if alert.action == 'BUY' else 'pill-sell' }}">
+      <div class="advisory-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <span class="advisory-action-pill {{ 'pill-buy' if alert.action == 'BUY' else 'pill-sell' }}" style="font-size:16px; font-weight:800; padding:4px 14px; border-radius:6px;">
           {{ alert.action }}
         </span>
-        <span class="advisory-stock-symbol">{{ alert.stock }}</span>
+        <span class="advisory-stock-symbol" style="font-size:22px; font-weight:900; letter-spacing:0.02em;">{{ alert.stock }}</span>
       </div>
 
-      <div class="advisory-price-grid">
+      <div class="advisory-price-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:1.25rem; background:#f4f8f3; padding:12px; border-radius:8px;">
         <div class="advisory-price-block">
-          <small>RECOMMENDED PRICE</small>
-          <strong>{{ alert.price|money if alert.price else 'Market Price' }}</strong>
+          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">RECOMMENDED PRICE</small>
+          <strong style="font-size:16px;">{{ alert.price|money if alert.price else 'Market Price' }}</strong>
         </div>
         {% if alert.target_price %}
         <div class="advisory-price-block">
-          <small>TARGET PRICE</small>
-          <strong class="pos">{{ alert.target_price|money }}</strong>
+          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">TARGET PRICE</small>
+          <strong class="pos" style="font-size:16px; color:#1e9752;">{{ alert.target_price|money }}</strong>
         </div>
         {% endif %}
         {% if alert.stop_loss %}
         <div class="advisory-price-block">
-          <small>STOP LOSS</small>
-          <strong class="neg">{{ alert.stop_loss|money }}</strong>
+          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">STOP LOSS</small>
+          <strong class="neg" style="font-size:16px; color:#d93025;">{{ alert.stop_loss|money }}</strong>
         </div>
         {% endif %}
       </div>
 
       {% if alert.message %}
-      <div class="advisory-message-box">
-        <p>{{ alert.message }}</p>
+      <div class="advisory-message-box" style="margin-bottom:1.25rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
+        <p style="margin:0;">{{ alert.message }}</p>
       </div>
       {% endif %}
 
-      <div class="advisory-timestamp muted">
-        Issued on {{ alert.created_at[:16] }} IST · Visible only in your private portal
+      <div class="advisory-timestamp muted" style="font-size:11px; margin-bottom:1.25rem; text-align:center;">
+        Issued on {{ alert.created_at[:16] }} IST · Real-time delivery
       </div>
 
-      <div class="modal-actions" style="margin-top: 1.25rem;">
-        <button class="btn btn-primary btn-wide" type="button" onclick="dismissAlert({{ alert.id }})">
-          {{ icon('check', 16) }} Acknowledge &amp; Dismiss
+      <div class="modal-actions" style="margin-top: 1rem;">
+        <button class="btn btn-primary btn-wide" id="btn-ack-{{ alert.id }}" type="button" onclick="acknowledgeAlert({{ alert.id }})" style="padding:14px; font-size:15px; font-weight:700; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">
+          {{ icon('check', 18) }} Acknowledge Trade Advisory
         </button>
       </div>
     </div>
@@ -293,86 +290,57 @@
 </dialog>
 {% endif %}
 
-<!-- ALL ADVISORIES DRAWER / MODAL -->
-<dialog class="modal modal-md" id="all-alerts-dialog">
-  <div class="modal-inner">
-    <div class="modal-heading">
-      <div>
-        <span class="eyebrow">TRADE ADVISORIES</span>
-        <h2>Active &amp; Past Recommendations</h2>
-      </div>
-      <button class="icon-btn" type="button" data-dialog-close aria-label="Close">{{ icon('x') }}</button>
-    </div>
-    
-    {% if all_alerts %}
-    <div class="advisories-history-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; margin-top: 1rem;">
-      {% for alert in all_alerts %}
-      <div class="advisory-history-card" style="border: 1px solid #e9efdf; border-radius: 8px; padding: 14px; background: #fafcf8;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span class="advisory-action-pill {{ 'pill-buy' if alert.action == 'BUY' else 'pill-sell' }}">{{ alert.action }}</span>
-            <strong style="font-size: 15px;">{{ alert.stock }}</strong>
-          </div>
-          <span style="font-weight: 700; font-size: 14px;">{{ alert.price|money if alert.price else 'CMP' }}</span>
-        </div>
-        {% if alert.message %}
-          <p style="font-size: 13px; color: #435443; margin-bottom: 6px;">{{ alert.message }}</p>
-        {% endif %}
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #7f957f;">
-          <span>Target: {{ alert.target_price|money if alert.target_price else '—' }} | SL: {{ alert.stop_loss|money if alert.stop_loss else '—' }}</span>
-          <span>{{ alert.created_at[:16] }}</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-      {{ empty_state('No advisories yet', 'Trade recommendations will appear here as soon as they are posted.', 'alert') }}
-    {% endif %}
-  </div>
-</dialog>
-
 <script>
-  // Open alerts history
-  document.getElementById('open-alerts-btn')?.addEventListener('click', function() {
-    document.getElementById('all-alerts-dialog').showModal();
-  });
-
   // Auto-show popup alert modal if there are undismissed alerts
   window.addEventListener('DOMContentLoaded', function() {
     const popup = document.getElementById('popup-advisory-dialog');
     if (popup) {
-      popup.showModal();
-      document.getElementById('close-advisory-modal')?.addEventListener('click', function() {
-        popup.close();
+      // Prevent Escape key from dismissing modal (modal cannot be removed until acknowledged)
+      popup.addEventListener('cancel', function(e) {
+        e.preventDefault();
       });
+      popup.showModal();
     }
   });
 
-  // Dismiss alert via API
-  async function dismissAlert(alertId) {
+  // Acknowledge alert via API (records acknowledgment in client profile)
+  async function acknowledgeAlert(alertId) {
+    const btn = document.getElementById('btn-ack-' + alertId);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = 'Recording Acknowledgment...';
+    }
     try {
       const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      await fetch('/api/alerts/' + alertId + '/dismiss', {
+      const res = await fetch('/api/alerts/' + alertId + '/acknowledge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': csrf || ''
         }
       });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to acknowledge');
+      }
+
       const el = document.getElementById('alert-item-' + alertId);
       if (el) el.remove();
       
       const remaining = document.querySelectorAll('.advisory-card-item');
       if (remaining.length === 0) {
         document.getElementById('popup-advisory-dialog')?.close();
-        const badge = document.querySelector('.alert-badge-pulse');
-        if (badge) badge.remove();
       } else {
         remaining[0].classList.remove('hidden-alert');
         remaining[0].classList.add('active-alert');
       }
     } catch (err) {
-      console.error('Failed to dismiss alert:', err);
+      console.error('Failed to acknowledge alert:', err);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Acknowledge Trade Advisory';
+      }
+      alert('Unable to record acknowledgment. Please tap Acknowledge again.');
     }
   }
 </script>

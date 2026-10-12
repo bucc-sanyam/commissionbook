@@ -4,7 +4,21 @@
 {% block breadcrumb %}Clients / {{ client.name }}{% endblock %}
 {% block content %}
 <div class="page-heading">
-  <div class="client-heading">{{ avatar(client.name, client.id) }}<div><span class="eyebrow">CLIENT AT A GLANCE</span><h1>{{ client.name }}<span class="accent-period">.</span></h1><div class="client-contact"><span>{{ icon('users', 13) }}Client #{{ client.id }}</span>{% if client.email %}<span>{{ icon('mail', 13) }}{{ client.email }}</span>{% endif %}{% if client.phone %}<span>{{ client.phone }}</span>{% endif %}</div></div></div>
+  <div class="client-heading">
+    {{ avatar(client.name, client.id) }}
+    <div>
+      <span class="eyebrow">CLIENT AT A GLANCE</span>
+      <h1>{{ client.name }}<span class="accent-period">.</span></h1>
+      <div class="client-contact">
+        <span>{{ icon('users', 13) }}Client #{{ client.id }}</span>
+        {% if client.username %}
+          <span style="font-weight:700; color:#164237; background:#eef3e8; padding:2px 8px; border-radius:4px; font-family:monospace;">@{{ client.username }}</span>
+        {% endif %}
+        {% if client.email %}<span>{{ icon('mail', 13) }}{{ client.email }}</span>{% endif %}
+        {% if client.phone %}<span>{{ client.phone }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
   <div class="heading-actions">
     <button class="btn btn-secondary" type="button" onclick="openClientPopupTrade('{{ client.id }}')">{{ icon('send', 14) }} Send Pop-up Trade</button>
     <a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a>
@@ -21,6 +35,77 @@
   <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · {{ s.invested_open|money }} invested</p></div><span class="badge">{{ rule }}</span></div>
   {{ trade_table(trades, s, show_client=False) }}
 </section>
+
+<!-- Pop-up Trade Advisories & Acknowledgments Card (Audit trail requested by admin) -->
+<section class="card" style="margin-top: 1.5rem;">
+  <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h2>Pop-up Trade Advisories &amp; Acknowledgments</h2>
+        <span class="badge" style="background:#e8f4fd; color:#0366d6;">SEBI Compliance Audit</span>
+      </div>
+      <p class="muted">Live record of trade pop-ups sent to {{ client.name }} and their mandatory acknowledgment status.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" type="button" onclick="openClientPopupTrade('{{ client.id }}')">
+        {{ icon('send', 14) }} Send New Pop-up Trade
+      </button>
+    </div>
+  </div>
+
+  {% if advisories %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Stock Symbol</th>
+          <th>Action</th>
+          <th class="r">Entry Price</th>
+          <th class="r">Target</th>
+          <th class="r">Stop Loss</th>
+          <th>Sent At</th>
+          <th>Client Acknowledgment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in advisories %}
+        <tr>
+          <td>
+            <strong>{{ a.stock }}</strong>
+            {% if a.message %}
+              <span class="cell-secondary" title="{{ a.message }}">{{ a.message|truncate(45) }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
+              {{ a.action }}
+            </span>
+          </td>
+          <td class="r tabular">{{ a.price|money if a.price else 'CMP' }}</td>
+          <td class="r tabular pos">{{ a.target_price|money if a.target_price else '—' }}</td>
+          <td class="r tabular neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</td>
+          <td class="date-cell muted">{{ a.created_at[:16] }}</td>
+          <td>
+            {% if a.acknowledged %}
+              <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at[:16] }}){% endif %}
+              </span>
+            {% else %}
+              <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+                {{ icon('clock', 12) }} Pending Acknowledgment
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ empty_state('No trade advisories sent yet', 'Click "Send New Pop-up Trade" to dispatch a mandatory pop-up recommendation directly to this client\'s screen.', 'send', compact=True) }}
+  {% endif %}
+</section>
+
 <div class="detail-grid">
   <section class="card">
     <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
@@ -74,10 +159,29 @@
       <div class="settings-heading">
         <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
         <div>
-          <h2>Client Portal Login &amp; Password</h2>
+          <h2>Client Portal Credentials</h2>
           <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
         </div>
       </div>
+
+      <!-- Username line with Edit/Create button -->
+      <div class="details-line" style="align-items: center;">
+        <span>Portal Username</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          {% if client.username %}
+            <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
+              {{ icon('copy', 12) }}
+            </button>
+          {% else %}
+            <span class="badge" style="background:#fff3cd; color:#856404;">Not Set</span>
+          {% endif %}
+          <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
+            {{ icon('edit', 12) }} {{ 'Change' if client.username else 'Create Username' }}
+          </button>
+        </div>
+      </div>
+
       <div class="details-line">
         <span>Login Identifier (ID / Phone)</span>
         <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
@@ -86,7 +190,7 @@
         <span>Current Password</span>
         {% if client.password_plain %}
           <div style="display: flex; align-items: center; gap: 8px;">
-            <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
+            <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
             <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
               {{ icon('eye', 14) }}
             </button>
@@ -109,24 +213,24 @@
         {% endif %}
       </div>
 
-      <!-- Reset Password Form -->
+      <!-- Reset Password Form with Strong Password Generator -->
       <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
         {{ csrf() }}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
-          <button type="button" class="btn btn-ghost btn-xs" onclick="generateRandomPassword('detail-new-password', 'detail-confirm-password')">
-            {{ icon('repeat', 11) }} Generate Random
+          <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
+            {{ icon('repeat', 11) }} Generate Strong
           </button>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
           <label class="field" style="margin: 0;">
             <span style="font-size: 11px;">New Password</span>
-            <input type="text" id="detail-new-password" name="client_password" required minlength="4" placeholder="Min 4 chars" autocomplete="off">
+            <input type="text" id="detail-new-password" name="client_password" required minlength="4" placeholder="Min 4 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
           </label>
           <label class="field" style="margin: 0;">
             <span style="font-size: 11px;">Confirm Password</span>
-            <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="4" placeholder="Repeat password" autocomplete="off">
+            <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="4" placeholder="Repeat password" autocomplete="off" style="font-family:monospace; font-weight:600;">
           </label>
         </div>
 
@@ -164,14 +268,45 @@
 <dialog class="modal" id="payment-dialog"><form method="post" action="{{ url_for('payments_list') }}" class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>{{ payment_fields([], amount=s.outstanding, locked_client=client, back=url_for('client_detail', cid=client.id)) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div></form></dialog>
 <dialog class="modal" id="fund-dialog"><form method="post" action="{{ url_for('add_fund') }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="client_id" value="{{ client.id }}"><input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">ADD CAPITAL</span><h2>Record a deposit</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field">Amount<input name="amount" type="number" step="0.01" required min="0.01" placeholder="0.00"></label><label class="field">Date<input name="added_on" type="date" required value="{{ today }}"></label><label class="field full">Notes<input name="notes" maxlength="200" placeholder="Optional details"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Add funds</button></div></form></dialog>
 <dialog class="modal" id="share-dialog"><form method="post" action="{{ url_for('client_share_add', cid=client.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">PORTFOLIO TRACKING</span><h2>Record a holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" type="text" required placeholder="e.g. RELIANCE"></label><label class="field">Quantity <span class="optional">Optional</span><input name="quantity" type="number" step="any" min="0" placeholder="0"></label><label class="field">Buy price <span class="optional">Optional</span><input name="buy_price" type="number" step="any" min="0" placeholder="0.00"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
+
+<!-- Dedicated Edit/Create Username Modal -->
+<dialog class="modal modal-sm" id="edit-username-dialog">
+  <form method="post" action="{{ url_for('client_set_username', cid=client.id) }}" class="modal-inner">
+    {{ csrf() }}
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">PORTAL ACCESS</span>
+        <h2>{{ 'Update Username' if client.username else 'Create Username' }}</h2>
+      </div>
+      <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted">Set a unique handle that {{ client.name }} can use to log into their portal.</p>
+    
+    <label class="field full">
+      Username Handle
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:16px; font-weight:700; color:#2e4438;">@</span>
+        <input name="username" value="{{ client.username or '' }}" minlength="3" maxlength="60" placeholder="e.g. rahul_trader" style="font-family:monospace; font-weight:600; flex:1;" autocomplete="off" required>
+      </div>
+    </label>
+
+    <div class="modal-actions" style="margin-top:1.25rem;">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">{{ icon('check', 14) }} Save Username</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog class="modal" id="edit-client-dialog"><form method="post" class="modal-inner">
   {{ csrf() }}
   <div class="modal-heading"><div><span class="eyebrow">KEEP THINGS CURRENT</span><h2>Edit client details</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
   <div class="form-grid">
     <label class="field full">Client name<input name="name" value="{{ client.name }}" required maxlength="120"></label>
-    <label class="field">Email<input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>
+    <label class="field">Username <span class="optional">Unique Login Handle</span>
+      <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. rahul_trader" autocomplete="off" style="font-family:monospace;">
+    </label>
     <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40" required></label>
-    <!-- Idle amount removed, using dynamic money_in_bank -->
+    <label class="field full">Email <span class="optional">Optional</span><input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>
     <label class="field">Commission rule<select name="commission_type" data-rule-select="edit-client-rate"><option value="">Workspace default</option>{% for key, label in COMMISSION_TYPES.items() %}<option value="{{ key }}" {{ 'selected' if client.commission_type == key }}>{{ label }}</option>{% endfor %}</select></label>
     <label class="field">Rate<input id="edit-client-rate" name="commission_rate" type="number" step="any" min="0" value="{{ client.commission_rate if client.commission_rate is not none else '' }}"></label>
     <label class="field full">Notes<textarea name="notes" rows="3" maxlength="2000">{{ client.notes or '' }}</textarea></label>
@@ -211,15 +346,37 @@ function togglePasswordVisibility(id, btn) {
   }
 }
 
-function generateRandomPassword(id1, id2) {
-  const adjectives = ['swift', 'safe', 'prime', 'smart', 'gold', 'blue', 'star', 'trade', 'ace', 'apex'];
-  const numbers = Math.floor(1000 + Math.random() * 9000);
-  const word = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const pwd = word + numbers;
-  const in1 = document.getElementById(id1);
-  const in2 = document.getElementById(id2);
-  if (in1) in1.value = pwd;
-  if (in2) in2.value = pwd;
+function generateStrongPassword(...targetIds) {
+  if (window.generateStrongPassword) {
+    return window.generateStrongPassword(...targetIds);
+  }
+  const lowers = 'abcdefghjkmnpqrstuvwxyz';
+  const uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const nums = '23456789';
+  const syms = '!@#$%&*';
+  const all = lowers + uppers + nums + syms;
+  let pwd = [
+    lowers[Math.floor(Math.random() * lowers.length)],
+    uppers[Math.floor(Math.random() * uppers.length)],
+    nums[Math.floor(Math.random() * nums.length)],
+    syms[Math.floor(Math.random() * syms.length)],
+  ];
+  for (let i = pwd.length; i < 14; i++) {
+    pwd.push(all[Math.floor(Math.random() * all.length)]);
+  }
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  const result = pwd.join('');
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = result;
+  });
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(result);
+  }
+  return result;
 }
 </script>
 {% endblock %}
