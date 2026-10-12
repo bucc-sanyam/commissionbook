@@ -21,96 +21,101 @@
   </section>
 
   <section class="auth-form-panel">
-    <!-- View Selector Tabs -->
-    <div class="auth-tabs" role="tablist" aria-label="Sign-in options" style="display: flex; gap: 8px; margin-bottom: 1.5rem; background: #eef3e8; padding: 4px; border-radius: 10px;">
-      <button type="button" class="auth-tab-btn active" id="tab-client-btn" onclick="showView('client')" style="flex: 1; padding: 10px 14px; font-weight: 600; font-size: 13px; border: none; border-radius: 7px; cursor: pointer; transition: all 0.2s; background: #fff; color: #142a2a; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-        {{ icon('users', 15) }} Client Portal
-      </button>
-      <button type="button" class="auth-tab-btn" id="tab-admin-btn" onclick="showView('admin')" style="flex: 1; padding: 10px 14px; font-weight: 600; font-size: 13px; border: none; border-radius: 7px; cursor: pointer; transition: all 0.2s; background: transparent; color: #586e58;">
-        {{ icon('shield', 15) }} Admin Login
-      </button>
-      <button type="button" class="auth-tab-btn" id="tab-proof-btn" onclick="showView('proof')" style="flex: 1; padding: 10px 14px; font-weight: 600; font-size: 13px; border: none; border-radius: 7px; cursor: pointer; transition: all 0.2s; background: transparent; color: #586e58;">
-        {{ icon('upload', 15) }} Send Proof
-      </button>
-    </div>
-
-    <!-- CLIENT LOGIN VIEW -->
-    <div class="auth-form" id="client-view">
-      <span class="eyebrow">CLIENT ACCESS</span>
-      <h2>Welcome to your portfolio.</h2>
-      <p>Sign in with your registered phone, email, or client ID to view your holdings, current prices, and advisory alerts.</p>
-      {% include "_flashes.html" %}
-
-      <form method="post" action="{{ url_for('login') }}">
-        {{ csrf() }}
-        <input type="hidden" name="login_type" value="client">
-        
-        <label class="field" for="client-identifier">
-          Phone number, email or username
-          <input id="client-identifier" name="identifier" required autofocus placeholder="e.g. 9876543210 or your username" autocomplete="username">
-        </label>
-        
-        <label class="field" for="client-password">
-          Password
-          <div class="password-wrap">
-            <input id="client-password" name="client_password" type="password" required autocomplete="current-password" placeholder="Enter your client password">
-            <button type="button" class="icon-btn" data-toggle-password="client-password" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
-          </div>
-        </label>
-
-        <button class="btn btn-primary btn-wide" type="submit" style="margin-top: 1rem;">
-          View My Portfolio {{ icon('arrow-right', 16) }}
+    <div class="auth-card">
+      <!-- View Selector Tabs -->
+      <nav class="auth-tabs" role="tablist" aria-label="Sign-in options">
+        <button type="button" class="auth-tab-btn active" id="tab-client-btn" onclick="showView('client')">
+          {{ icon('users', 14) }}<span>Client Portal</span>
         </button>
-      </form>
+        <button type="button" class="auth-tab-btn" id="tab-admin-btn" onclick="showView('admin')">
+          {{ icon('shield', 14) }}<span>Admin Login</span>
+        </button>
+        <button type="button" class="auth-tab-btn" id="tab-proof-btn" onclick="showView('proof')">
+          {{ icon('upload', 14) }}<span>Send Proof</span>
+        </button>
+      </nav>
 
-      <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid #e9efdf; padding-top: 1rem;">
-        <p class="muted" style="font-size: 13px;">Don't have a password yet? Contact your administrator to set up your profile, or submit screenshots directly via <a href="javascript:void(0)" onclick="showView('proof')" style="color: #215935; font-weight: 600;">Send Proof</a>.</p>
-      </div>
-    </div>
+      <!-- CLIENT LOGIN VIEW -->
+      <div class="auth-form" id="client-view">
+        <span class="eyebrow">CLIENT ACCESS</span>
+        <h2>Welcome to your portfolio.</h2>
+        <p>Sign in with your registered phone, email, or client ID to view your holdings, current prices, and advisory alerts.</p>
+        {% include "_flashes.html" %}
 
-    <!-- ADMIN LOGIN VIEW -->
-    <div class="auth-form" id="admin-view" style="display: none;">
-      <span class="eyebrow">ADMINISTRATOR WORKSPACE</span>
-      <h2>{{ 'Set up your workspace.' if first_run else 'Welcome back, Admin.' }}</h2>
-      <p>{{ 'Choose a strong admin password to start your personal bookkeeping workspace.' if first_run else 'Sign in to access your ledger, clients, trade advisories, and price controls.' }}</p>
-      {% include "_flashes.html" %}
-
-      <form method="post" action="{{ url_for('login') }}">
-        {{ csrf() }}
-        <input type="hidden" name="login_type" value="admin">
-        <label class="field" for="admin-password">
-          Admin password
-          <div class="password-wrap">
-            <input id="admin-password" name="password" type="password" required {% if first_run %}minlength="10"{% endif %} autocomplete="{{ 'new-password' if first_run else 'current-password' }}" placeholder="{{ 'At least 10 characters' if first_run else 'Enter your password' }}">
-            <button type="button" class="icon-btn" data-toggle-password="admin-password" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
-          </div>
-        </label>
-        {% if first_run %}
-          <label class="field">
-            Confirm password
-            <input type="password" name="confirm" autocomplete="new-password" minlength="10" required placeholder="One more time, just to be sure">
+        <form method="post" action="{{ url_for('login') }}">
+          {{ csrf() }}
+          <input type="hidden" name="login_type" value="client">
+          
+          <label class="field" for="client-identifier">
+            Phone number, email or username
+            <input id="client-identifier" name="identifier" required autofocus placeholder="e.g. 9876543210 or your username" autocomplete="username">
           </label>
-        {% endif %}
-        <button class="btn btn-primary btn-wide" type="submit" style="margin-top: 1rem;">
-          {{ 'Create my workspace' if first_run else 'Open Admin Workspace' }} {{ icon('arrow-right', 16) }}
-        </button>
-      </form>
-    </div>
+          
+          <label class="field" for="client-password">
+            Password
+            <div class="password-wrap">
+              <input id="client-password" name="client_password" type="password" required autocomplete="current-password" placeholder="Enter your client password">
+              <button type="button" class="icon-btn" data-toggle-password="client-password" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
+            </div>
+          </label>
 
-    <!-- QUICK PROOF UPLOAD VIEW -->
-    <div class="auth-form" id="proof-view" style="display: none;">
-      <span class="eyebrow">SUBMIT TRADE PROOF</span>
-      <h2>Send your trade screenshots.</h2>
-      <p>Upload screenshots as proof for your account. You can enter details on the next step without logging in.</p>
-      <form action="{{ url_for('public_upload', token=public_token) }}" method="GET" id="proof-form">
-        <label class="field" for="quick-phone">
-          Your registered phone number
-          <input id="quick-phone" name="phone" type="tel" required placeholder="Enter mobile number" autocomplete="tel">
-        </label>
-        <button type="submit" class="btn btn-primary btn-wide" style="margin-top: 1rem;">
-          Proceed to Upload Proof {{ icon('arrow-right', 16) }}
-        </button>
-      </form>
+          <button class="btn btn-primary btn-wide" type="submit">
+            View My Portfolio {{ icon('arrow-right', 16) }}
+          </button>
+        </form>
+
+        <div class="auth-form-footnote">
+          {{ icon('info', 14) }}
+          <div>
+            Don't have a password yet? Contact your administrator to set up your profile, or submit screenshots directly via <a href="javascript:void(0)" onclick="showView('proof')">Send Proof</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN LOGIN VIEW -->
+      <div class="auth-form" id="admin-view" style="display: none;">
+        <span class="eyebrow">ADMINISTRATOR WORKSPACE</span>
+        <h2>{{ 'Set up your workspace.' if first_run else 'Welcome back, Admin.' }}</h2>
+        <p>{{ 'Choose a strong admin password to start your personal bookkeeping workspace.' if first_run else 'Sign in to access your ledger, clients, trade advisories, and price controls.' }}</p>
+        {% include "_flashes.html" %}
+
+        <form method="post" action="{{ url_for('login') }}">
+          {{ csrf() }}
+          <input type="hidden" name="login_type" value="admin">
+          <label class="field" for="admin-password">
+            Admin password
+            <div class="password-wrap">
+              <input id="admin-password" name="password" type="password" required {% if first_run %}minlength="10"{% endif %} autocomplete="{{ 'new-password' if first_run else 'current-password' }}" placeholder="{{ 'At least 10 characters' if first_run else 'Enter your password' }}">
+              <button type="button" class="icon-btn" data-toggle-password="admin-password" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
+            </div>
+          </label>
+          {% if first_run %}
+            <label class="field">
+              Confirm password
+              <input type="password" name="confirm" autocomplete="new-password" minlength="10" required placeholder="One more time, just to be sure">
+            </label>
+          {% endif %}
+          <button class="btn btn-primary btn-wide" type="submit">
+            {{ 'Create my workspace' if first_run else 'Open Admin Workspace' }} {{ icon('arrow-right', 16) }}
+          </button>
+        </form>
+      </div>
+
+      <!-- QUICK PROOF UPLOAD VIEW -->
+      <div class="auth-form" id="proof-view" style="display: none;">
+        <span class="eyebrow">SUBMIT TRADE PROOF</span>
+        <h2>Send your trade screenshots.</h2>
+        <p>Upload screenshots as proof for your account. You can enter details on the next step without logging in.</p>
+        <form action="{{ url_for('public_upload', token=public_token) }}" method="GET" id="proof-form">
+          <label class="field" for="quick-phone">
+            Your registered phone number
+            <input id="quick-phone" name="phone" type="tel" required placeholder="Enter mobile number" autocomplete="tel">
+          </label>
+          <button type="submit" class="btn btn-primary btn-wide">
+            Proceed to Upload Proof {{ icon('arrow-right', 16) }}
+          </button>
+        </form>
+      </div>
     </div>
 
     <script>
@@ -120,14 +125,15 @@
           const btn = document.getElementById('tab-' + v + '-btn');
           if (el) el.style.display = (v === view) ? 'block' : 'none';
           if (btn) {
-            btn.style.background = (v === view) ? '#fff' : 'transparent';
-            btn.style.color = (v === view) ? '#142a2a' : '#586e58';
-            btn.style.boxShadow = (v === view) ? '0 1px 3px rgba(0,0,0,0.06)' : 'none';
+            if (v === view) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
           }
         });
       }
 
-      // Check initial tab from server or hash
       (function() {
         const active = "{{ active_tab | default('client') }}";
         if (active === 'admin' || window.location.hash === '#admin') {

@@ -49,7 +49,7 @@
     {% for sh in shares %}
       <tr>
         <td><strong>{{ sh.stock }}</strong></td>
-        <td class="r tabular">{{ sh.quantity or '—' }}</td>
+        <td class="r tabular"><strong>{{ sh.quantity|num if sh.quantity else '—' }}</strong></td>
         <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
         <td class="r tabular">{{ sh.cmp|money if sh.cmp else '—' }}</td>
         <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>

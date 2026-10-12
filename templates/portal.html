@@ -121,7 +121,7 @@
                   {% endif %}
                 </div>
               </td>
-              <td class="r tabular"><strong>{{ h.quantity or '—' }}</strong></td>
+              <td class="r tabular"><strong>{{ h.quantity|num if h.quantity else '—' }}</strong></td>
               <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if h.cmp %}
