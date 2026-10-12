@@ -72,10 +72,16 @@
       dialog.setAttribute("aria-labelledby", heading.id);
     }
     dialog.addEventListener("click", (event) => {
+      if (dialog.hasAttribute("data-mandatory") || dialog.id === "popup-advisory-dialog") return;
       if (event.target !== dialog) return;
       const box = dialog.getBoundingClientRect();
       if (event.clientX < box.left || event.clientX > box.right ||
           event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+    });
+    dialog.addEventListener("cancel", (event) => {
+      if (dialog.hasAttribute("data-mandatory") || dialog.id === "popup-advisory-dialog") {
+        event.preventDefault();
+      }
     });
   });
 

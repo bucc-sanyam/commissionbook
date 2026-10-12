@@ -266,6 +266,14 @@
     {% endif %}
   </div>
 </div>
+
+<footer class="client-detail-disclaimer-footer" style="margin-top: 2rem; padding: 14px 18px; border-top: 1px solid var(--border-light, #e1e9de); display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1.5rem;">
+  <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
+  <div>
+    <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading Advisory Disclaimer</strong>
+    Investments in securities market are subject to market risks. Read all trade and scheme documents carefully before trading. Trade recommendations provided in this portal are advisory in nature and do not guarantee profits. Real-time market valuations and portfolio ledger metrics are for private tracking purposes only.
+  </div>
+</footer>
 <dialog class="modal" id="payment-dialog"><form method="post" action="{{ url_for('payments_list') }}" class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>{{ payment_fields([], amount=s.outstanding, locked_client=client, back=url_for('client_detail', cid=client.id)) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div></form></dialog>
 <dialog class="modal" id="fund-dialog"><form method="post" action="{{ url_for('add_fund') }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="client_id" value="{{ client.id }}"><input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">ADD CAPITAL</span><h2>Record a deposit</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field">Amount<input name="amount" type="number" step="0.01" required min="0.01" placeholder="0.00"></label><label class="field">Date<input name="added_on" type="date" required value="{{ today }}"></label><label class="field full">Notes<input name="notes" maxlength="200" placeholder="Optional details"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Add funds</button></div></form></dialog>
 <dialog class="modal" id="share-dialog"><form method="post" action="{{ url_for('client_share_add', cid=client.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">PORTFOLIO TRACKING</span><h2>Record a holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" type="text" required placeholder="e.g. RELIANCE"></label><label class="field">Quantity <span class="optional">Optional</span><input name="quantity" type="number" step="any" min="0" placeholder="0"></label><label class="field">Buy price <span class="optional">Optional</span><input name="buy_price" type="number" step="any" min="0" placeholder="0.00"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
@@ -287,7 +295,7 @@
       Username Handle
       <div style="display:flex; align-items:center; gap:6px;">
         <span style="font-size:16px; font-weight:700; color:#2e4438;">@</span>
-        <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. rahul_trader (or leave blank to remove)" style="font-family:monospace; font-weight:600; flex:1;" autocomplete="off">
+        <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. batman (or leave blank to remove)" style="font-family:monospace; font-weight:600; flex:1;" autocomplete="off">
       </div>
       <small class="muted" style="margin-top:4px; display:block; font-size:11px;">Leave empty to remove username and allow client to set it again.</small>
     </label>
@@ -305,7 +313,7 @@
   <div class="form-grid">
     <label class="field full">Client name<input name="name" value="{{ client.name }}" required maxlength="120"></label>
     <label class="field">Username <span class="optional">Unique Login Handle</span>
-      <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. rahul_trader" autocomplete="off" style="font-family:monospace;">
+      <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. batman" autocomplete="off" style="font-family:monospace;">
     </label>
     <label class="field">Phone<input name="phone" type="tel" value="{{ client.phone or '' }}" maxlength="40" required></label>
     <label class="field full">Email <span class="optional">Optional</span><input name="email" type="email" value="{{ client.email or '' }}" maxlength="254"></label>

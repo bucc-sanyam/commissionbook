@@ -57,7 +57,7 @@
               <span class="badge" style="background: #1b5e20; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">One-time only</span>
             </div>
             <p style="margin: 4px 0 0; font-size: 13px; color: #37533b; line-height: 1.4;">
-              Create your unique login handle (e.g. <code>@rahul_trader</code>). Once set, it is permanently locked and only an administrator can modify it.
+              Create your unique login handle (e.g. <code>@batman</code>). Once set, it is permanently locked and only an administrator can modify it.
             </p>
           </div>
         </div>
@@ -218,6 +218,15 @@
       </div>
     </section>
     {% endif %}
+
+    <!-- Client Profile Screen Disclaimer Footer with 'i' icon -->
+    <footer class="portal-disclaimer-footer" style="margin-top: 2.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
+      <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
+      <div>
+        <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading Advisory Disclaimer</strong>
+        Investments in securities market are subject to market risks. Read all trade and scheme documents carefully before trading. Trade recommendations provided in this portal are advisory in nature and do not guarantee profits. Real-time market valuations and portfolio ledger metrics are for private tracking purposes only.
+      </div>
+    </footer>
   </main>
 </div>
 
@@ -281,7 +290,7 @@
       Desired Username Handle
       <div style="display: flex; align-items: center; gap: 6px;">
         <span style="font-size: 17px; font-weight: 800; color: #2e4438;">@</span>
-        <input id="client-new-username" name="username" required minlength="3" maxlength="30" placeholder="e.g. rahul_trader" pattern="[a-zA-Z0-9_.]+" title="Letters, numbers, underscores and dots only" autocomplete="off" style="font-family: monospace; font-size: 15px; font-weight: 700; flex: 1;">
+        <input id="client-new-username" name="username" required minlength="3" maxlength="30" placeholder="e.g. batman" pattern="[a-zA-Z0-9_.]+" title="Letters, numbers, underscores and dots only" autocomplete="off" style="font-family: monospace; font-size: 15px; font-weight: 700; flex: 1;">
       </div>
       <small class="muted" style="margin-top: 4px; display: block; font-size: 11px;">Min 3 characters. Allowed: letters, numbers, underscores, dots.</small>
     </label>
@@ -298,7 +307,7 @@
 
 <!-- MANDATORY POPUP ADVISORY MODAL (NO CLOSE / CROSS BUTTON - MUST BE ACKNOWLEDGED) -->
 {% if undismissed_alerts %}
-<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog" style="padding:0; overflow:hidden; border-radius:14px; border:2px solid #2e7d32; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog" data-mandatory="true" style="padding:0; overflow:hidden; border-radius:14px; border:2px solid #2e7d32; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
   <div class="modal-inner advisory-modal-content" style="padding: 1.5rem;">
     <div class="advisory-top-banner" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #edf2e5;">
       <div class="advisory-banner-badge" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#1e4620; font-size:13px; text-transform:uppercase; letter-spacing:0.05em;">
@@ -337,10 +346,18 @@
       </div>
 
       {% if alert.message %}
-      <div class="advisory-message-box" style="margin-bottom:1.25rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
+      <div class="advisory-message-box" style="margin-bottom:1rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
         <p style="margin:0;">{{ alert.message }}</p>
       </div>
       {% endif %}
+
+      <!-- Disclaimer with 'i' icon on Acknowledgment Screen -->
+      <div class="advisory-disclaimer-notice" style="display:flex; gap:8px; align-items:flex-start; background:#fafcf8; border:1px solid #dce7db; border-radius:8px; padding:10px 12px; margin-bottom:1.15rem;">
+        <span style="color:#2e7d32; flex-shrink:0; margin-top:1px;">{{ icon('info', 16) }}</span>
+        <p style="margin:0; font-size:11px; line-height:1.45; color:#435443;">
+          <strong>Trading &amp; Advisory Disclaimer:</strong> Stock market trading and securities investments involve substantial risk of loss. All price levels and recommendations are for advisory purposes only and do not guarantee returns. Clients must assess their risk appetite before execution.
+        </p>
+      </div>
 
       <div class="advisory-timestamp muted" style="font-size:11px; margin-bottom:1.25rem; text-align:center;">
         Issued on {{ alert.created_at[:16] }} IST · Real-time delivery
@@ -365,6 +382,13 @@
       // Prevent Escape key from dismissing modal (modal cannot be removed until acknowledged)
       popup.addEventListener('cancel', function(e) {
         e.preventDefault();
+      });
+      // Prevent clicking outside / backdrop from dismissing modal
+      popup.addEventListener('click', function(e) {
+        if (e.target === popup) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
       });
       popup.showModal();
     }
