@@ -437,7 +437,7 @@
 </div>
 
 <!-- CLIENT ADD TRADE DIALOG -->
-<dialog class="modal modal-sm" id="add-trade-dialog">
+<dialog class="modal modal-md" id="add-trade-dialog">
   <form method="post" action="{{ url_for('portal_trade_add') }}" enctype="multipart/form-data" class="modal-inner" id="add-trade-form">
     {{ csrf() }}
     <div class="modal-heading">
@@ -447,72 +447,76 @@
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted">Record a buy or sell trade. Leave Sell Price blank for an open holding position.</p>
+    <p class="muted" style="margin-bottom: 12px; font-size: 12px;">
+      Record a buy or sell trade. Leave Sell Price blank for an open holding position.
+    </p>
 
-    <label class="field" for="trade-stock-input">
-      Stock Symbol / Name <span style="color:#e53e3e">*</span>
-      <input id="trade-stock-input" name="stock" required placeholder="e.g. RELIANCE, TCS, INFY" autocomplete="off" style="text-transform: uppercase;">
-    </label>
+    <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
+      <label class="field" for="trade-stock-input" style="margin-bottom: 0;">
+        Stock Symbol / Name <span style="color:#e53e3e">*</span>
+        <input id="trade-stock-input" name="stock" required placeholder="e.g. RELIANCE, TCS, INFY" autocomplete="off" style="text-transform: uppercase;">
+      </label>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <label class="field" for="trade-qty-input">
-        Quantity <span style="color:#e53e3e">*</span>
-        <input id="trade-qty-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
-      </label>
-      <label class="field" for="trade-buy-price">
-        Buy Price (₹)
-        <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="₹ per share">
-      </label>
-    </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label class="field" for="trade-qty-input" style="margin-bottom: 0;">
+          Quantity <span style="color:#e53e3e">*</span>
+          <input id="trade-qty-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
+        </label>
+        <label class="field" for="trade-buy-price" style="margin-bottom: 0;">
+          Buy Price (₹)
+          <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="₹ per share">
+        </label>
+      </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <label class="field" for="trade-sell-price">
-        Sell Price (₹) <span class="optional">(Optional)</span>
-        <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open">
-      </label>
-      <label class="field" for="trade-buy-date">
-        Buy Date
-        <input id="trade-buy-date" type="date" name="buy_date" value="{{ today }}">
-      </label>
-    </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label class="field" for="trade-buy-date" style="margin-bottom: 0;">
+          Buy Date
+          <input id="trade-buy-date" type="date" name="buy_date" value="{{ today }}">
+        </label>
+        <label class="field" for="trade-notes" style="margin-bottom: 0;">
+          Notes <span class="optional">(Optional)</span>
+          <input id="trade-notes" name="notes" placeholder="e.g. Swing, Intraday">
+        </label>
+      </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <label class="field" for="trade-sell-date">
-        Sell Date <span class="optional">(Optional)</span>
-        <input id="trade-sell-date" type="date" name="sell_date">
-      </label>
-      <label class="field" for="trade-notes">
-        Notes <span class="optional">(Optional)</span>
-        <input id="trade-notes" name="notes" placeholder="e.g. Swing, Intraday">
-      </label>
-    </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #fafbf9; border: 1px dashed #d5ded2; border-radius: 8px;">
+        <label class="field" for="trade-sell-price" style="margin-bottom: 0;">
+          Sell Price (₹) <span class="optional">(Optional)</span>
+          <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open">
+        </label>
+        <label class="field" for="trade-sell-date" style="margin-bottom: 0;">
+          Sell Date <span class="optional">(Optional)</span>
+          <input id="trade-sell-date" type="date" name="sell_date">
+        </label>
+      </div>
 
-    <!-- Optional Screenshot Proof Dropzone -->
-    <div class="field full" style="margin-top: 6px;">
-      <span style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px; color: #2d3748;">
-        Trade Screenshot Proof <span class="optional">(Optional)</span>
-      </span>
-      <div class="sell-upload-dropzone" id="trade-upload-dropzone" onclick="document.getElementById('trade-proof-file').click()" role="button" tabindex="0">
-        <input type="file" id="trade-proof-file" name="proof_image" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleTradeProofSelect(this)">
-        <div id="trade-dropzone-empty" style="text-align: center; padding: 14px 10px;">
-          <span style="color: #4a5568; display: inline-block; margin-bottom: 2px;">{{ icon('upload', 22) }}</span>
-          <div style="font-size: 12px; font-weight: 600; color: #2d3748;">Tap to attach broker screenshot</div>
-          <small class="muted" style="font-size: 10px;">PNG, JPG, or WebP</small>
-        </div>
-        <div id="trade-dropzone-preview" style="display: none; padding: 10px 14px; align-items: center; gap: 12px;">
-          <img id="trade-preview-img" src="" alt="Proof preview" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0;">
-          <div style="flex: 1; min-width: 0;">
-            <div id="trade-file-name" style="font-size: 12px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">screenshot.png</div>
-            <div id="trade-file-size" class="muted" style="font-size: 11px;">0 KB</div>
+      <!-- Optional Screenshot Proof Dropzone -->
+      <div class="field full" style="margin-top: 2px; margin-bottom: 0;">
+        <span style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 3px; color: #2d3748;">
+          Trade Screenshot Proof <span class="optional">(Optional)</span>
+        </span>
+        <div class="sell-upload-dropzone" id="trade-upload-dropzone" onclick="document.getElementById('trade-proof-file').click()" role="button" tabindex="0" style="padding: 10px; border-radius: 8px;">
+          <input type="file" id="trade-proof-file" name="proof_image" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleTradeProofSelect(this)">
+          <div id="trade-dropzone-empty" style="text-align: center; padding: 6px;">
+            <span style="color: #4a5568; display: inline-block;">{{ icon('upload', 18) }}</span>
+            <div style="font-size: 12px; font-weight: 600; color: #2d3748;">Tap to attach broker screenshot</div>
+            <small class="muted" style="font-size: 10px;">PNG, JPG, or WebP</small>
           </div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeTradeProof();" style="color: #e53e3e; padding: 4px 8px;">
-            {{ icon('x', 14) }}
-          </button>
+          <div id="trade-dropzone-preview" style="display: none; padding: 6px 10px; align-items: center; gap: 10px;">
+            <img id="trade-preview-img" src="" alt="Proof preview" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0;">
+            <div style="flex: 1; min-width: 0;">
+              <div id="trade-file-name" style="font-size: 12px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">screenshot.png</div>
+              <div id="trade-file-size" class="muted" style="font-size: 10px;">0 KB</div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeTradeProof();" style="color: #e53e3e; padding: 2px 6px;">
+              {{ icon('x', 14) }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="modal-actions" style="margin-top: 1.25rem;">
+    <div class="modal-actions" style="margin-top: 14px; padding-top: 12px;">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
       <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Add Trade</button>
     </div>

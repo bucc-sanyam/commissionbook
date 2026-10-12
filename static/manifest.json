@@ -1,0 +1,16 @@
+{
+  "name": "Commission Book",
+  "short_name": "CommissionBook",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#173d34",
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
