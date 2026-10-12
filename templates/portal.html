@@ -46,9 +46,6 @@
   <main class="client-portal-main" id="main">
     {% include "_flashes.html" %}
 
-    <!-- Security Watermark (Anti-Leak) -->
-    <div class="portal-watermark"></div>
-    <div class="portal-watermark-text">Confidential · {{ client.name }} · {{ client.phone or '' }}</div>
 
     {% if not client.password_changed %}
     <!-- First Login Password Update Banner -->
@@ -140,11 +137,11 @@
       <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
         <div>
           <h2>Your Current Holdings</h2>
-          <p class="muted">Live and end-of-day updated stock market valuations.</p>
+          <p class="muted">Calculated automatically from your open trades and live market valuations.</p>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('add-holding-dialog').showModal()">
-            {{ icon('plus', 14) }} Append Holding
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+            {{ icon('plus', 14) }} Add Trade
           </button>
           <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}" class="btn btn-secondary btn-sm">
             {{ icon('upload', 14) }} Upload Trade Proof
@@ -267,7 +264,7 @@
         {% endfor %}
       </div>
       {% else %}
-        {{ empty_state('No holdings yet', 'Click "Append Holding" above to record your first stock holding.', 'trend') }}
+        {{ empty_state('No open holdings', 'Holdings are calculated automatically from your open trades. Click "Add Trade" above to record a trade.', 'trend') }}
       {% endif %}
     </section>
 
@@ -279,8 +276,8 @@
           <p class="muted">Your recorded trades and closed transactions.</p>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('add-trade-dialog').showModal()">
-            {{ icon('plus', 14) }} Append Trade
+          <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+            {{ icon('plus', 14) }} Add Trade
           </button>
         </div>
       </div>
@@ -307,7 +304,15 @@
               <td><strong>{{ t.stock }}</strong></td>
               <td class="r tabular">{{ t.quantity }}</td>
               <td class="r tabular">{{ t.buy_price|money if t.buy_price else '—' }}</td>
-              <td class="r tabular">{{ t.sell_price|money if t.sell_price else 'Open' }}</td>
+              <td class="r tabular">
+                {% if t.sell_price %}
+                  {{ t.sell_price|money }}
+                {% else %}
+                  <button type="button" class="btn btn-ghost btn-xs" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}')" style="font-size: 11px; padding: 2px 7px; border: 1px solid #c6e7cf; color: #167e45; border-radius: 6px; background: #f0faf2; font-weight: 600;" title="Click to complete this trade">
+                    Open &bull; Complete
+                  </button>
+                {% endif %}
+              </td>
               <td class="r tabular {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
                 {{ t.pnl|money if t.status == 'Closed' else '—' }}
               </td>
@@ -369,7 +374,13 @@
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Sell Price</span>
-                <strong class="mtd-val">{{ t.sell_price|money if t.sell_price else 'Open' }}</strong>
+                <strong class="mtd-val">
+                  {% if t.sell_price %}
+                    {{ t.sell_price|money }}
+                  {% else %}
+                    <span style="color: #b7791f; font-weight: 700;">Open</span>
+                  {% endif %}
+                </strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Holding Days</span>
@@ -387,6 +398,14 @@
               </div>
             </div>
 
+            {% if t.status != 'Closed' %}
+            <div style="margin-top: 10px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}')" style="width: 100%; justify-content: center; font-size: 12px;">
+                {{ icon('check', 14) }} Complete Open Trade
+              </button>
+            </div>
+            {% endif %}
+
             {% if t.upload_filename %}
             <div class="mtd-proof">
               <span class="muted" style="font-size:11px;">Proof:</span>
@@ -402,7 +421,7 @@
         {% endfor %}
       </div>
       {% else %}
-        {{ empty_state('No trades yet', 'Click "Append Trade" above to record your first trade in your ledger.', 'trend') }}
+        {{ empty_state('No trades yet', 'Click "Add Trade" above to record your first trade in your ledger.', 'trend') }}
       {% endif %}
     </section>
 
@@ -417,55 +436,18 @@
   </main>
 </div>
 
-<!-- CLIENT APPEND HOLDING DIALOG -->
-<dialog class="modal modal-sm" id="add-holding-dialog">
-  <form method="post" action="{{ url_for('portal_share_add') }}" class="modal-inner">
-    {{ csrf() }}
-    <div class="modal-heading">
-      <div>
-        <span class="eyebrow">PORTFOLIO ENTRY</span>
-        <h2>Append Stock Holding</h2>
-      </div>
-      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
-    </div>
-    <p class="muted">Add a stock to your current holdings. Once added, stock prices update automatically.</p>
-    
-    <label class="field" for="holding-stock">
-      Stock Symbol / Name
-      <input id="holding-stock" name="stock" required placeholder="e.g. RELIANCE, INFY, TATAMOTORS" autocomplete="off" style="text-transform: uppercase;">
-    </label>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <label class="field" for="holding-qty">
-        Quantity
-        <input id="holding-qty" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
-      </label>
-
-      <label class="field" for="holding-price">
-        Avg Buy Price (₹)
-        <input id="holding-price" type="number" name="buy_price" step="any" min="0" required inputmode="decimal" placeholder="₹ per share">
-      </label>
-    </div>
-
-    <div class="modal-actions" style="margin-top: 1rem;">
-      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
-      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Append Holding</button>
-    </div>
-  </form>
-</dialog>
-
-<!-- CLIENT APPEND TRADE DIALOG -->
+<!-- CLIENT ADD TRADE DIALOG -->
 <dialog class="modal modal-sm" id="add-trade-dialog">
   <form method="post" action="{{ url_for('portal_trade_add') }}" enctype="multipart/form-data" class="modal-inner" id="add-trade-form">
     {{ csrf() }}
     <div class="modal-heading">
       <div>
-        <span class="eyebrow">LEDGER ENTRY</span>
-        <h2>Append Trade Entry</h2>
+        <span class="eyebrow">TRADE ENTRY</span>
+        <h2>Add Trade</h2>
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted">Record a buy or sell trade directly into your trade ledger history.</p>
+    <p class="muted">Record a buy or sell trade. Leave Sell Price blank for an open holding position.</p>
 
     <label class="field" for="trade-stock-input">
       Stock Symbol / Name <span style="color:#e53e3e">*</span>
@@ -532,7 +514,7 @@
 
     <div class="modal-actions" style="margin-top: 1.25rem;">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
-      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Append Trade</button>
+      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Add Trade</button>
     </div>
   </form>
 </dialog>
@@ -548,7 +530,7 @@
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted">Record a deposit or withdrawal in your funds ledger. Tracked transparently at the admin desk.</p>
+    <p class="muted">Record a deposit or withdrawal in your funds ledger. Completed trade profits are credited directly upon closing.</p>
 
     <div class="sell-summary-box" style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
       <div>
@@ -856,6 +838,27 @@
     if (previewBox) previewBox.style.display = 'none';
     if (dropzone) dropzone.classList.remove('has-file');
     if (imgEl) imgEl.src = '';
+  }
+
+  // Open Add Trade Modal with optional prefilled values
+  function openAddTradeModal(stock = '', qty = '', buyPrice = '', buyDate = '') {
+    const dialog = document.getElementById('add-trade-dialog');
+    if (!dialog) return;
+    const form = document.getElementById('add-trade-form');
+    if (stock) {
+      document.getElementById('trade-stock-input').value = stock;
+      document.getElementById('trade-qty-input').value = qty;
+      document.getElementById('trade-buy-price').value = buyPrice;
+      if (buyDate) document.getElementById('trade-buy-date').value = buyDate;
+      const sellInput = document.getElementById('trade-sell-price');
+      sellInput.value = '';
+      setTimeout(() => sellInput.focus(), 150);
+    } else {
+      if (form) form.reset();
+      document.getElementById('trade-buy-date').value = "{{ today }}";
+      removeTradeProof();
+    }
+    dialog.showModal();
   }
 </script>
 {% endblock %}

@@ -330,6 +330,121 @@ def funds_by_client():
     return {row["client_id"]: dec(row["total"]) for row in rows}
 
 
+def get_client_calculated_holdings(cid, db=None):
+    if db is None:
+        db = get_db()
+
+    # 1. Any existing rows in client_shares (e.g. added by admin)
+    try:
+        raw_shares = db.execute(
+            "SELECT id, stock, quantity, buy_price, added_on FROM client_shares WHERE client_id=?",
+            (cid,)
+        ).fetchall()
+    except Exception:
+        raw_shares = []
+
+    # 2. Open trades from trades table (where buy_price is set, and sell_price is null or 0)
+    try:
+        open_trades = db.execute(
+            """SELECT id, stock, quantity, buy_price, COALESCE(buy_date, created_at) as added_on
+               FROM trades
+               WHERE client_id=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+            """,
+            (cid,)
+        ).fetchall()
+    except Exception:
+        open_trades = []
+
+    holdings_map = {}
+    for r in list(raw_shares) + list(open_trades):
+        stk = (r["stock"] or "").strip().upper()
+        if not stk:
+            continue
+        qty = dec(r["quantity"]) if r["quantity"] is not None else ZERO
+        bp = dec(r["buy_price"]) if r["buy_price"] is not None else ZERO
+        added = str(r["added_on"]) if r.get("added_on") else ""
+
+        if stk not in holdings_map:
+            holdings_map[stk] = {
+                "id": r["id"],
+                "stock": stk,
+                "quantity": ZERO,
+                "total_invested": ZERO,
+                "added_on": added,
+            }
+        holdings_map[stk]["quantity"] += qty
+        holdings_map[stk]["total_invested"] += (qty * bp)
+        if added and (not holdings_map[stk]["added_on"] or added < holdings_map[stk]["added_on"]):
+            holdings_map[stk]["added_on"] = added
+
+    # Deduct any pure-sell trades (where buy_price is null and sell_price is set)
+    try:
+        sell_trades = db.execute(
+            """SELECT stock, quantity FROM trades
+               WHERE client_id=? AND (buy_price IS NULL OR buy_price=0) AND sell_price IS NOT NULL
+            """,
+            (cid,)
+        ).fetchall()
+        for st in sell_trades:
+            stk = (st["stock"] or "").strip().upper()
+            if stk in holdings_map:
+                sqty = dec(st["quantity"]) if st["quantity"] is not None else ZERO
+                holdings_map[stk]["quantity"] -= sqty
+                if holdings_map[stk]["quantity"] <= ZERO:
+                    del holdings_map[stk]
+    except Exception:
+        pass
+
+    results = []
+    for stk, h in holdings_map.items():
+        if h["quantity"] > ZERO:
+            avg_bp = (h["total_invested"] / h["quantity"]).quantize(CENT, rounding=ROUND_HALF_UP)
+            results.append({
+                "id": h["id"],
+                "stock": stk,
+                "quantity": h["quantity"],
+                "buy_price": avg_bp,
+                "total_invested": h["total_invested"],
+                "added_on": h["added_on"],
+            })
+
+    results.sort(key=lambda x: x["stock"])
+    return results
+
+
+def sync_trade_profits_to_funds(db, cid=None):
+    """Ensure completed trades have their realized profit recorded in funds ledger exactly once."""
+    try:
+        where_clause = "WHERE buy_price IS NOT NULL AND sell_price IS NOT NULL"
+        params = []
+        if cid:
+            where_clause += " AND client_id=?"
+            params.append(cid)
+        closed_trades = db.execute(
+            f"SELECT id, client_id, stock, quantity, buy_price, sell_price, sell_date, created_at FROM trades {where_clause}",
+            params
+        ).fetchall()
+        for t in closed_trades:
+            pnl = ((dec(t["sell_price"]) - dec(t["buy_price"])) * dec(t["quantity"])).quantize(CENT, rounding=ROUND_HALF_UP)
+            if pnl == ZERO:
+                continue
+            tag = f"[Trade #{t['id']}]"
+            existing = db.execute(
+                "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
+                (t["client_id"], f"%{tag}%")
+            ).fetchone()
+            if not existing:
+                note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {t['stock']} ({t['quantity']} sh) {tag}"
+                date_val = t["sell_date"] or str(t["created_at"])[:10] or date.today().isoformat()
+                db.execute(
+                    "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
+                    (t["client_id"], pnl, date_val, note)
+                )
+    except Exception as exc:
+        current_app.logger.warning("sync_trade_profits_to_funds error: %s", exc)
+
+
+
 def rule_label(ctype, rate):
     if not ctype or rate is None:
         return "Default"
@@ -778,8 +893,11 @@ def create_app(config=None):
     @app.route("/trades/<int:tid>/delete", methods=["POST"])
     @login_required
     def trade_delete(tid):
-        if get_db().execute("DELETE FROM trades WHERE id=?", (tid,)).rowcount != 1:
+        trade = get_db().execute("SELECT * FROM trades WHERE id=?", (tid,)).fetchone()
+        if not trade:
             abort(404)
+        get_db().execute("DELETE FROM trades WHERE id=?", (tid,))
+        get_db().execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (trade["client_id"], f"%[Trade #{tid}]%"))
         flash("Trade deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
 
@@ -802,7 +920,21 @@ def create_app(config=None):
             "UPDATE trades SET sell_price=?,sell_date=? WHERE id=?",
             (values["sell_price"], values["sell_date"], tid),
         )
-        flash("Position closed.", "success")
+        # Record realized profit to bank funds once
+        pnl = ((dec(values["sell_price"]) - dec(trade["buy_price"])) * dec(trade["quantity"])).quantize(CENT, rounding=ROUND_HALF_UP)
+        if pnl != ZERO:
+            tag = f"[Trade #{tid}]"
+            existing = get_db().execute(
+                "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
+                (trade["client_id"], f"%{tag}%")
+            ).fetchone()
+            if not existing:
+                pnl_note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {trade['stock']} ({trade['quantity']} sh) {tag}"
+                get_db().execute(
+                    "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
+                    (trade["client_id"], pnl, values["sell_date"], pnl_note),
+                )
+        flash("Position closed and profit added to bank funds.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
 
     @app.route("/trades/bulk-delete", methods=["POST"])
@@ -813,6 +945,8 @@ def create_app(config=None):
             raise ValidationError("Choose at least one trade to delete.")
         if len(ids) > MAX_ROWS:
             raise ValidationError(f"Delete at most {MAX_ROWS} trades at once.")
+        for tid in ids:
+            get_db().execute("DELETE FROM funds WHERE notes LIKE ?", (f"%[Trade #{tid}]%",))
         count = get_db().execute(
             f"DELETE FROM trades WHERE id IN ({','.join('?' for _ in ids)})", ids
         ).rowcount
@@ -1117,24 +1251,18 @@ def create_app(config=None):
             funds = []
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
         
-        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
-        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades if trade.get("notes") != "Sold from Holdings"), ZERO)
-        summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
-
-        try:
-            raw_shares = get_db().execute(
-                "SELECT * FROM client_shares WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
-            ).fetchall()
-        except Exception:
-            raw_shares = []
-
+        sync_trade_profits_to_funds(get_db(), cid)
+        
+        raw_shares = get_client_calculated_holdings(cid, get_db())
         prices = get_cached_prices(get_db())
         shares = []
+        total_holdings_invested = ZERO
         for s in raw_shares:
             item = dict(s)
             qty = dec(item.get("quantity"))
             buy_p = dec(item.get("buy_price"))
             cost = qty * buy_p
+            total_holdings_invested += cost
             quote = prices.get((item.get("stock") or "").strip().upper())
             if quote:
                 cmp = quote["current_price"]
@@ -1159,6 +1287,8 @@ def create_app(config=None):
                     price_change_pct=ZERO,
                 )
             shares.append(item)
+
+        summary["money_in_bank"] = total_funds - total_holdings_invested
 
         try:
             advisories = get_db().execute(
@@ -1281,7 +1411,7 @@ def create_app(config=None):
             
         buy_date = holding["added_on"][:10] if holding["added_on"] else date.today().isoformat()
         
-        insert_trades(cid, [{
+        trade_ids = insert_trades(cid, [{
             "stock": holding["stock"],
             "quantity": sell_qty,
             "buy_price": holding["buy_price"],
@@ -1290,6 +1420,20 @@ def create_app(config=None):
             "sell_date": sell_date,
             "notes": "Sold from Holdings"
         }])
+        trade_id = trade_ids[0] if trade_ids else None
+        pnl = ((dec(sell_price) - dec(holding["buy_price"])) * dec(sell_qty)).quantize(CENT, rounding=ROUND_HALF_UP)
+        if pnl != ZERO:
+            tag = f"[Trade #{trade_id}]" if trade_id else f"[Holding Sale #{sid}]"
+            existing = get_db().execute(
+                "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
+                (cid, f"%{tag}%")
+            ).fetchone()
+            if not existing:
+                pnl_note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {holding['stock']} ({sell_qty} sh) {tag}"
+                get_db().execute(
+                    "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
+                    (cid, pnl, sell_date, pnl_note),
+                )
         
         flash(f"Sold {sell_qty} shares of {holding['stock']} and recorded in Trade Ledger.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -1765,7 +1909,8 @@ def create_app(config=None):
         cid = session["client_id"]
         client = get_client(cid)
         trades = query_trades({"client_id": cid})
-        shares = get_db().execute("SELECT * FROM client_shares WHERE client_id=? ORDER BY added_on DESC, id DESC", (cid,)).fetchall()
+        sync_trade_profits_to_funds(get_db(), cid)
+        shares = get_client_calculated_holdings(cid, get_db())
 
         prices = get_cached_prices(get_db())
         enriched_shares = []
@@ -1818,10 +1963,7 @@ def create_app(config=None):
         except Exception:
             funds = []
         total_funds = sum((dec(f["amount"]) for f in funds), ZERO)
-
-        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
-        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades if trade.get("notes") != "Sold from Holdings"), ZERO)
-        money_in_bank = total_funds + cash_from_sales - cash_spent_on_buys
+        money_in_bank = total_funds - total_holdings_invested
 
         undismissed_alerts = get_db().execute(
             """
@@ -1862,13 +2004,17 @@ def create_app(config=None):
         if not stock:
             flash("Stock symbol is required.", "error")
             return redirect(url_for("client_portal"))
-        quantity = number(request.form.get("quantity"), "Quantity", positive=True) if request.form.get("quantity") else None
+        quantity = number(request.form.get("quantity"), "Quantity", positive=True) if request.form.get("quantity") else 1
         buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
-        get_db().execute(
-            "INSERT INTO client_shares (client_id, stock, quantity, buy_price) VALUES (?, ?, ?, ?)",
-            (cid, stock, quantity, buy_price),
-        )
-        flash(f"Holding for {stock} added to your portfolio.", "success")
+        insert_trades(cid, [{
+            "stock": stock,
+            "quantity": quantity,
+            "buy_price": buy_price,
+            "sell_price": None,
+            "buy_date": date.today().isoformat(),
+            "notes": "Added from Client Portal",
+        }], source="portal")
+        flash(f"Trade for {stock} recorded. Your holdings have been updated.", "success")
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/trades/new", methods=["POST"])
@@ -1924,7 +2070,7 @@ def create_app(config=None):
                             client_name, client_id, filename, platform, trade_count,
                             submission_id, submission_hash, submission_owner
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
-                        (client["name"], cid, storage_path, "Client Portal Append", 1, sub_uuid, sub_hash, owner),
+                        (client["name"], cid, storage_path, "Client Portal Add Trade", 1, sub_uuid, sub_hash, owner),
                     ).fetchone()
                     upload_id = up_row["id"]
 
@@ -1936,17 +2082,94 @@ def create_app(config=None):
                 except Exception as exc:
                     current_app.logger.warning("Trade screenshot upload skipped: %s", exc)
 
-        insert_trades(cid, [{
-            "stock": stock,
-            "quantity": quantity,
-            "buy_price": buy_price,
-            "sell_price": sell_price,
-            "buy_date": buy_date,
-            "sell_date": sell_date,
-            "notes": user_notes or "Added via Client Portal",
-        }], source="portal", upload_id=upload_id)
+        # Check if this completes an existing open trade for this stock
+        closed_existing = False
+        trade_id = None
+        if sell_price is not None:
+            existing_open = get_db().execute(
+                """SELECT * FROM trades
+                   WHERE client_id=? AND UPPER(stock)=? AND (sell_price IS NULL OR sell_price=0)
+                   ORDER BY COALESCE(buy_date, created_at) ASC, id ASC LIMIT 1""",
+                (cid, stock),
+            ).fetchone()
+            if existing_open:
+                open_qty = dec(existing_open["quantity"])
+                eff_bp = buy_price if buy_price is not None else dec(existing_open["buy_price"])
+                eff_bdate = buy_date if buy_date else existing_open["buy_date"]
+                s_date = sell_date or date.today().isoformat()
 
-        flash(f"Trade for {stock} appended to your trade ledger.", "success")
+                if quantity >= open_qty:
+                    trade_id = existing_open["id"]
+                    get_db().execute(
+                        """UPDATE trades SET
+                            buy_price=?, sell_price=?, buy_date=?, sell_date=?,
+                            upload_id=COALESCE(?, upload_id),
+                            notes=COALESCE(?, notes)
+                        WHERE id=?""",
+                        (eff_bp, sell_price, eff_bdate, s_date, upload_id, user_notes or existing_open["notes"], trade_id)
+                    )
+                    closed_existing = True
+                    buy_price = eff_bp
+                else:
+                    new_open_qty = open_qty - quantity
+                    get_db().execute("UPDATE trades SET quantity=? WHERE id=?", (new_open_qty, existing_open["id"]))
+                    buy_price = eff_bp
+
+        if not closed_existing:
+            trade_ids = insert_trades(cid, [{
+                "stock": stock,
+                "quantity": quantity,
+                "buy_price": buy_price,
+                "sell_price": sell_price,
+                "buy_date": buy_date,
+                "sell_date": sell_date,
+                "notes": user_notes or "Added via Client Portal",
+            }], source="portal", upload_id=upload_id)
+            trade_id = trade_ids[0] if trade_ids else None
+
+        # Eagerly fetch live price quote for the stock
+        try:
+            quote = fetch_stock_quote(stock)
+            if quote:
+                get_db().execute(
+                    """
+                    INSERT INTO stock_prices (stock, current_price, previous_close, change, change_pct, updated_at)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(stock) DO UPDATE SET
+                        current_price=excluded.current_price,
+                        previous_close=excluded.previous_close,
+                        change=excluded.change,
+                        change_pct=excluded.change_pct,
+                        updated_at=CURRENT_TIMESTAMP
+                    """,
+                    (stock, quote["current_price"], quote.get("previous_close"), quote.get("change"), quote.get("change_pct")),
+                )
+        except Exception:
+            pass
+
+        # If trade is completed (has both buy_price and sell_price), add realised profit to bank funds ONCE
+        if buy_price is not None and sell_price is not None and trade_id:
+            pnl = ((dec(sell_price) - dec(buy_price)) * dec(quantity)).quantize(CENT, rounding=ROUND_HALF_UP)
+            if pnl != ZERO:
+                tag = f"[Trade #{trade_id}]"
+                existing = get_db().execute(
+                    "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
+                    (cid, f"%{tag}%")
+                ).fetchone()
+                if not existing:
+                    s_date = sell_date or date.today().isoformat()
+                    pnl_note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {stock} ({quantity} sh) {tag}"
+                    get_db().execute(
+                        "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
+                        (cid, pnl, s_date, pnl_note),
+                    )
+            if pnl >= ZERO:
+                flash(f"Trade completed for {stock}. Realized profit of ₹{pnl:,.2f} added to your bank funds.", "success")
+            else:
+                flash(f"Trade completed for {stock}. Realized loss of ₹{abs(pnl):,.2f} recorded in your funds ledger.", "success")
+        else:
+            flash(f"Trade for {stock} recorded. Your holdings and live valuations have been updated.", "success")
+
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/funds/adjust", methods=["POST"])
