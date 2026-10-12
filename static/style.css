@@ -189,6 +189,14 @@ code { background: #edf1ef; border-radius: 4px; padding: 2px 5px; font-size: 12p
 .data-table tbody tr { transition: background .15s; }
 .data-table tbody tr:hover { background: #fcfdf9; }
 .data-table tbody tr.selected { background: #f0f7eb; }
+.data-table tbody tr.row-all-acknowledged { background-color: rgba(46, 125, 50, 0.12) !important; }
+.data-table tbody tr.row-all-acknowledged:hover { background-color: rgba(46, 125, 50, 0.18) !important; }
+.data-table tbody tr.ack-subrow { background: transparent; }
+.data-table tbody tr.ack-subrow.row-all-acknowledged { background-color: rgba(46, 125, 50, 0.08) !important; }
+.data-table tbody tr.ack-subrow td { white-space: normal; padding-top: 0; }
+@media (max-width: 768px) {
+  .ack-chips-wrapper { grid-template-columns: 1fr !important; }
+}
 .data-table tfoot td { border-top: 1px solid var(--line); background: #fafcf7; color: #5b6d52; font-size: 10px; font-weight: 600; }
 .data-table .r { text-align: right; }
 .trade-table { font-size: 11px; }

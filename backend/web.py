@@ -1917,14 +1917,65 @@ def create_app(config=None):
         alerts = get_db().execute(
             """
             SELECT a.*, c.name as client_name,
-                   (SELECT COUNT(*) FROM client_alert_views v WHERE v.alert_id=a.id AND v.dismissed=1) as view_count
+                   (SELECT COUNT(*) FROM client_alert_views v WHERE v.alert_id=a.id AND (v.dismissed=1 OR v.acknowledged=1)) as view_count
             FROM client_alerts a
             LEFT JOIN clients c ON c.id=a.client_id
             ORDER BY a.created_at DESC
             """
         ).fetchall()
         clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
-        return render_template("alerts.html", alerts=alerts, clients=clients)
+
+        views = get_db().execute(
+            """
+            SELECT v.alert_id, v.client_id, v.acknowledged_at, v.viewed_at, c.name as client_name
+            FROM client_alert_views v
+            JOIN clients c ON c.id = v.client_id
+            WHERE (v.dismissed = 1 OR v.acknowledged = 1)
+            ORDER BY lower(c.name)
+            """
+        ).fetchall()
+
+        ack_by_alert = {}
+        for v in views:
+            ack_by_alert.setdefault(v["alert_id"], []).append(v)
+
+        active_clients_list = [dict(c) for c in clients]
+        active_client_map = {c["id"]: c["name"] for c in clients}
+
+        enriched_alerts = []
+        for a in alerts:
+            ad = dict(a)
+            acks = ack_by_alert.get(ad["id"], [])
+            acked_client_ids = {v["client_id"] for v in acks}
+            acked_clients = [
+                {
+                    "id": v["client_id"],
+                    "name": v["client_name"],
+                    "acknowledged_at": v.get("acknowledged_at") or v.get("viewed_at"),
+                }
+                for v in acks
+            ]
+
+            if ad.get("client_id"):
+                cid = ad["client_id"]
+                cname = ad.get("client_name") or active_client_map.get(cid, f"Client #{cid}")
+                target_clients = [{"id": cid, "name": cname}]
+                if cid in acked_client_ids:
+                    pending_clients = []
+                else:
+                    pending_clients = [{"id": cid, "name": cname}]
+            else:
+                target_clients = active_clients_list
+                pending_clients = [c for c in active_clients_list if c["id"] not in acked_client_ids]
+
+            ad["target_count"] = len(target_clients)
+            ad["ack_count"] = len(acked_clients)
+            ad["acknowledged_clients"] = acked_clients
+            ad["pending_clients"] = pending_clients
+            ad["all_acknowledged"] = (len(target_clients) > 0 and len(pending_clients) == 0)
+            enriched_alerts.append(ad)
+
+        return render_template("alerts.html", alerts=enriched_alerts, clients=clients)
 
     @app.route("/alerts/new", methods=["POST"])
     @login_required

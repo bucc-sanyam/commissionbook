@@ -27,14 +27,14 @@
           <th class="r">Price</th>
           <th class="r">Target / SL</th>
           <th>Advisory Note</th>
-          <th class="r">Acknowledged</th>
+          <th class="r">Acknowledgment</th>
           <th>Status</th>
           <th class="r">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for a in alerts %}
-        <tr>
+        <tr class="{{ 'row-all-acknowledged' if a.all_acknowledged else '' }}">
           <td>
             <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}">
               {{ a.action }}
@@ -56,11 +56,19 @@
             <small class="muted"> / </small>
             <span class="neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</span>
           </td>
-          <td style="max-width: 250px; font-size: 13px;">
+          <td style="max-width: 230px; font-size: 13px;">
             {{ a.message or '<span class="muted">—</span>'|safe }}
           </td>
           <td class="r tabular">
-            <span class="badge" title="{{ a.view_count }} clients acknowledged this">{{ a.view_count }}</span>
+            {% if a.all_acknowledged %}
+              <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-weight:700; border:1px solid #c8e6c9; display:inline-flex; align-items:center; gap:4px;">
+                {{ icon('check-circle', 13) }} {{ a.ack_count }}/{{ a.target_count }} Done
+              </span>
+            {% else %}
+              <span class="badge" style="background:#fff3e0; color:#b76e00; font-weight:700; border:1px solid #ffe0b2; display:inline-flex; align-items:center; gap:4px;">
+                {{ icon('clock', 13) }} {{ a.ack_count }}/{{ a.target_count }} Acked
+              </span>
+            {% endif %}
           </td>
           <td>
             {% if a.active %}
@@ -84,6 +92,74 @@
                 </button>
               </form>
             </div>
+          </td>
+        </tr>
+        <!-- Expandable Client Acknowledgment Sub-row with Different Colored Names -->
+        <tr class="ack-subrow {{ 'row-all-acknowledged' if a.all_acknowledged else '' }}" id="ack-subrow-{{ a.id }}">
+          <td colspan="9" style="padding: 4px 20px 14px; border-top: 0;">
+            <details class="ack-accordion" {{ 'open' if not a.all_acknowledged else '' }} style="border-radius: 8px; border: 1px solid {{ '#b7dfba' if a.all_acknowledged else '#e2e8df' }}; background: {{ '#f4faf3' if a.all_acknowledged else '#fafbf9' }}; padding: 8px 14px; transition: all 0.2s ease;">
+              <summary style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 600; color: #2e4438; list-style: none;">
+                <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ '#2e7d32' if a.all_acknowledged else '#e65100' }}; display: inline-block;"></span>
+                  <strong>Client Status:</strong>
+                  <span style="color: #1b5e20; font-weight: 700;">{{ a.ack_count }} Acknowledged</span>
+                  <span style="color: #bbb;">·</span>
+                  <span style="color: #b76e00; font-weight: 700;">{{ a.pending_clients|length }} Yet to Acknowledge</span>
+                  {% if a.all_acknowledged %}
+                    <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px; font-weight:700; border:1px solid #c8e6c9;">✓ 100% Target Acknowledged</span>
+                  {% endif %}
+                </span>
+                <span class="muted" style="font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                  <span>Expand / Collapse</span>
+                  <span style="font-size: 9px;">▾</span>
+                </span>
+              </summary>
+
+              <div class="ack-chips-wrapper" style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <!-- Acknowledged Clients List (GREEN colored names) -->
+                <div class="ack-col-acked" style="background: #ffffff; padding: 10px 12px; border-radius: 6px; border: 1px solid #c8e6c9;">
+                  <div style="font-size: 11px; font-weight: 700; color: #1b5e20; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex; align-items:center; gap:5px;">{{ icon('check-circle', 13) }} Acknowledged ({{ a.ack_count }})</span>
+                    <small style="color: #558b2f; font-weight: 500;">Saved in profile</small>
+                  </div>
+                  {% if a.acknowledged_clients %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                      {% for c in a.acknowledged_clients %}
+                        <span class="chip-acked" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; border-radius: 16px; padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                          <span style="color: #2e7d32; font-weight: 900;">✓</span>
+                          <span>{{ c.name }}</span>
+                          {% if c.acknowledged_at %}
+                            <small style="color: #558b2f; font-size: 9px; opacity: 0.85;">{{ c.acknowledged_at[:16] }}</small>
+                          {% endif %}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p style="margin: 0; font-size: 11px; color: #888; font-style: italic;">No clients have acknowledged yet.</p>
+                  {% endif %}
+                </div>
+
+                <!-- Yet to Acknowledge Clients List (AMBER/ORANGE colored names) -->
+                <div class="ack-col-pending" style="background: #ffffff; padding: 10px 12px; border-radius: 6px; border: 1px solid #ffe0b2;">
+                  <div style="font-size: 11px; font-weight: 700; color: #b76e00; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display:flex; align-items:center; gap:5px;">{{ icon('clock', 13) }} Yet to Acknowledge ({{ a.pending_clients|length }})</span>
+                    <small style="color: #e65100; font-weight: 500;">Popup active</small>
+                  </div>
+                  {% if a.pending_clients %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                      {% for c in a.pending_clients %}
+                        <span class="chip-pending" style="background: #fff3e0; color: #b76e00; border: 1px solid #ffcc80; border-radius: 16px; padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                          <span style="color: #e65100; font-weight: 800;">⏳</span>
+                          <span>{{ c.name }}</span>
+                        </span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p style="margin: 0; font-size: 11px; color: #2e7d32; font-weight: 600;">All target clients have acknowledged! 🎉</p>
+                  {% endif %}
+                </div>
+              </div>
+            </details>
           </td>
         </tr>
         {% endfor %}
