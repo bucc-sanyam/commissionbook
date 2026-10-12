@@ -5,7 +5,11 @@
 {% block content %}
 <div class="page-heading">
   <div class="client-heading">{{ avatar(client.name, client.id) }}<div><span class="eyebrow">CLIENT AT A GLANCE</span><h1>{{ client.name }}<span class="accent-period">.</span></h1><div class="client-contact"><span>{{ icon('users', 13) }}Client #{{ client.id }}</span>{% if client.email %}<span>{{ icon('mail', 13) }}{{ client.email }}</span>{% endif %}{% if client.phone %}<span>{{ client.phone }}</span>{% endif %}</div></div></div>
-  <div class="heading-actions"><a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a><a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name) }}">{{ icon('plus', 16) }}Add trade</a></div>
+  <div class="heading-actions">
+    <button class="btn btn-secondary" type="button" onclick="openClientPopupTrade('{{ client.id }}')">{{ icon('send', 14) }} Send Pop-up Trade</button>
+    <a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a>
+    <a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name) }}">{{ icon('plus', 16) }}Add trade</a>
+  </div>
 </div>
 <div class="kpi-grid">
   <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ s.commission|money }}</div><div class="kpi-bottom">{{ rule }}</div></section>
@@ -41,12 +45,14 @@
   <section class="card">
     <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
     {% if shares %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th></th></tr></thead><tbody>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
     {% for sh in shares %}
       <tr>
         <td><strong>{{ sh.stock }}</strong></td>
         <td class="r tabular">{{ sh.quantity or '—' }}</td>
-        <td class="r pos tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+        <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+        <td class="r tabular">{{ sh.cmp|money if sh.cmp else '—' }}</td>
+        <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
         <td>
           <div class="row-actions" style="justify-content: flex-end;">
             <button class="icon-btn" type="button" data-dialog="edit-share-dialog-{{ sh.id }}" aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
@@ -63,6 +69,73 @@
     {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
   </section>
   <div class="stack">
+    <!-- Client Portal Credentials Card -->
+    <section class="card card-pad" id="portal-credentials-card">
+      <div class="settings-heading">
+        <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
+        <div>
+          <h2>Client Portal Login &amp; Password</h2>
+          <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
+        </div>
+      </div>
+      <div class="details-line">
+        <span>Login Identifier (ID / Phone)</span>
+        <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
+      </div>
+      <div class="details-line" style="align-items: center;">
+        <span>Current Password</span>
+        {% if client.password_plain %}
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
+            <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
+              {{ icon('eye', 14) }}
+            </button>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
+              {{ icon('copy', 13) }} Copy
+            </button>
+          </div>
+        {% elif client.password_hash %}
+          <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
+        {% else %}
+          <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
+        {% endif %}
+      </div>
+      <div class="details-line">
+        <span>Portal Status</span>
+        {% if client.password_hash or client.password_plain %}
+          <span class="badge badge-pos">Access Enabled</span>
+        {% else %}
+          <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
+        {% endif %}
+      </div>
+
+      <!-- Reset Password Form -->
+      <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
+        {{ csrf() }}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
+          <button type="button" class="btn btn-ghost btn-xs" onclick="generateRandomPassword('detail-new-password', 'detail-confirm-password')">
+            {{ icon('repeat', 11) }} Generate Random
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <label class="field" style="margin: 0;">
+            <span style="font-size: 11px;">New Password</span>
+            <input type="text" id="detail-new-password" name="client_password" required minlength="4" placeholder="Min 4 chars" autocomplete="off">
+          </label>
+          <label class="field" style="margin: 0;">
+            <span style="font-size: 11px;">Confirm Password</span>
+            <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="4" placeholder="Repeat password" autocomplete="off">
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-sm btn-wide">
+          {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
+        </button>
+      </form>
+    </section>
+
     <section class="card card-pad">
       <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
       <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
@@ -114,4 +187,39 @@
 </form></dialog>
 {% endif %}
 <form method="post" action="{{ url_for('client_delete', cid=client.id) }}" data-confirm="Permanently delete {{ client.name }} and all their trades and payments? This cannot be undone." class="actions" style="margin-top:25px">{{ csrf() }}<a class="btn btn-ghost btn-sm" href="{{ url_for('clients_list') }}">{{ icon('arrow-left', 13) }}All clients</a><button class="btn btn-ghost btn-sm">{{ icon('trash', 13) }}Delete this client</button></form>
+{% endblock %}
+{% block scripts %}
+<script>
+function openClientPopupTrade(cid) {
+  const modal = document.getElementById('global-popup-trade-dialog');
+  if (!modal) return;
+  const select = document.getElementById('popup-trade-client-select');
+  if (select) select.value = cid;
+  modal.showModal();
+}
+
+function togglePasswordVisibility(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.dataset.hidden === 'true') {
+    el.textContent = el.dataset.real;
+    el.dataset.hidden = 'false';
+  } else {
+    el.dataset.real = el.textContent;
+    el.textContent = '••••••••';
+    el.dataset.hidden = 'true';
+  }
+}
+
+function generateRandomPassword(id1, id2) {
+  const adjectives = ['swift', 'safe', 'prime', 'smart', 'gold', 'blue', 'star', 'trade', 'ace', 'apex'];
+  const numbers = Math.floor(1000 + Math.random() * 9000);
+  const word = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const pwd = word + numbers;
+  const in1 = document.getElementById(id1);
+  const in2 = document.getElementById(id2);
+  if (in1) in1.value = pwd;
+  if (in2) in2.value = pwd;
+}
+</script>
 {% endblock %}

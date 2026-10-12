@@ -17,7 +17,12 @@ from xml.etree.ElementTree import ParseError
 from zipfile import BadZipFile, ZipFile
 
 import click
-import psycopg
+try:
+    import psycopg
+    PsycopgError = (psycopg.Error,)
+except (ImportError, Exception):
+    psycopg = None
+    PsycopgError = ()
 from flask import (
     Flask, abort, current_app, flash, g, jsonify, redirect, render_template,
     request, send_file, send_from_directory, session, url_for,
@@ -32,6 +37,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from trade_parser import parse_text
 from .database import get_db, install_database
+from .prices import (
+    DailyPriceScheduler, fetch_stock_quote, get_all_held_stocks,
+    get_cached_prices, update_all_stock_prices,
+)
 from .security import (
     configure_app, credential_version, csrf_token, local_setup_allowed, require_csrf,
     safe_redirect_target, secure_response,
@@ -137,8 +146,21 @@ def login_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if not session.get("admin"):
+            if session.get("client_id"):
+                return redirect(url_for("client_portal"))
             if request.path.startswith("/api/"):
                 abort(401, description="Administrator sign-in is required.")
+            return redirect(url_for("login", next=request.path))
+        return function(*args, **kwargs)
+    return wrapper
+
+
+def client_login_required(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if not session.get("client_id"):
+            if request.path.startswith("/api/"):
+                abort(401, description="Client sign-in is required.")
             return redirect(url_for("login", next=request.path))
         return function(*args, **kwargs)
     return wrapper
@@ -486,10 +508,23 @@ def create_app(config=None):
     app.after_request(secure_response)
     app.jinja_env.globals["csrf_token"] = csrf_token
 
+    @app.context_processor
+    def inject_admin_context():
+        if session.get("admin"):
+            try:
+                clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+                alerts_count = get_db().execute("SELECT COUNT(*) as c FROM client_alerts WHERE active=1").fetchone()["c"]
+                return {"active_clients": clients, "active_alerts_count": alerts_count}
+            except Exception:
+                return {}
+        return {}
+
     @app.before_request
     def authorize_request():
         g.decimal_context = localcontext()
         g.decimal_context.__enter__().prec = 60
+        if session.get("client_id") or session.get("admin"):
+            session.permanent = True
         if session.get("admin"):
             _, version = admin_credentials()
             if not version or session.get("auth_version") != version:
@@ -531,6 +566,10 @@ def create_app(config=None):
         error = g.get("error_response", False)
         return {
             "COMMISSION_TYPES": COMMISSION_TYPES, "logged_in": bool(session.get("admin")),
+            "is_admin": bool(session.get("admin")),
+            "is_client": bool(session.get("client_id")),
+            "client_name": session.get("client_name"),
+            "client_id": session.get("client_id"),
             "today": date.today().isoformat(), "app_name": "Commission Book",
             "business_name": "" if error else setting("business_name", ""),
             "currency": "\u20b9" if error else setting("currency", "\u20b9"),
@@ -564,16 +603,20 @@ def create_app(config=None):
         return error_response(503, "Private storage unavailable", str(error))
 
     @app.errorhandler(sqlite3.IntegrityError)
-    @app.errorhandler(psycopg.IntegrityError)
     def database_conflict(error):
         app.logger.warning("A database constraint rejected a request (%s).", type(error).__name__)
         return error_response(409, "Conflicting entry", "This entry conflicts with existing data. Reload and try again.")
 
+    if psycopg is not None:
+        app.errorhandler(psycopg.IntegrityError)(database_conflict)
+
     @app.errorhandler(sqlite3.OperationalError)
-    @app.errorhandler(psycopg.OperationalError)
     def unavailable_database(error):
         app.logger.error("Database operation failed (%s).", type(error).__name__)
         return error_response(503, "Ledger unavailable", "The database is unavailable. Try again shortly or check its configuration.")
+
+    if psycopg is not None:
+        app.errorhandler(psycopg.OperationalError)(unavailable_database)
 
     @app.errorhandler(500)
     def server_error(_error):
@@ -583,29 +626,57 @@ def create_app(config=None):
     def login():
         if session.get("admin"):
             return redirect(url_for("dashboard"))
+        if session.get("client_id"):
+            return redirect(url_for("client_portal"))
         password_hash, version = admin_credentials()
         first_run = not password_hash
         if first_run and not local_setup_allowed():
             abort(503, description="An administrator must configure the password on the server before this site can be used.")
         if request.method == "POST":
-            password = request.form.get("password", "")
-            if len(password) > 1024:
-                raise ValidationError("Password is too long.")
-            if first_run:
-                if len(password) < 10 or password != request.form.get("confirm"):
-                    flash("Password must be at least 10 characters and match confirmation.", "error")
-                    return render_template("login.html", first_run=True), 400
-                password_hash = generate_password_hash(password)
-                set_setting("admin_password", password_hash)
-                version = admin_credentials()[1]
-            elif not check_password_hash(password_hash, password):
-                flash("Incorrect password.", "error")
-                return render_template("login.html", first_run=False), 401
-            session.clear()
-            session["admin"], session["auth_version"] = True, version
-            session.permanent = True
-            return redirect(safe_redirect_target(request.args.get("next"), url_for("dashboard")))
-        return render_template("login.html", first_run=first_run, public_token=portal_token())
+            login_type = request.form.get("login_type", "admin")
+            if login_type == "client":
+                identifier = request.form.get("identifier", "").strip()
+                password = request.form.get("client_password", "")
+                if not identifier or not password:
+                    flash("Please provide your ID/phone and password.", "error")
+                    return render_template("login.html", first_run=first_run, active_tab="client", public_token=portal_token()), 400
+                client = get_db().execute(
+                    """SELECT * FROM clients 
+                    WHERE (lower(phone)=lower(?) OR lower(email)=lower(?) OR lower(username)=lower(?) OR lower(name)=lower(?) OR CAST(id AS TEXT)=?) 
+                      AND active=1""",
+                    (identifier, identifier, identifier, identifier, identifier),
+                ).fetchone()
+                if not client or not client.get("password_hash"):
+                    flash("Invalid credentials or client password has not been configured yet.", "error")
+                    return render_template("login.html", first_run=first_run, active_tab="client", public_token=portal_token()), 401
+                if not check_password_hash(client["password_hash"], password):
+                    flash("Incorrect password.", "error")
+                    return render_template("login.html", first_run=first_run, active_tab="client", public_token=portal_token()), 401
+                session.clear()
+                session["client_id"] = client["id"]
+                session["client_name"] = client["name"]
+                session["role"] = "client"
+                session.permanent = True
+                return redirect(safe_redirect_target(request.args.get("next"), url_for("client_portal")))
+            else:
+                password = request.form.get("password", "")
+                if len(password) > 1024:
+                    raise ValidationError("Password is too long.")
+                if first_run:
+                    if len(password) < 10 or password != request.form.get("confirm"):
+                        flash("Password must be at least 10 characters and match confirmation.", "error")
+                        return render_template("login.html", first_run=True, active_tab="admin"), 400
+                    password_hash = generate_password_hash(password)
+                    set_setting("admin_password", password_hash)
+                    version = admin_credentials()[1]
+                elif not check_password_hash(password_hash, password):
+                    flash("Incorrect password.", "error")
+                    return render_template("login.html", first_run=False, active_tab="admin"), 401
+                session.clear()
+                session["admin"], session["auth_version"] = True, version
+                session.permanent = True
+                return redirect(safe_redirect_target(request.args.get("next"), url_for("dashboard")))
+        return render_template("login.html", first_run=first_run, active_tab=request.args.get("tab", "options"), public_token=portal_token())
 
     @app.route("/logout", methods=["POST"])
     def logout():
@@ -885,7 +956,7 @@ def create_app(config=None):
         """
         
         if stock_query:
-            holdings = get_db().execute(
+            raw_holdings = get_db().execute(
                 base_query + """
                 WHERE stock LIKE ?
                 GROUP BY stock, client_id, client_name
@@ -894,14 +965,81 @@ def create_app(config=None):
                 (f"%{stock_query}%",)
             ).fetchall()
         else:
-            holdings = get_db().execute(
+            raw_holdings = get_db().execute(
                 base_query + """
                 GROUP BY stock, client_id, client_name
                 ORDER BY stock, lower(client_name)
                 """
             ).fetchall()
-            
-        return render_template("holdings.html", holdings=holdings, query=stock_query)
+
+        prices = get_cached_prices(get_db())
+        holdings = []
+        total_invested = ZERO
+        total_current_value = ZERO
+
+        for h in raw_holdings:
+            item = dict(h)
+            qty = dec(item.get("quantity"))
+            buy_p = dec(item.get("buy_price"))
+            cost = qty * buy_p
+            total_invested += cost
+
+            stock_sym = (item.get("stock") or "").strip().upper()
+            quote = prices.get(stock_sym)
+            if quote:
+                cmp = quote["current_price"]
+                cur_val = qty * cmp
+                unrealized = cur_val - cost
+                unrealized_pct = (unrealized / cost * 100) if cost else ZERO
+                item.update(
+                    cmp=cmp,
+                    current_value=cur_val,
+                    unrealized_pnl=unrealized,
+                    unrealized_pct=unrealized_pct,
+                    price_change=quote.get("change", ZERO),
+                    price_change_pct=quote.get("change_pct", ZERO),
+                    price_updated_at=quote.get("updated_at"),
+                )
+                total_current_value += cur_val
+            else:
+                item.update(
+                    cmp=None,
+                    current_value=cost,
+                    unrealized_pnl=ZERO,
+                    unrealized_pct=ZERO,
+                    price_change=ZERO,
+                    price_change_pct=ZERO,
+                    price_updated_at=None,
+                )
+                total_current_value += cost
+            holdings.append(item)
+
+        total_unrealized_pnl = total_current_value - total_invested
+        total_unrealized_pct = (total_unrealized_pnl / total_invested * 100) if total_invested else ZERO
+
+        return render_template(
+            "holdings.html",
+            holdings=holdings,
+            query=stock_query,
+            total_invested=total_invested,
+            total_current_value=total_current_value,
+            total_unrealized_pnl=total_unrealized_pnl,
+            total_unrealized_pct=total_unrealized_pct,
+        )
+
+    @app.route("/admin/update-prices", methods=["POST"])
+    @login_required
+    def admin_update_prices():
+        res = update_all_stock_prices(get_db())
+        count = len(res["updated"])
+        failed = len(res["failed"])
+        if count:
+            flash(f"Updated market prices for {count} stock(s).", "success")
+        elif failed:
+            flash(f"Could not fetch prices for {failed} stock(s). Check symbols or internet connection.", "warning")
+        else:
+            flash("No holdings currently recorded to update.", "info")
+        return redirect(safe_redirect_target(request.referrer, url_for("holdings_list")))
 
     @app.route("/clients", methods=["GET", "POST"])
     @login_required
@@ -911,11 +1049,14 @@ def create_app(config=None):
             values = client_values(request.form, name)
             if get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone():
                 raise ValidationError("A user with that name already exists.")
+            portal_pwd = (request.form.get("portal_password") or request.form.get("client_password") or "").strip()
+            p_hash = generate_password_hash(portal_pwd) if portal_pwd else None
+            p_plain = portal_pwd if portal_pwd else None
             get_db().execute(
-                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount) VALUES (?,?,?,?,?,?,?)",
-                values,
+                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain) VALUES (?,?,?,?,?,?,?,?,?)",
+                (*values, p_hash, p_plain),
             )
-            flash(f"Added {name}.", "success")
+            flash(f"Added {name}." + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
             return redirect(url_for("clients_list"))
         trades, paid, rows = query_trades({}), payments_by_client(), []
         for client in get_db().execute("SELECT * FROM clients ORDER BY lower(name)").fetchall():
@@ -963,11 +1104,43 @@ def create_app(config=None):
         summary["money_in_bank"] = total_funds + cash_from_sales - cash_spent_on_buys
 
         try:
-            shares = get_db().execute(
+            raw_shares = get_db().execute(
                 "SELECT * FROM client_shares WHERE client_id=? ORDER BY added_on DESC,id DESC", (cid,)
             ).fetchall()
         except Exception:
-            shares = []
+            raw_shares = []
+
+        prices = get_cached_prices(get_db())
+        shares = []
+        for s in raw_shares:
+            item = dict(s)
+            qty = dec(item.get("quantity"))
+            buy_p = dec(item.get("buy_price"))
+            cost = qty * buy_p
+            quote = prices.get((item.get("stock") or "").strip().upper())
+            if quote:
+                cmp = quote["current_price"]
+                cur_val = qty * cmp
+                unrealized = cur_val - cost
+                unrealized_pct = (unrealized / cost * 100) if cost else ZERO
+                item.update(
+                    cmp=cmp,
+                    current_value=cur_val,
+                    unrealized_pnl=unrealized,
+                    unrealized_pct=unrealized_pct,
+                    price_change=quote.get("change", ZERO),
+                    price_change_pct=quote.get("change_pct", ZERO),
+                )
+            else:
+                item.update(
+                    cmp=None,
+                    current_value=cost,
+                    unrealized_pnl=ZERO,
+                    unrealized_pct=ZERO,
+                    price_change=ZERO,
+                    price_change_pct=ZERO,
+                )
+            shares.append(item)
 
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
@@ -976,6 +1149,24 @@ def create_app(config=None):
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
         )
+
+    @app.route("/clients/<int:cid>/set-password", methods=["POST"])
+    @login_required
+    def client_set_password(cid):
+        client = get_client(cid)
+        pwd = request.form.get("client_password", "").strip()
+        confirm = request.form.get("confirm_password", "").strip()
+        back = request.form.get("back")
+        if not pwd or len(pwd) < 4:
+            flash("Password must be at least 4 characters.", "error")
+            return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+        if confirm and pwd != confirm:
+            flash("Passwords do not match.", "error")
+            return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+        p_hash = generate_password_hash(pwd)
+        get_db().execute("UPDATE clients SET password_hash=?, password_plain=? WHERE id=?", (p_hash, pwd, cid))
+        flash(f"Portal password for {client['name']} updated to: {pwd}", "success")
+        return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
 
     @app.route("/clients/<int:cid>/shares/new", methods=["POST"])
     @login_required
@@ -1445,7 +1636,7 @@ def create_app(config=None):
             if len(tables) != 6 or any(not table["relrowsecurity"] or table["browser_access"] for table in tables):
                 raise click.ClickException("The database schema or browser-access restrictions are incomplete. Run the SQL migration.")
             get_storage().check_bucket()
-        except psycopg.Error as exc:
+        except PsycopgError as exc:
             raise click.ClickException("PostgreSQL could not be verified. Check DATABASE_URL and apply the SQL migration.") from exc
         except (ValidationError, StorageUnavailable) as exc:
             raise click.ClickException(str(exc)) from exc
@@ -1463,7 +1654,7 @@ def create_app(config=None):
                 migrate_local(snapshot)
         except (ValidationError, StorageUnavailable, sqlite3.Error, OSError) as exc:
             raise click.ClickException(str(exc)) from exc
-        except psycopg.Error as exc:
+        except PsycopgError as exc:
             raise click.ClickException(
                 "Cloud migration did not confirm completion. Check the cloud ledger before retrying; "
                 "the local source is unchanged."
@@ -1503,5 +1694,209 @@ def create_app(config=None):
             database.commit()
             removed += len(paths)
         click.echo(f"Removed {removed} abandoned upload(s). Submitted evidence was not removed.")
+
+    @app.route("/portal")
+    @client_login_required
+    def client_portal():
+        cid = session["client_id"]
+        client = get_client(cid)
+        trades = query_trades({"client_id": cid})
+        shares = get_db().execute("SELECT * FROM client_shares WHERE client_id=? ORDER BY added_on DESC, id DESC", (cid,)).fetchall()
+
+        prices = get_cached_prices(get_db())
+        enriched_shares = []
+        total_holdings_invested = ZERO
+        total_holdings_current_value = ZERO
+
+        for share in shares:
+            s_dict = dict(share)
+            qty = dec(s_dict.get("quantity"))
+            buy_p = dec(s_dict.get("buy_price"))
+            cost = qty * buy_p
+            total_holdings_invested += cost
+
+            stock_key = (s_dict.get("stock") or "").strip().upper()
+            quote = prices.get(stock_key)
+            if quote:
+                cmp = quote["current_price"]
+                cur_val = qty * cmp
+                unrealized_pnl = cur_val - cost
+                unrealized_pct = (unrealized_pnl / cost * 100) if cost else ZERO
+                s_dict.update(
+                    cmp=cmp,
+                    current_value=cur_val,
+                    unrealized_pnl=unrealized_pnl,
+                    unrealized_pct=unrealized_pct,
+                    price_change=quote.get("change", ZERO),
+                    price_change_pct=quote.get("change_pct", ZERO),
+                    price_updated_at=quote.get("updated_at"),
+                )
+                total_holdings_current_value += cur_val
+            else:
+                s_dict.update(
+                    cmp=None,
+                    current_value=cost,
+                    unrealized_pnl=ZERO,
+                    unrealized_pct=ZERO,
+                    price_change=ZERO,
+                    price_change_pct=ZERO,
+                    price_updated_at=None,
+                )
+                total_holdings_current_value += cost
+            enriched_shares.append(s_dict)
+
+        total_unrealized_pnl = total_holdings_current_value - total_holdings_invested
+        total_unrealized_pct = (total_unrealized_pnl / total_holdings_invested * 100) if total_holdings_invested else ZERO
+
+        summary = summarize(trades)
+        try:
+            funds = get_db().execute("SELECT * FROM funds WHERE client_id=? ORDER BY added_on DESC, id DESC", (cid,)).fetchall()
+        except Exception:
+            funds = []
+        total_funds = sum((dec(f["amount"]) for f in funds), ZERO)
+
+        cash_from_sales = sum(((trade["sell_price"] or ZERO) * trade["quantity"] for trade in trades), ZERO)
+        cash_spent_on_buys = sum(((trade["buy_price"] or ZERO) * trade["quantity"] for trade in trades if trade.get("notes") != "Sold from Holdings"), ZERO)
+        money_in_bank = total_funds + cash_from_sales - cash_spent_on_buys
+
+        undismissed_alerts = get_db().execute(
+            """
+            SELECT a.* FROM client_alerts a
+            LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
+            WHERE (a.client_id=? OR a.client_id IS NULL)
+              AND a.active=1
+              AND (v.dismissed IS NULL OR v.dismissed=0)
+            ORDER BY a.created_at DESC
+            """,
+            (cid, cid),
+        ).fetchall()
+
+        all_alerts = get_db().execute(
+            """
+            SELECT a.*, COALESCE(v.dismissed, 0) as dismissed FROM client_alerts a
+            LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
+            WHERE (a.client_id=? OR a.client_id IS NULL)
+              AND a.active=1
+            ORDER BY a.created_at DESC
+            LIMIT 20
+            """,
+            (cid, cid),
+        ).fetchall()
+
+        return render_template(
+            "portal.html",
+            client=client,
+            shares=enriched_shares,
+            trades=trades,
+            s=summary,
+            funds=funds,
+            total_funds=total_funds,
+            money_in_bank=money_in_bank,
+            total_holdings_invested=total_holdings_invested,
+            total_holdings_current_value=total_holdings_current_value,
+            total_unrealized_pnl=total_unrealized_pnl,
+            total_unrealized_pct=total_unrealized_pct,
+            undismissed_alerts=undismissed_alerts,
+            all_alerts=all_alerts,
+            public_token=portal_token(),
+        )
+
+    @app.route("/portal/shares/new", methods=["POST"])
+    @client_login_required
+    def portal_share_add():
+        cid = session["client_id"]
+        stock = request.form.get("stock", "").strip().upper()
+        if not stock:
+            flash("Stock symbol is required.", "error")
+            return redirect(url_for("client_portal"))
+        quantity = number(request.form.get("quantity"), "Quantity", positive=True) if request.form.get("quantity") else None
+        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+        get_db().execute(
+            "INSERT INTO client_shares (client_id, stock, quantity, buy_price) VALUES (?, ?, ?, ?)",
+            (cid, stock, quantity, buy_price),
+        )
+        flash(f"Holding for {stock} added to your portfolio.", "success")
+        return redirect(url_for("client_portal"))
+
+    @app.route("/api/alerts/<int:aid>/dismiss", methods=["POST"])
+    @client_login_required
+    def api_alert_dismiss(aid):
+        cid = session["client_id"]
+        get_db().execute(
+            """
+            INSERT INTO client_alert_views (alert_id, client_id, dismissed, viewed_at)
+            VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(alert_id, client_id) DO UPDATE SET dismissed=1, viewed_at=CURRENT_TIMESTAMP
+            """,
+            (aid, cid),
+        )
+        return jsonify(success=True)
+
+    @app.route("/alerts", methods=["GET"])
+    @login_required
+    def alerts_list():
+        alerts = get_db().execute(
+            """
+            SELECT a.*, c.name as client_name,
+                   (SELECT COUNT(*) FROM client_alert_views v WHERE v.alert_id=a.id AND v.dismissed=1) as view_count
+            FROM client_alerts a
+            LEFT JOIN clients c ON c.id=a.client_id
+            ORDER BY a.created_at DESC
+            """
+        ).fetchall()
+        clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+        return render_template("alerts.html", alerts=alerts, clients=clients)
+
+    @app.route("/alerts/new", methods=["POST"])
+    @login_required
+    def alert_create():
+        action = request.form.get("action", "BUY").upper()
+        if action not in ("BUY", "SELL"):
+            abort(400)
+        stock = request.form.get("stock", "").strip().upper()
+        back = request.form.get("back")
+        if not stock:
+            flash("Stock symbol is required.", "error")
+            return redirect(safe_redirect_target(back, url_for("alerts_list")))
+        price = number(request.form.get("price"), "Price", positive=True) if request.form.get("price") else None
+        target_price = number(request.form.get("target_price"), "Target Price", positive=True) if request.form.get("target_price") else None
+        stop_loss = number(request.form.get("stop_loss"), "Stop Loss", positive=True) if request.form.get("stop_loss") else None
+        message = request.form.get("message", "").strip()
+        client_id_raw = request.form.get("client_id", "").strip()
+        client_id = int(client_id_raw) if client_id_raw and client_id_raw != "all" else None
+
+        get_db().execute(
+            """
+            INSERT INTO client_alerts (client_id, action, stock, price, target_price, stop_loss, message, active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            """,
+            (client_id, action, stock, price, target_price, stop_loss, message),
+        )
+        recipient = "All clients (Broadcast)" if client_id is None else get_client(client_id)["name"]
+        flash(f"Pop-up trade for {stock} ({action}) sent to {recipient}.", "success")
+        return redirect(safe_redirect_target(back, url_for("alerts_list")))
+
+    @app.route("/alerts/<int:aid>/toggle", methods=["POST"])
+    @login_required
+    def alert_toggle(aid):
+        alert = get_db().execute("SELECT * FROM client_alerts WHERE id=?", (aid,)).fetchone()
+        if not alert:
+            abort(404)
+        new_status = 0 if alert["active"] else 1
+        get_db().execute("UPDATE client_alerts SET active=? WHERE id=?", (new_status, aid))
+        flash("Alert status updated.", "success")
+        return redirect(url_for("alerts_list"))
+
+    @app.route("/alerts/<int:aid>/delete", methods=["POST"])
+    @login_required
+    def alert_delete(aid):
+        get_db().execute("DELETE FROM client_alerts WHERE id=?", (aid,))
+        flash("Alert deleted.", "success")
+        return redirect(url_for("alerts_list"))
+
+    if not (config and config.get("TESTING")):
+        scheduler = DailyPriceScheduler(app)
+        scheduler.start()
+        app.extensions["price_scheduler"] = scheduler
 
     return app

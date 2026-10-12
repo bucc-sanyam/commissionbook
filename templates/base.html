@@ -39,7 +39,8 @@
       ('trades_list', 'Trade ledger', 'book', ep in ('trades_list', 'trade_form')),
       ('clients_list', 'Clients', 'users', ep in ('clients_list', 'client_detail')),
       ('payments_list', 'Payments', 'wallet', ep == 'payments_list'),
-      ('holdings_list', 'Holdings', 'trend', ep == 'holdings_list')
+      ('holdings_list', 'Holdings', 'trend', ep == 'holdings_list'),
+      ('alerts_list', 'Pop-up Trades', 'send', ep == 'alerts_list')
     ] %}
     <a class="nav-link{{ ' active' if active }}" href="{{ url_for(endpoint) }}" {% if active %}aria-current="page"{% endif %}>{{ icon(glyph, 19) }}<span>{{ label }}</span>{% if active %}<span class="nav-active-dot"></span>{% endif %}</a>
     {% endfor %}
@@ -58,7 +59,16 @@
 <div class="app-shell">
   <header class="topbar">
     <div class="breadcrumb"><button class="icon-btn mobile-menu" id="menu-toggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('menu') }}</button><span class="breadcrumb-root">Workspace</span>{{ icon('chevron-right', 13) }}<span>{% block breadcrumb %}Overview{% endblock %}</span></div>
-    <div class="topbar-right"><button type="button" class="icon-btn" id="privacy-toggle" aria-label="Toggle privacy mode" title="Hide numbers" aria-pressed="false">{{ icon('eye-off', 16) }}</button><span class="private-label">{{ icon('shield', 14) }}Admin only</span><span class="topbar-divider"></span><span class="topbar-date" data-today="{{ today }}">{{ today }}</span><span class="topbar-avatar">A</span></div>
+    <div class="topbar-right">
+      <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('global-popup-trade-dialog').showModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:6px 12px; font-size:12px;">
+        {{ icon('send', 13) }}<span>Send Pop-up Trade</span>
+      </button>
+      <button type="button" class="icon-btn" id="privacy-toggle" aria-label="Toggle privacy mode" title="Hide numbers" aria-pressed="false">{{ icon('eye-off', 16) }}</button>
+      <span class="private-label">{{ icon('shield', 14) }}Admin only</span>
+      <span class="topbar-divider"></span>
+      <span class="topbar-date" data-today="{{ today }}">{{ today }}</span>
+      <span class="topbar-avatar">A</span>
+    </div>
   </header>
   <main id="main" class="main-content">
     {% block flashes %}{% include "_flashes.html" %}{% endblock %}
@@ -74,6 +84,72 @@
     <label class="field">Sell price per share<input type="number" name="sell_price" min="0" step="any" required inputmode="decimal"></label>
     <label class="field">Sell date<input type="date" name="sell_date" value="{{ today }}" required></label>
     <div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 17) }}Close position</button></div>
+  </form>
+</dialog>
+<dialog class="modal modal-md" id="global-popup-trade-dialog">
+  <form method="post" action="{{ url_for('alert_create') }}" class="modal-inner">
+    {{ csrf() }}
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">ADMIN PORTAL ONLY · INSTANT POP-UP ALERT</span>
+        <h2>Send Pop-up Trade to Clients</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted">Creates an eye-catching recommendation popup on the client's screen upon login. Only visible in your private admin workspace and the recipient's portal.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem;">
+      <label class="field">
+        Trade Action
+        <select name="action" required style="font-weight: 700; font-size: 14px;">
+          <option value="BUY" selected>BUY</option>
+          <option value="SELL">SELL</option>
+        </select>
+      </label>
+
+      <label class="field">
+        Stock Symbol
+        <input name="stock" id="popup-trade-stock-input" required placeholder="e.g. RELIANCE, INFY" autocomplete="off" style="text-transform: uppercase; font-weight: 700;">
+      </label>
+    </div>
+
+    <label class="field">
+      Target Recipient
+      <select name="client_id" id="popup-trade-client-select" required>
+        <option value="all" selected>All Clients (Broadcast Pop-up)</option>
+        {% for c in active_clients|default([]) %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+      <label class="field">
+        Recommended Price (₹)
+        <input type="number" step="any" min="0" name="price" placeholder="e.g. 2950.00" inputmode="decimal">
+      </label>
+
+      <label class="field">
+        Target Price (₹)
+        <input type="number" step="any" min="0" name="target_price" placeholder="e.g. 3200.00" inputmode="decimal">
+      </label>
+
+      <label class="field">
+        Stop Loss (₹)
+        <input type="number" step="any" min="0" name="stop_loss" placeholder="e.g. 2850.00" inputmode="decimal">
+      </label>
+    </div>
+
+    <label class="field">
+      Trade Rationale / Note
+      <textarea name="message" rows="3" placeholder="e.g. Breakout on high daily volume. Target 2-3 weeks."></textarea>
+    </label>
+
+    <div class="modal-actions" style="margin-top: 1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">{{ icon('send', 15) }} Send Pop-up Trade Now</button>
+    </div>
   </form>
 </dialog>
 <dialog class="modal modal-sm" id="confirm-dialog">

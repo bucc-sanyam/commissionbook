@@ -3,9 +3,13 @@ import threading
 from datetime import date, datetime
 from decimal import Decimal
 
-import psycopg
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except (ImportError, Exception):
+    psycopg = None
+    dict_row = None
 from flask import current_app, g
-from psycopg.rows import dict_row
 
 
 DEFAULTS = {
@@ -24,6 +28,9 @@ CREATE TABLE IF NOT EXISTS clients (
     phone TEXT UNIQUE, email TEXT, commission_type TEXT, commission_rate NUMERIC,
     notes TEXT, active INTEGER NOT NULL DEFAULT 1,
     portfolio_amount NUMERIC DEFAULT 0,
+    password_hash TEXT,
+    password_plain TEXT,
+    username TEXT UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS uploads (
@@ -64,6 +71,34 @@ CREATE TABLE IF NOT EXISTS client_shares (
     stock TEXT NOT NULL, quantity NUMERIC, buy_price NUMERIC,
     added_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS client_alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    stock TEXT NOT NULL,
+    price NUMERIC,
+    target_price NUMERIC,
+    stop_loss NUMERIC,
+    message TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS client_alert_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alert_id INTEGER NOT NULL REFERENCES client_alerts(id) ON DELETE CASCADE,
+    client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    viewed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dismissed INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(alert_id, client_id)
+);
+CREATE TABLE IF NOT EXISTS stock_prices (
+    stock TEXT PRIMARY KEY,
+    current_price NUMERIC NOT NULL,
+    previous_close NUMERIC,
+    change NUMERIC,
+    change_pct NUMERIC,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS upload_assets (
     path TEXT PRIMARY KEY,
     owner_hash TEXT NOT NULL, scope_hash TEXT NOT NULL,
@@ -78,6 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_trades_dates ON trades(sell_date, buy_date);
 CREATE INDEX IF NOT EXISTS idx_payments_date ON payments(paid_on);
 CREATE INDEX IF NOT EXISTS idx_assets_upload ON upload_assets(upload_id);
 CREATE INDEX IF NOT EXISTS idx_assets_owner ON upload_assets(owner_hash, expires_at);
+CREATE INDEX IF NOT EXISTS idx_client_alerts_client ON client_alerts(client_id, active);
 """
 
 
@@ -151,6 +187,9 @@ def init_local(connection):
         },
         "clients": {
             "portfolio_amount": "NUMERIC DEFAULT 0",
+            "password_hash": "TEXT",
+            "password_plain": "TEXT",
+            "username": "TEXT",
         },
     }
     for table, columns in additions.items():
@@ -180,7 +219,7 @@ def init_local(connection):
 def get_db():
     if "db" not in g:
         config = current_app.config
-        if config["BACKEND_MODE"] == "supabase":
+        if config["BACKEND_MODE"] == "supabase" and psycopg is not None:
             conn_kwargs = {
                 "prepare_threshold": None,
                 "connect_timeout": 10,

@@ -15,8 +15,13 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import urlsplit
 
 import httpx
-import psycopg
-from flask import Flask, template_rendered
+try:
+    import psycopg
+except (ImportError, Exception):
+    psycopg = MagicMock()
+    psycopg.OperationalError = type("OperationalError", (Exception,), {})
+    psycopg.IntegrityError = type("IntegrityError", (Exception,), {})
+    psycopg.Error = type("Error", (Exception,), {})
 from openpyxl import Workbook, load_workbook
 from PIL import Image
 from werkzeug.security import generate_password_hash
@@ -87,7 +92,7 @@ class BackendTests(unittest.TestCase):
 
     def payload(self, **changes):
         return {
-            "name": "Alice", "rows": [dict(ROW)], "portal_token": PORTAL, "code": "",
+            "name": "Alice", "phone": "9876543210", "rows": [dict(ROW)], "portal_token": PORTAL, "code": "",
             "ocr_text": "", "platform": "generic", "images": [], "submission_id": str(uuid.uuid4()),
             **changes,
         }

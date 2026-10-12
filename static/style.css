@@ -745,3 +745,497 @@ pre.ocr-text { color: #60734f; }
 .privacy-mode .tabular:hover { filter: blur(0); }
 .privacy-mode .kpi-value { filter: blur(7px); transition: filter 0.2s ease; user-select: none; }
 .privacy-mode .kpi-value:hover { filter: blur(0); }
+
+/* ==========================================================================
+   Client Portal Styles & Layout
+   ========================================================================== */
+.client-portal-wrapper {
+  min-height: 100vh;
+  background: #f4f7f4;
+  display: flex;
+  flex-direction: column;
+}
+
+.client-portal-topbar {
+  background: #ffffffea;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e2ece3;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(20, 45, 36, 0.03);
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #d1f29c, #a8e874);
+  color: #173d34;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 5px rgba(23, 61, 52, 0.12);
+}
+
+.portal-brand strong {
+  display: block;
+  font-size: 15px;
+  font-family: var(--heading);
+  color: #142a26;
+  line-height: 1.2;
+}
+
+.portal-brand small {
+  color: #617b6e;
+  font-size: 11px;
+}
+
+.portal-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.portal-bell-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f0f5ed;
+  color: #215935;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+  border: 1px solid #dbe6d7;
+}
+
+.portal-bell-btn:hover {
+  background: #e2ede0;
+  transform: scale(1.05);
+}
+
+.alert-badge-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 2px #fff;
+  animation: pulse-ring 2s infinite ease-in-out;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.portal-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7faf6;
+  border: 1px solid #e1ebe0;
+  padding: 5px 12px 5px 6px;
+  border-radius: 30px;
+}
+
+.portal-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #245c4d;
+  color: #d1f29c;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.portal-user-meta strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #1a332d;
+}
+
+.portal-user-meta small {
+  display: block;
+  font-size: 10px;
+  color: #728c81;
+}
+
+.client-portal-main {
+  max-width: 1260px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+  flex: 1;
+}
+
+/* Portfolio Metrics Cards */
+.portal-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: #fff;
+  border: 1px solid #e5ece6;
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(18, 43, 35, 0.02);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(18, 43, 35, 0.05);
+}
+
+.metric-card.primary {
+  background: linear-gradient(145deg, #1d463c, #13332b);
+  border-color: #27564b;
+  color: #fff;
+}
+
+.metric-card.primary .metric-label {
+  color: #9eccba;
+}
+
+.metric-card.primary .metric-value {
+  color: #fff;
+}
+
+.metric-card.primary .muted {
+  color: #8bb3a3;
+}
+
+.metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #748c82;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 750;
+  font-family: var(--heading);
+  letter-spacing: -0.6px;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-sub {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-pos {
+  background: #e8f7ee;
+  color: #17834e;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pill-neg {
+  background: #fdeeee;
+  color: #c93b3b;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.portal-card {
+  background: #fff;
+  border: 1px solid #e3ebe4;
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(18, 43, 35, 0.03);
+}
+
+.stock-sym-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.daily-change {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 1px 4px;
+  width: fit-content;
+}
+
+.daily-change.pos {
+  background: #e6f6ec;
+  color: #1e8751;
+}
+
+.daily-change.neg {
+  background: #fdeded;
+  color: #d13d3d;
+}
+
+.cmp-price {
+  color: #164237;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Trade Advisories & Popup Recommendations
+   ========================================================================== */
+.advisory-action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.pill-buy {
+  background: #e7f7ed;
+  color: #167e45;
+  border: 1px solid #b3e7c5;
+}
+
+.pill-sell {
+  background: #feecee;
+  color: #cb2a38;
+  border: 1px solid #fcc6cb;
+}
+
+.alert-popup-modal {
+  padding: 0;
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(14, 38, 30, 0.28);
+  max-width: 520px;
+  width: 90vw;
+  background: #fff;
+  overflow: hidden;
+}
+
+.alert-popup-modal::backdrop {
+  background: rgba(14, 36, 29, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.advisory-modal-content {
+  padding: 24px;
+}
+
+.advisory-top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.advisory-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #edf6ef;
+  color: #1e593c;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.advisory-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.advisory-stock-symbol {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--heading);
+  color: #142a26;
+  letter-spacing: -0.5px;
+}
+
+.advisory-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.advisory-price-block {
+  background: #f7faf7;
+  border: 1px solid #e5ede6;
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.advisory-price-block small {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #6a8277;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.advisory-price-block strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 750;
+  color: #15332d;
+  font-variant-numeric: tabular-nums;
+}
+
+.advisory-message-box {
+  background: #fbfdfb;
+  border-left: 3px solid #245c4d;
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: #354e44;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.advisory-timestamp {
+  font-size: 11px;
+  color: #799187;
+  text-align: center;
+}
+
+.hidden-alert {
+  display: none !important;
+}
+
+.active-alert {
+  display: block !important;
+}
+
+/* ==========================================================================
+   Mobile-Friendly Responsive Polish
+   ========================================================================== */
+@media (max-width: 900px) {
+  .portal-hero-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .client-portal-topbar {
+    padding: 12px 16px;
+  }
+  
+  .portal-brand strong {
+    font-size: 14px;
+  }
+  
+  .portal-brand small {
+    display: none;
+  }
+  
+  .portal-user-meta {
+    display: none;
+  }
+  
+  .portal-user-chip {
+    padding: 3px;
+    background: transparent;
+    border: none;
+  }
+  
+  .client-portal-main {
+    padding: 18px 14px 30px;
+  }
+  
+  .portal-hero-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .metric-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .metric-value {
+    font-size: 22px;
+  }
+  
+  .advisory-price-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .advisory-modal-content {
+    padding: 18px 16px;
+  }
+  
+  .auth-tabs {
+    flex-direction: column;
+    gap: 6px !important;
+  }
+  
+  .auth-tab-btn {
+    padding: 8px 12px !important;
+  }
+  
+  /* Touch target assurance */
+  .btn, button, input, select {
+    min-height: 42px;
+  }
+  
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

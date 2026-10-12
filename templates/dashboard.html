@@ -5,8 +5,9 @@
 <div class="page-heading">
   <div><p class="eyebrow">YOUR PERSONAL TRADING OFFICE</p><h1>The bigger picture<span class="accent-period">.</span></h1><p>Track the trades. Know your earnings. Keep things in balance.</p></div>
   <div class="heading-actions">
+    <button class="btn btn-primary" type="button" onclick="document.getElementById('global-popup-trade-dialog').showModal()">{{ icon('send', 15) }} Send Pop-up Trade</button>
     <button class="btn" type="button" data-dialog="share-dialog">{{ icon('link', 15) }}Share upload link</button>
-    <a class="btn btn-primary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
+    <a class="btn btn-secondary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
 </div>
 
