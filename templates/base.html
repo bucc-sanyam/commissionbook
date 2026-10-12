@@ -63,9 +63,6 @@
   <header class="topbar">
     <div class="breadcrumb"><button class="icon-btn mobile-menu" id="menu-toggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('menu') }}</button><span class="breadcrumb-root">Workspace</span>{{ icon('chevron-right', 13) }}<span>{% block breadcrumb %}Overview{% endblock %}</span></div>
     <div class="topbar-right">
-      <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('global-popup-trade-dialog').showModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:6px 12px; font-size:12px;">
-        {{ icon('send', 13) }}<span>Send Pop-up Trade</span>
-      </button>
       <button type="button" class="icon-btn" id="privacy-toggle" aria-label="Toggle privacy mode" title="Hide numbers" aria-pressed="false">{{ icon('eye-off', 16) }}</button>
       <span class="private-label">{{ icon('shield', 14) }}Admin only</span>
       <span class="topbar-divider"></span>
