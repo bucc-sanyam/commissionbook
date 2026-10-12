@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
+{% block title %}Trade Advisories{% endblock %}
+{% block breadcrumb %}Trade Advisories{% endblock %}
+{% block content %}
+<section class="card" id="main">
+  <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2>Trade Advisories &amp; In-Portal Alerts</h2>
+      <p class="muted">Send compliant buy/sell alerts directly to client portals instead of WhatsApp.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('new-alert-dialog').showModal()">
+        {{ icon('plus', 15) }} New Recommendation
+      </button>
+    </div>
+  </div>
+
+  {% if alerts %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Stock</th>
+          <th>Target Recipient</th>
+          <th class="r">Price</th>
+          <th class="r">Target / SL</th>
+          <th>Advisory Note</th>
+          <th class="r">Acknowledged</th>
+          <th>Status</th>
+          <th class="r">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr>
+          <td>
+            <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}">
+              {{ a.action }}
+            </span>
+          </td>
+          <td><strong>{{ a.stock }}</strong></td>
+          <td>
+            {% if a.client_id %}
+              <span class="client-cell">{{ avatar(a.client_name, a.client_id) }}<span>{{ a.client_name }}</span></span>
+            {% else %}
+              <span class="badge" style="background: #eef3e8; color: #215935; font-weight: 600;">
+                {{ icon('users', 12) }} All Clients (Broadcast)
+              </span>
+            {% endif %}
+          </td>
+          <td class="r tabular"><strong>{{ a.price|money if a.price else 'CMP' }}</strong></td>
+          <td class="r tabular">
+            <span class="pos">{{ a.target_price|money if a.target_price else '—' }}</span>
+            <small class="muted"> / </small>
+            <span class="neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</span>
+          </td>
+          <td style="max-width: 250px; font-size: 13px;">
+            {{ a.message or '<span class="muted">—</span>'|safe }}
+          </td>
+          <td class="r tabular">
+            <span class="badge" title="{{ a.view_count }} clients acknowledged this">{{ a.view_count }}</span>
+          </td>
+          <td>
+            {% if a.active %}
+              <span class="badge badge-pos">Active</span>
+            {% else %}
+              <span class="badge" style="background:#f0f0f0; color:#888;">Archived</span>
+            {% endif %}
+          </td>
+          <td class="r">
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+              <form method="post" action="{{ url_for('alert_toggle', aid=a.id) }}" style="display:inline;">
+                {{ csrf() }}
+                <button type="submit" class="btn btn-ghost btn-sm" title="Toggle active status">
+                  {{ 'Archive' if a.active else 'Activate' }}
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('alert_delete', aid=a.id) }}" style="display:inline;" onsubmit="return confirm('Delete this alert?');">
+                {{ csrf() }}
+                <button type="submit" class="icon-btn" aria-label="Delete alert" title="Delete">
+                  {{ icon('trash', 15) }}
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ empty_state('No trade advisories created yet', 'Click "New Recommendation" above to send in-portal buy or sell recommendations to your clients.', 'alert') }}
+  {% endif %}
+</section>
+
+<!-- NEW ALERT MODAL -->
+<dialog class="modal modal-md" id="new-alert-dialog">
+  <form method="post" action="{{ url_for('alert_create') }}" class="modal-inner">
+    {{ csrf() }}
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">TRADE RECOMMENDATION</span>
+        <h2>Issue New Advisory</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted">Creates an instant in-portal popup alert for clients. Visible only to you and selected recipients.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem;">
+      <label class="field">
+        Advisory Action
+        <select name="action" required style="font-weight: 700; font-size: 14px;">
+          <option value="BUY" selected>BUY</option>
+          <option value="SELL">SELL</option>
+        </select>
+      </label>
+
+      <label class="field">
+        Stock Symbol
+        <input name="stock" required placeholder="e.g. RELIANCE, INFY" autocomplete="off" style="text-transform: uppercase; font-weight: 700;">
+      </label>
+    </div>
+
+    <label class="field">
+      Target Recipient
+      <select name="client_id" required>
+        <option value="all" selected>All Clients (Broadcast Alert)</option>
+        {% for c in clients %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+      <label class="field">
+        Recommended Price (₹)
+        <input type="number" step="any" min="0" name="price" placeholder="e.g. 2950.00" inputmode="decimal">
+      </label>
+
+      <label class="field">
+        Target Price (₹)
+        <input type="number" step="any" min="0" name="target_price" placeholder="e.g. 3200.00" inputmode="decimal">
+      </label>
+
+      <label class="field">
+        Stop Loss (₹)
+        <input type="number" step="any" min="0" name="stop_loss" placeholder="e.g. 2850.00" inputmode="decimal">
+      </label>
+    </div>
+
+    <label class="field">
+      Advisory Notes / Rationale
+      <textarea name="message" rows="3" placeholder="e.g. Breakout on high daily volume. Hold for 2-3 weeks."></textarea>
+    </label>
+
+    <div class="modal-actions" style="margin-top: 1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Post Advisory</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

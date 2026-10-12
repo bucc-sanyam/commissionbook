@@ -41,12 +41,14 @@
   <section class="card">
     <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
     {% if shares %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th></th></tr></thead><tbody>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
     {% for sh in shares %}
       <tr>
         <td><strong>{{ sh.stock }}</strong></td>
         <td class="r tabular">{{ sh.quantity or '—' }}</td>
-        <td class="r pos tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+        <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+        <td class="r tabular">{{ sh.cmp|money if sh.cmp else '—' }}</td>
+        <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
         <td>
           <div class="row-actions" style="justify-content: flex-end;">
             <button class="icon-btn" type="button" data-dialog="edit-share-dialog-{{ sh.id }}" aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
@@ -63,6 +65,43 @@
     {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
   </section>
   <div class="stack">
+    <!-- Client Portal Credentials Card -->
+    <section class="card card-pad">
+      <div class="settings-heading">
+        <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
+        <div>
+          <h2>Client Portal Login</h2>
+          <p>Grant this client direct access to their profile.</p>
+        </div>
+      </div>
+      <div class="details-line">
+        <span>Login Identifier</span>
+        <strong>{{ client.phone or client.email or client.name }}</strong>
+      </div>
+      <div class="details-line">
+        <span>Portal Status</span>
+        {% if client.password_hash %}
+          <span class="badge badge-pos">Password Active</span>
+        {% else %}
+          <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
+        {% endif %}
+      </div>
+      <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 12px; border-top: 1px solid #edf2e5; padding-top: 12px;">
+        {{ csrf() }}
+        <label class="field" style="margin-bottom: 8px;">
+          <span style="font-size: 12px;">{{ 'Reset Client Password' if client.password_hash else 'Set Client Password' }}</span>
+          <input type="password" name="client_password" required minlength="4" placeholder="Enter password (min 4 chars)" autocomplete="new-password">
+        </label>
+        <label class="field" style="margin-bottom: 12px;">
+          <span style="font-size: 12px;">Confirm Password</span>
+          <input type="password" name="confirm_password" required minlength="4" placeholder="Repeat password" autocomplete="new-password">
+        </label>
+        <button type="submit" class="btn btn-primary btn-sm btn-wide">
+          {{ icon('check', 14) }}{{ 'Update Password' if client.password_hash else 'Save Client Password' }}
+        </button>
+      </form>
+    </section>
+
     <section class="card card-pad">
       <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
       <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>

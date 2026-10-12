@@ -5,8 +5,10 @@ import io
 import sqlite3
 import uuid
 from pathlib import Path
-
-import psycopg
+try:
+    import psycopg
+except (ImportError, Exception):
+    psycopg = None
 from PIL import Image, UnidentifiedImageError
 
 from .database import DEFAULTS, get_db

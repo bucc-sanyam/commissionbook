@@ -3,21 +3,54 @@
 {% block title %}Holdings{% endblock %}
 {% block breadcrumb %}Holdings{% endblock %}
 {% block content %}
-<section class="card" id="main">
-  <div class="card-header">
-    <div>
-      <h2>Client Holdings</h2>
-      <p id="holdings-search-count">{{ holdings|length }} holding{{ 's' if holdings|length != 1 }}</p>
-    </div>
-    <form method="get" action="{{ url_for('holdings_list') }}" class="search-field" style="display: flex; gap: 8px; max-width: 400px; width: 100%;">
-      <div style="position: relative; flex: 1;">
-        {{ icon('search', 15) }}
-        <input type="search" name="stock" value="{{ query }}" placeholder="Search a stock..." aria-label="Search stock" style="padding-left: 37px; width: 100%; font-size: 12px; min-height: 36px; border-radius: 6px; border: 1px solid #edf2e5;">
-      </div>
-      <button type="submit" class="btn btn-primary" style="padding: 0 16px;">Search</button>
-      {% if query %}<a href="{{ url_for('holdings_list') }}" class="btn btn-ghost" style="padding: 0 16px;">Clear</a>{% endif %}
-    </form>
+<div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+  <div class="card" style="padding: 1.25rem;">
+    <span class="eyebrow">PORTFOLIO VALUATION</span>
+    <div style="font-size: 1.75rem; font-weight: 700; color: #142a2a; margin: 4px 0;">{{ total_current_value|money }}</div>
+    <small class="muted">Live market worth across clients</small>
   </div>
+  <div class="card" style="padding: 1.25rem;">
+    <span class="eyebrow">TOTAL INVESTED</span>
+    <div style="font-size: 1.75rem; font-weight: 700; color: #142a2a; margin: 4px 0;">{{ total_invested|money }}</div>
+    <small class="muted">Net cost basis of holdings</small>
+  </div>
+  <div class="card" style="padding: 1.25rem;">
+    <span class="eyebrow">UNREALIZED P&amp;L</span>
+    <div style="font-size: 1.75rem; font-weight: 700; margin: 4px 0;" class="{{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}">
+      {{ '+' if total_unrealized_pnl >= 0 else '' }}{{ total_unrealized_pnl|money }}
+    </div>
+    <small class="{{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}">
+      {{ '+' if total_unrealized_pnl >= 0 else '' }}{{ total_unrealized_pct|round(2) }}% unrealized return
+    </small>
+  </div>
+</div>
+
+<section class="card" id="main">
+  <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2>Client Holdings &amp; Market Prices</h2>
+      <p id="holdings-search-count">{{ holdings|length }} position{{ 's' if holdings|length != 1 }} · Auto-updates daily at 3:45 PM IST</p>
+    </div>
+    
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <form method="post" action="{{ url_for('admin_update_prices') }}">
+        {{ csrf() }}
+        <button type="submit" class="btn btn-secondary btn-sm" title="Fetch live market prices for all held stocks now">
+          {{ icon('repeat', 14) }} Update Prices Now
+        </button>
+      </form>
+
+      <form method="get" action="{{ url_for('holdings_list') }}" class="search-field" style="display: flex; gap: 8px; max-width: 320px; width: 100%;">
+        <div style="position: relative; flex: 1;">
+          {{ icon('search', 15) }}
+          <input type="search" name="stock" value="{{ query }}" placeholder="Search a stock..." aria-label="Search stock" style="padding-left: 37px; width: 100%; font-size: 12px; min-height: 36px; border-radius: 6px; border: 1px solid #edf2e5;">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="padding: 0 14px;">Search</button>
+        {% if query %}<a href="{{ url_for('holdings_list') }}" class="btn btn-ghost btn-sm" style="padding: 0 12px;">Clear</a>{% endif %}
+      </form>
+    </div>
+  </div>
+
   {% if holdings %}
   <div class="table-wrap">
     <table class="data-table" id="holdings-table">
@@ -27,6 +60,9 @@
           <th>Client</th>
           <th class="r">Quantity</th>
           <th class="r">Buy price</th>
+          <th class="r">Current Price (CMP)</th>
+          <th class="r">Current Value</th>
+          <th class="r">Unrealized P&amp;L</th>
           <th class="r">Added on</th>
           <th></th>
         </tr>
@@ -34,10 +70,35 @@
       <tbody>
         {% for h in holdings %}
         <tr>
-          <td><strong>{{ h.stock }}</strong></td>
+          <td>
+            <strong>{{ h.stock }}</strong>
+            {% if h.price_change is defined and h.price_change != 0 %}
+              <span class="daily-change {{ 'pos' if h.price_change > 0 else 'neg' }}" style="display: block; font-size: 10px;">
+                {{ '+' if h.price_change > 0 else '' }}{{ h.price_change_pct|round(2) }}% today
+              </span>
+            {% endif %}
+          </td>
           <td><a class="client-cell" href="{{ url_for('client_detail', cid=h.client_id) }}">{{ avatar(h.client_name, h.client_id) }}<span>{{ h.client_name }}</span></a></td>
           <td class="r tabular">{{ h.quantity or '—' }}</td>
-          <td class="r pos tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
+          <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
+          <td class="r tabular">
+            {% if h.cmp %}
+              <strong>{{ h.cmp|money }}</strong>
+              {% if h.price_updated_at %}
+                <small class="muted" style="display:block; font-size:10px;">{{ h.price_updated_at[11:16] }}</small>
+              {% endif %}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+          <td class="r tabular"><strong>{{ h.current_value|money }}</strong></td>
+          <td class="r tabular">
+            {% if h.unrealized_pnl >= 0 %}
+              <span class="pos">+{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small></span>
+            {% else %}
+              <span class="neg">{{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small></span>
+            {% endif %}
+          </td>
           <td class="r date-cell">{{ h.added_on[:10] }}</td>
           <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=h.client_id) }}" aria-label="View {{ h.client_name }}">{{ icon('arrow-up-right', 17) }}</a></td>
         </tr>

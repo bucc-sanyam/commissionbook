@@ -37,11 +37,13 @@ def configure_app(app, overrides=None):
         "MAX_CONTENT_LENGTH": 4 * 1024 * 1024,
         "MAX_FORM_MEMORY_SIZE": 256 * 1024,
         "MAX_FORM_PARTS": 1000,
+        "SESSION_COOKIE_NAME": "commission_session",
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
         "SESSION_COOKIE_SECURE": production or cloud,
-        "PERMANENT_SESSION_LIFETIME": timedelta(hours=12),
-        "SESSION_REFRESH_EACH_REQUEST": False,
+        "PERMANENT_SESSION_LIFETIME": timedelta(days=365),
+        "REMEMBER_COOKIE_DURATION": timedelta(days=365),
+        "SESSION_REFRESH_EACH_REQUEST": True,
     }
     if overrides:
         config.update(overrides)
@@ -152,7 +154,7 @@ def require_csrf():
     origin = request.headers.get("Origin")
     if origin:
         allowed = {request.host_url.rstrip("/"), current_app.config["PUBLIC_BASE_URL"]}
-        for host in current_app.config.get("TRUSTED_HOSTS", []):
+        for host in (current_app.config.get("TRUSTED_HOSTS") or []):
             allowed.add(f"https://{host}")
             allowed.add(f"http://{host}")
         null_origin_from_privacy_browser = (origin == "null")
