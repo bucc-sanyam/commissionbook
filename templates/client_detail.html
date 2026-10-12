@@ -173,11 +173,12 @@
             <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
               {{ icon('copy', 12) }}
             </button>
+            <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
           {% else %}
-            <span class="badge" style="background:#fff3cd; color:#856404;">Not Set</span>
+            <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
           {% endif %}
           <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
-            {{ icon('edit', 12) }} {{ 'Change' if client.username else 'Create Username' }}
+            {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
           </button>
         </div>
       </div>
@@ -269,25 +270,26 @@
 <dialog class="modal" id="fund-dialog"><form method="post" action="{{ url_for('add_fund') }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="client_id" value="{{ client.id }}"><input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">ADD CAPITAL</span><h2>Record a deposit</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field">Amount<input name="amount" type="number" step="0.01" required min="0.01" placeholder="0.00"></label><label class="field">Date<input name="added_on" type="date" required value="{{ today }}"></label><label class="field full">Notes<input name="notes" maxlength="200" placeholder="Optional details"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Add funds</button></div></form></dialog>
 <dialog class="modal" id="share-dialog"><form method="post" action="{{ url_for('client_share_add', cid=client.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">PORTFOLIO TRACKING</span><h2>Record a holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" type="text" required placeholder="e.g. RELIANCE"></label><label class="field">Quantity <span class="optional">Optional</span><input name="quantity" type="number" step="any" min="0" placeholder="0"></label><label class="field">Buy price <span class="optional">Optional</span><input name="buy_price" type="number" step="any" min="0" placeholder="0.00"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
 
-<!-- Dedicated Edit/Create Username Modal -->
+<!-- Dedicated Edit/Create Username Modal (Admin full control) -->
 <dialog class="modal modal-sm" id="edit-username-dialog">
   <form method="post" action="{{ url_for('client_set_username', cid=client.id) }}" class="modal-inner">
     {{ csrf() }}
     <div class="modal-heading">
       <div>
-        <span class="eyebrow">PORTAL ACCESS</span>
-        <h2>{{ 'Update Username' if client.username else 'Create Username' }}</h2>
+        <span class="eyebrow">ADMINISTRATOR CONTROL</span>
+        <h2>{{ 'Edit Client Username' if client.username else 'Set Client Username' }}</h2>
       </div>
       <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted">Set a unique handle that {{ client.name }} can use to log into their portal.</p>
+    <p class="muted">Set or update the unique login handle for {{ client.name }}. As an administrator, you can modify or clear this anytime.</p>
     
     <label class="field full">
       Username Handle
       <div style="display:flex; align-items:center; gap:6px;">
         <span style="font-size:16px; font-weight:700; color:#2e4438;">@</span>
-        <input name="username" value="{{ client.username or '' }}" minlength="3" maxlength="60" placeholder="e.g. rahul_trader" style="font-family:monospace; font-weight:600; flex:1;" autocomplete="off" required>
+        <input name="username" value="{{ client.username or '' }}" maxlength="60" placeholder="e.g. rahul_trader (or leave blank to remove)" style="font-family:monospace; font-weight:600; flex:1;" autocomplete="off">
       </div>
+      <small class="muted" style="margin-top:4px; display:block; font-size:11px;">Leave empty to remove username and allow client to set it again.</small>
     </label>
 
     <div class="modal-actions" style="margin-top:1.25rem;">

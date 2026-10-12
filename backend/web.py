@@ -3,6 +3,7 @@ import hmac
 import io
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
@@ -1190,6 +1191,9 @@ def create_app(config=None):
             if len(username) < 3 or len(username) > 60:
                 flash("Username must be between 3 and 60 characters.", "error")
                 return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
+            if not re.match(r"^[a-zA-Z0-9_.]+$", username):
+                flash("Username can only contain letters, numbers, underscores, and dots.", "error")
+                return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
             existing = get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?) AND id<>?", (username, cid)).fetchone()
             if existing:
                 flash("A client with that username already exists.", "error")
@@ -1853,6 +1857,39 @@ def create_app(config=None):
             (cid, stock, quantity, buy_price),
         )
         flash(f"Holding for {stock} added to your portfolio.", "success")
+        return redirect(url_for("client_portal"))
+
+    @app.route("/portal/set-username", methods=["POST"])
+    @client_login_required
+    def portal_set_username():
+        cid = session["client_id"]
+        client = get_client(cid)
+        # Client can only set their username one time only
+        if client.get("username"):
+            flash("Your username has already been set and is permanently locked. Only your administrator can modify it.", "error")
+            return redirect(url_for("client_portal"))
+
+        raw_username = request.form.get("username", "").strip()
+        username = raw_username.lstrip("@").strip().lower()
+        if not username:
+            flash("Please enter a username.", "error")
+            return redirect(url_for("client_portal"))
+
+        if len(username) < 3 or len(username) > 30:
+            flash("Username must be between 3 and 30 characters.", "error")
+            return redirect(url_for("client_portal"))
+
+        if not re.match(r"^[a-zA-Z0-9_.]+$", username):
+            flash("Username can only contain letters, numbers, underscores, and dots.", "error")
+            return redirect(url_for("client_portal"))
+
+        existing = get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?) AND id<>?", (username, cid)).fetchone()
+        if existing:
+            flash(f"The username @{username} is already taken. Please choose another one.", "error")
+            return redirect(url_for("client_portal"))
+
+        get_db().execute("UPDATE clients SET username=? WHERE id=?", (username, cid))
+        flash(f"Your username @{username} has been saved and locked! You can now use this handle to sign into your portfolio.", "success")
         return redirect(url_for("client_portal"))
 
     @app.route("/api/alerts/<int:aid>/acknowledge", methods=["POST"])

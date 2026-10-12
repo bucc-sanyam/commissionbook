@@ -24,7 +24,13 @@
               <strong>{{ c.name }}</strong>
               <small style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                 {% if c.username %}
-                  <span class="badge" style="background:#eef3e8; color:#164237; font-weight:700; padding:1px 6px; font-size:11px;">@{{ c.username }}</span>
+                  <button type="button" class="btn btn-ghost btn-xs" style="padding:1px 6px; font-size:11px; font-weight:700; color:#164237; background:#eef3e8; border:1px solid #d4e2d4; border-radius:4px;" onclick="event.preventDefault(); event.stopPropagation(); openAdminUsernameModal('{{ c.id }}', '{{ c.name|escape }}', '{{ c.username|escape }}')" title="Edit client username">
+                    @{{ c.username }} {{ icon('edit', 10) }}
+                  </button>
+                {% else %}
+                  <button type="button" class="btn btn-ghost btn-xs" style="padding:1px 6px; font-size:10px; color:#856404; background:#fff3cd; border:1px solid #ffeeba; border-radius:4px;" onclick="event.preventDefault(); event.stopPropagation(); openAdminUsernameModal('{{ c.id }}', '{{ c.name|escape }}', '')" title="Admin option to set/assign username">
+                    + Set username
+                  </button>
                 {% endif %}
                 <span>{{ c.phone or c.email or 'Client #' ~ c.id }}</span>
               </small>
@@ -137,6 +143,36 @@
     </div>
   </form>
 </dialog>
+
+<!-- Admin Quick Set/Edit Username Dialog -->
+<dialog class="modal modal-sm" id="admin-username-dialog">
+  <form method="post" id="admin-username-form" class="modal-inner">
+    {{ csrf() }}
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">ADMINISTRATOR CONTROL</span>
+        <h2 id="admin-username-heading">Edit Client Username</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted">Set or update the unique login handle for this client. You can edit or change this anytime.</p>
+
+    <label class="field full" for="admin-client-username-input">
+      Username Handle
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:16px; font-weight:700; color:#2e4438;">@</span>
+        <input type="text" id="admin-client-username-input" name="username" placeholder="e.g. rahul_trader (or leave blank to remove)" autocomplete="off" style="width:100%; font-family:monospace; font-weight:600;">
+      </div>
+      <small class="muted" style="margin-top:4px; display:block; font-size:11px;">Leave empty to clear username and allow client to set it again.</small>
+    </label>
+
+    <div class="modal-actions" style="margin-top:1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">{{ icon('check', 15) }} Save Username</button>
+    </div>
+  </form>
+</dialog>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -157,6 +193,18 @@ function openClientPopupTrade(cid) {
   if (!modal) return;
   const select = document.getElementById('popup-trade-client-select');
   if (select) select.value = cid;
+  modal.showModal();
+}
+
+function openAdminUsernameModal(cid, cname, curUsername) {
+  const modal = document.getElementById('admin-username-dialog');
+  if (!modal) return;
+  const form = document.getElementById('admin-username-form');
+  if (form) form.action = '/clients/' + cid + '/set-username';
+  const heading = document.getElementById('admin-username-heading');
+  if (heading) heading.textContent = 'Username for ' + cname;
+  const input = document.getElementById('admin-client-username-input');
+  if (input) input.value = curUsername || '';
   modal.showModal();
 }
 

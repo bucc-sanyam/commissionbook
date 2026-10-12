@@ -19,7 +19,13 @@
         <span class="portal-avatar">{{ client.name[0]|upper }}</span>
         <div class="portal-user-meta">
           <strong>{{ client.name }}</strong>
-          <small>{{ ('@' ~ client.username) if client.username else (client.phone or client.email or 'Verified Client') }}</small>
+          {% if client.username %}
+            <small style="font-weight: 700; color: #1b5e20;">@{{ client.username }}</small>
+          {% else %}
+            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('claim-username-dialog').showModal()" style="font-size: 11px; padding: 1px 6px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600; margin-top: 2px;">
+              + Set @username
+            </button>
+          {% endif %}
         </div>
       </div>
 
@@ -38,6 +44,29 @@
     <!-- Security Watermark (Anti-Leak) -->
     <div class="portal-watermark"></div>
     <div class="portal-watermark-text">Confidential · {{ client.name }} · {{ client.phone or '' }}</div>
+
+    {% if not client.username %}
+    <!-- One-Time Username Setup Banner -->
+    <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #f0f7ee 0%, #e8f5e9 100%); border: 1.5px solid #a3d9a5; border-radius: 12px; padding: 16px 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <span style="font-size: 26px; line-height: 1;">✨</span>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong style="font-size: 15px; color: #164237;">Set Your Permanent Username</strong>
+              <span class="badge" style="background: #1b5e20; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">One-time only</span>
+            </div>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #37533b; line-height: 1.4;">
+              Create your unique login handle (e.g. <code>@rahul_trader</code>). Once set, it is permanently locked and only an administrator can modify it.
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('claim-username-dialog').showModal()" style="white-space: nowrap;">
+          {{ icon('user', 14) }} Choose Username
+        </button>
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Portfolio Summary Metrics -->
     <section class="portal-hero-metrics">
@@ -228,6 +257,44 @@
     </div>
   </form>
 </dialog>
+
+{% if not client.username %}
+<!-- ONE-TIME USERNAME SETUP DIALOG FOR CLIENT (LOCKED ONCE SET) -->
+<dialog class="modal modal-sm" id="claim-username-dialog">
+  <form method="post" action="{{ url_for('portal_set_username') }}" class="modal-inner">
+    {{ csrf() }}
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">ONE-TIME CONFIGURATION</span>
+        <h2>Choose Your Username</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <div class="helper-box" style="margin: 10px 0 16px; background: #fff8e1; border: 1px solid #ffe082; color: #6d4c41;">
+      {{ icon('alert', 16) }}
+      <span style="font-size: 12px; line-height: 1.4;">
+        <strong>Important:</strong> You can only set your username <strong>one time</strong>. After saving, it cannot be changed by you (only an administrator can modify it later).
+      </span>
+    </div>
+    
+    <label class="field full" for="client-new-username">
+      Desired Username Handle
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 17px; font-weight: 800; color: #2e4438;">@</span>
+        <input id="client-new-username" name="username" required minlength="3" maxlength="30" placeholder="e.g. rahul_trader" pattern="[a-zA-Z0-9_.]+" title="Letters, numbers, underscores and dots only" autocomplete="off" style="font-family: monospace; font-size: 15px; font-weight: 700; flex: 1;">
+      </div>
+      <small class="muted" style="margin-top: 4px; display: block; font-size: 11px;">Min 3 characters. Allowed: letters, numbers, underscores, dots.</small>
+    </label>
+
+    <div class="modal-actions" style="margin-top: 1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">
+        {{ icon('check', 15) }} Save &amp; Lock Username
+      </button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
 
 <!-- MANDATORY POPUP ADVISORY MODAL (NO CLOSE / CROSS BUTTON - MUST BE ACKNOWLEDGED) -->
 {% if undismissed_alerts %}
