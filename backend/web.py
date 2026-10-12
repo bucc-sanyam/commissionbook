@@ -1871,19 +1871,28 @@ def create_app(config=None):
         flash(f"Holding for {stock} added to your portfolio.", "success")
         return redirect(url_for("client_portal"))
 
-    @app.route("/portal/trades/sell", methods=["POST"])
+    @app.route("/portal/trades/new", methods=["POST"])
     @client_login_required
-    def portal_trade_sell():
+    def portal_trade_add():
         cid = session["client_id"]
         client = get_client(cid)
+        stock = request.form.get("stock", "").strip().upper()
+        if not stock:
+            flash("Stock symbol is required.", "error")
+            return redirect(url_for("client_portal"))
 
-        holding_id = request.form.get("holding_id", "").strip()
-        trade_id = request.form.get("trade_id", "").strip()
-        sell_price = number(request.form.get("sell_price"), "Sell Price", required=True, positive=True)
         quantity = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
-        sell_date = valid_date(request.form.get("sell_date"), "Sell Date") or date.today().isoformat()
+        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+        sell_price = number(request.form.get("sell_price"), "Sell Price") if request.form.get("sell_price") else None
+        buy_date = valid_date(request.form.get("buy_date")) or (date.today().isoformat() if buy_price is not None else None)
+        sell_date = valid_date(request.form.get("sell_date"))
+        user_notes = text(request.form.get("notes"), "Notes", limit=200) or ""
 
-        # Handle screenshot proof image
+        if buy_price is None and sell_price is None:
+            flash("Please provide at least a Buy Price or Sell Price.", "error")
+            return redirect(url_for("client_portal"))
+
+        # Handle optional proof image upload
         proof_file = request.files.get("proof_image")
         upload_id = None
         if proof_file and proof_file.filename:
@@ -1899,84 +1908,73 @@ def create_app(config=None):
                     elif ext == ".webp":
                         mimetype = "image/webp"
                     else:
-                        flash("Only PNG, JPEG, and WebP screenshots are supported.", "error")
-                        return redirect(url_for("client_portal"))
+                        mimetype = "image/png"
 
                 try:
                     validate_image(content, mimetype)
-                except ValidationError as exc:
-                    flash(f"Screenshot error: {exc}", "error")
-                    return redirect(url_for("client_portal"))
+                    storage_path = "evidence/" + uuid.uuid4().hex + IMAGE_TYPES[mimetype][1]
+                    storage = get_storage()
+                    storage.store(storage_path, content, mimetype)
 
-                storage_path = "evidence/" + uuid.uuid4().hex + IMAGE_TYPES[mimetype][1]
-                storage = get_storage()
-                storage.store(storage_path, content, mimetype)
+                    sub_uuid = str(uuid.uuid4())
+                    sub_hash = hashlib.sha256(content).hexdigest()
+                    owner = f"client:{cid}"
+                    up_row = get_db().execute(
+                        """INSERT INTO uploads (
+                            client_name, client_id, filename, platform, trade_count,
+                            submission_id, submission_hash, submission_owner
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
+                        (client["name"], cid, storage_path, "Client Portal Append", 1, sub_uuid, sub_hash, owner),
+                    ).fetchone()
+                    upload_id = up_row["id"]
 
-                sub_uuid = str(uuid.uuid4())
-                sub_hash = hashlib.sha256(content).hexdigest()
-                owner = f"client:{cid}"
-                up_row = get_db().execute(
-                    """INSERT INTO uploads (
-                        client_name, client_id, filename, platform, trade_count,
-                        submission_id, submission_hash, submission_owner
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
-                    (client["name"], cid, storage_path, "Client Portal Sell", 1, sub_uuid, sub_hash, owner),
-                ).fetchone()
-                upload_id = up_row["id"]
+                    get_db().execute(
+                        """INSERT INTO upload_assets (path, owner_hash, scope_hash, content_type, byte_size, expires_at, upload_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        (storage_path, owner, "portal", mimetype, len(content), int(time.time()) + 365 * 86400, upload_id),
+                    )
+                except Exception as exc:
+                    current_app.logger.warning("Trade screenshot upload skipped: %s", exc)
 
-                get_db().execute(
-                    """INSERT INTO upload_assets (path, owner_hash, scope_hash, content_type, byte_size, expires_at, upload_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                    (storage_path, owner, "portal", mimetype, len(content), int(time.time()) + 365 * 86400, upload_id),
-                )
+        insert_trades(cid, [{
+            "stock": stock,
+            "quantity": quantity,
+            "buy_price": buy_price,
+            "sell_price": sell_price,
+            "buy_date": buy_date,
+            "sell_date": sell_date,
+            "notes": user_notes or "Added via Client Portal",
+        }], source="portal", upload_id=upload_id)
 
-        if holding_id:
-            hid = identifier(holding_id)
-            holding = get_db().execute("SELECT * FROM client_shares WHERE id=? AND client_id=?", (hid, cid)).fetchone()
-            if not holding:
-                flash("Holding not found.", "error")
-                return redirect(url_for("client_portal"))
+        flash(f"Trade for {stock} appended to your trade ledger.", "success")
+        return redirect(url_for("client_portal"))
 
-            orig_qty = dec(holding["quantity"] or ZERO)
-            if quantity > orig_qty:
-                quantity = orig_qty
+    @app.route("/portal/funds/adjust", methods=["POST"])
+    @client_login_required
+    def portal_funds_adjust():
+        cid = session["client_id"]
+        client = get_client(cid)
+        action = request.form.get("action", "add").strip().lower()
+        amount = number(request.form.get("amount"), "Amount", required=True, positive=True, places=2)
+        added_on = valid_date(request.form.get("date"), "Date") or date.today().isoformat()
+        user_notes = text(request.form.get("notes"), "Notes", limit=200) or ""
 
-            new_qty = orig_qty - quantity
-            if new_qty <= ZERO:
-                get_db().execute("DELETE FROM client_shares WHERE id=? AND client_id=?", (hid, cid))
-            else:
-                get_db().execute("UPDATE client_shares SET quantity=? WHERE id=? AND client_id=?", (new_qty, hid, cid))
-
-            buy_date = holding["added_on"][:10] if holding["added_on"] else date.today().isoformat()
-            insert_trades(cid, [{
-                "stock": holding["stock"],
-                "quantity": quantity,
-                "buy_price": holding["buy_price"],
-                "sell_price": sell_price,
-                "buy_date": buy_date,
-                "sell_date": sell_date,
-                "notes": "Sold via Client Portal",
-            }], source="portal_sell", upload_id=upload_id)
-            flash(f"Sold {quantity} shares of {holding['stock']} at ₹{sell_price:,.2f}. Recorded in Trade Ledger History with proof!", "success")
-
-        elif trade_id:
-            tid = identifier(trade_id)
-            trade = get_db().execute("SELECT * FROM trades WHERE id=? AND client_id=?", (tid, cid)).fetchone()
-            if not trade:
-                flash("Trade not found.", "error")
-                return redirect(url_for("client_portal"))
-
-            get_db().execute(
-                """UPDATE trades SET sell_price=?, sell_date=?,
-                   upload_id=COALESCE(?, upload_id),
-                   notes=COALESCE(notes, 'Closed via Client Portal')
-                   WHERE id=? AND client_id=?""",
-                (sell_price, sell_date, upload_id, tid, cid),
-            )
-            flash(f"Sold {trade['stock']} at ₹{sell_price:,.2f}. Position closed in Trade Ledger History!", "success")
+        if action == "remove":
+            fund_amount = -amount
+            note_prefix = "[Client Withdrawal]"
+            action_text = f"Withdrew ₹{amount:,.2f}"
         else:
-            flash("No trade or holding selected to sell.", "error")
+            fund_amount = amount
+            note_prefix = "[Client Deposit]"
+            action_text = f"Added ₹{amount:,.2f}"
 
+        notes_entry = f"{note_prefix} {user_notes}".strip()
+
+        get_db().execute(
+            "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
+            (cid, fund_amount, added_on, notes_entry),
+        )
+        flash(f"{action_text} recorded in your funds ledger.", "success")
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/set-username", methods=["POST"])

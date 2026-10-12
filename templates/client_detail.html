@@ -118,14 +118,33 @@
     <div class="card-footer"><span>Total received</span><strong class="pos tabular">{{ s.paid|money }}</strong></div>
   </section>
   <section class="card">
-    <div class="card-header"><div><h2>Funds added</h2><p>Capital deposited into the account.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
+    <div class="card-header"><div><h2>Capital &amp; Funds Ledger</h2><p>Capital deposited or withdrawn by client and admin.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
     {% if funds %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for f in funds %}
-      <tr><td class="date-cell">{{ f.added_on }}</td><td>{% if f.notes %}<span class="cell-secondary" title="{{ f.notes }}">{{ f.notes|truncate(32) }}</span>{% else %}Not specified{% endif %}</td><td class="r pos tabular strong">{{ f.amount|money }}</td><td><form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this deposit? The client's bank balance will decrease.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete fund">{{ icon('trash', 15) }}</button></form></td></tr>
+      <tr>
+        <td class="date-cell">{{ f.added_on }}</td>
+        <td>
+          {% if f.notes and '[Client' in f.notes %}
+            <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px; margin-right: 4px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
+            <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() or 'Via Client Portal' }}</span>
+          {% elif f.notes %}
+            <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes|truncate(36) }}</span>
+          {% else %}
+            Not specified
+          {% endif %}
+        </td>
+        <td class="r {{ 'pos' if f.amount >= 0 else 'neg' }} tabular strong">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</td>
+        <td>
+          <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+            {{ csrf() }}
+            <button class="icon-btn icon-btn-danger" aria-label="Delete fund">{{ icon('trash', 15) }}</button>
+          </form>
+        </td>
+      </tr>
     {% endfor %}</tbody></table></div>
     {% else %}{{ empty_state('Awaiting capital', 'Record a deposit to track trading funds.', 'wallet', compact=True) }}{% endif %}
-    <div class="card-footer"><span>Total added</span><strong class="pos tabular">{{ total_funds|money }}</strong></div>
+    <div class="card-footer"><span>Net Trading Funds</span><strong class="{{ 'pos' if total_funds >= 0 else 'neg' }} tabular">{{ total_funds|money }}</strong></div>
   </section>
   <section class="card">
     <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
