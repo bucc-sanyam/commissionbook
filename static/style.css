@@ -1293,12 +1293,20 @@ body.app-obscured #security-screen-shield {
   display: flex !important;
 }
 
+body.portal-body {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+body.app-obscured .client-portal-wrapper,
+body.app-obscured .client-portal-main,
 body.app-obscured .portal-main,
 body.app-obscured .main-content,
 body.app-obscured .auth-layout,
 body.app-obscured dialog {
-  filter: blur(40px) !important;
-  opacity: 0.05 !important;
+  filter: blur(45px) !important;
+  opacity: 0.03 !important;
   pointer-events: none !important;
 }
 

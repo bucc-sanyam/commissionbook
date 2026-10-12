@@ -143,7 +143,7 @@ def csrf_token():
 def require_csrf():
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return
-    if request.path == "/login" and session.get("admin"):
+    if request.path == "/login":
         return
     provided = request.headers.get("X-CSRF-Token")
     if not provided and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
@@ -205,7 +205,9 @@ def secure_response(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Content-Security-Policy"] = "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-    if request.endpoint != "static":
+    if request.endpoint == "static" or request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
+    else:
         response.headers["Cache-Control"] = "no-store"
     if current_app.config["PRODUCTION"]:
         response.headers["Strict-Transport-Security"] = "max-age=31536000"

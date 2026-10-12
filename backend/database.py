@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS clients (
     password_hash TEXT,
     password_plain TEXT,
     username TEXT UNIQUE,
+    password_changed INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS uploads (
@@ -192,6 +193,7 @@ def init_local(connection):
             "password_hash": "TEXT",
             "password_plain": "TEXT",
             "username": "TEXT",
+            "password_changed": "INTEGER DEFAULT 0",
         },
         "client_alert_views": {
             "acknowledged": "INTEGER DEFAULT 0",
@@ -222,18 +224,35 @@ def init_local(connection):
     connection.commit()
 
 
+_cached_pg_conn = None
+_pg_lock = threading.Lock()
+
+
 def get_db():
+    global _cached_pg_conn
     if "db" not in g:
         config = current_app.config
         if config["BACKEND_MODE"] == "supabase" and psycopg is not None:
-            conn_kwargs = {
-                "prepare_threshold": None,
-                "connect_timeout": 10,
-                "row_factory": dict_row,
-            }
-            if "sslmode" not in config["DATABASE_URL"]:
-                conn_kwargs["sslmode"] = "require"
-            connection = psycopg.connect(config["DATABASE_URL"], **conn_kwargs)
+            with _pg_lock:
+                connection = _cached_pg_conn
+                if connection is not None:
+                    try:
+                        if connection.closed:
+                            connection = None
+                        else:
+                            connection.rollback()
+                    except Exception:
+                        connection = None
+                if connection is None:
+                    conn_kwargs = {
+                        "prepare_threshold": None,
+                        "connect_timeout": 8,
+                        "row_factory": dict_row,
+                    }
+                    if "sslmode" not in config["DATABASE_URL"]:
+                        conn_kwargs["sslmode"] = "require"
+                    connection = psycopg.connect(config["DATABASE_URL"], **conn_kwargs)
+                    _cached_pg_conn = connection
             g.db = Database(connection, postgres=True)
         else:
             connection = sqlite3.connect(config["DATABASE"], timeout=15)
@@ -265,7 +284,8 @@ def close_db(_error=None):
         try:
             database.rollback()
         finally:
-            database.close()
+            if not database.postgres:
+                database.close()
 
 
 def install_database(app):

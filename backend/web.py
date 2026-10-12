@@ -1059,10 +1059,12 @@ def create_app(config=None):
                 if get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?)", (username,)).fetchone():
                     raise ValidationError("A client with that username already exists.")
             portal_pwd = (request.form.get("portal_password") or request.form.get("client_password") or "").strip()
-            p_hash = generate_password_hash(portal_pwd) if portal_pwd else None
-            p_plain = portal_pwd if portal_pwd else None
+            if not portal_pwd:
+                portal_pwd = "Client@1234"
+            p_hash = generate_password_hash(portal_pwd)
+            p_plain = portal_pwd
             get_db().execute(
-                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain,username) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO clients(name,phone,email,commission_type,commission_rate,notes,portfolio_amount,password_hash,password_plain,username,password_changed) VALUES (?,?,?,?,?,?,?,?,?,?,0)",
                 (*values, p_hash, p_plain, username),
             )
             flash(f"Added {name}." + (f" Username: @{username}." if username else "") + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
@@ -1890,6 +1892,29 @@ def create_app(config=None):
 
         get_db().execute("UPDATE clients SET username=? WHERE id=?", (username, cid))
         flash(f"Your username @{username} has been saved and locked! You can now use this handle to sign into your portfolio.", "success")
+        return redirect(url_for("client_portal"))
+
+    @app.route("/portal/password/update", methods=["POST"])
+    @client_login_required
+    def client_update_password():
+        cid = session["client_id"]
+        new_pwd = request.form.get("new_password", "").strip()
+        confirm_pwd = request.form.get("confirm_password", "").strip()
+
+        if len(new_pwd) < 6:
+            flash("New password must be at least 6 characters long.", "error")
+            return redirect(url_for("client_portal"))
+
+        if new_pwd != confirm_pwd:
+            flash("Passwords do not match. Please re-enter carefully.", "error")
+            return redirect(url_for("client_portal"))
+
+        p_hash = generate_password_hash(new_pwd)
+        get_db().execute(
+            "UPDATE clients SET password_hash=?, password_plain=?, password_changed=1 WHERE id=?",
+            (p_hash, new_pwd, cid),
+        )
+        flash("Password updated successfully! Keep this password safe for your future logins.", "success")
         return redirect(url_for("client_portal"))
 
     @app.route("/api/alerts/<int:aid>/acknowledge", methods=["POST"])

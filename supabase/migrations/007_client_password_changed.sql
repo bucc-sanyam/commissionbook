@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS password_changed INTEGER NOT NULL DEFAULT 0;
