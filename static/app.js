@@ -108,6 +108,42 @@
     pendingConfirmation = null;
   });
 
+  // Global button loading circle on clicking/submitting
+  document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.checkValidity && !form.checkValidity()) return;
+
+    const btn = event.submitter || form.querySelector('button[type="submit"], button:not([type="button"]), input[type="submit"]');
+    if (!btn || btn.classList.contains("is-loading")) return;
+
+    btn.classList.add("is-loading");
+    if (!btn.querySelector(".spinner-circle")) {
+      const spinner = document.createElement("span");
+      spinner.className = "spinner-circle";
+      spinner.setAttribute("aria-hidden", "true");
+      btn.prepend(spinner);
+    }
+
+    setTimeout(() => {
+      if (btn && btn.classList.contains("is-loading")) {
+        btn.querySelector(".spinner-circle")?.remove();
+        btn.classList.remove("is-loading");
+      }
+    }, 12000);
+  }, true);
+
+  document.addEventListener("invalid", (event) => {
+    const form = event.target.form;
+    if (form) {
+      const btn = form.querySelector(".is-loading");
+      if (btn) {
+        btn.querySelector(".spinner-circle")?.remove();
+        btn.classList.remove("is-loading");
+      }
+    }
+  }, true);
+
   document.querySelectorAll("[data-close-trade]").forEach((button) => {
     button.addEventListener("click", () => {
       const form = document.getElementById("close-trade-form");

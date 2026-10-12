@@ -114,6 +114,34 @@ code { background: #edf1ef; border-radius: 4px; padding: 2px 5px; font-size: 12p
 .btn-danger:hover { background: #ffefeb; border-color: #e5c0b7; }
 .btn-sm { padding: 7px 11px; font-size: 10px; min-height: 32px; }
 .btn-wide { width: 100%; }
+@keyframes spin-circle {
+  to { transform: rotate(360deg); }
+}
+.spinner-circle {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent !important;
+  border-radius: 50%;
+  animation: spin-circle 0.65s linear infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.btn .spinner-circle {
+  margin-right: 6px;
+}
+.btn.is-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.82;
+  cursor: wait !important;
+}
+.btn-primary .spinner-circle {
+  border-color: #ffffff;
+  border-right-color: transparent !important;
+}
 .text-link { color: var(--green); display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 650; }
 .text-link:hover { color: var(--positive); }
 .icon-btn { border: 0; background: transparent; color: #809088; display: inline-flex; align-items: center; justify-content: center; width: 31px; height: 31px; border-radius: 6px; padding: 0; }

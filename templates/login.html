@@ -42,7 +42,7 @@
         <p>Sign in with your registered phone, email, or client ID to view your holdings, current prices, and advisory alerts.</p>
         {% include "_flashes.html" %}
 
-        <form method="post" action="{{ url_for('login') }}" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.innerText = 'Signing in...'; }">
+        <form method="post" action="{{ url_for('login') }}" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn && !btn.classList.contains('is-loading')) { btn.classList.add('is-loading'); btn.innerHTML = '<span class=\'spinner-circle\'></span> Signing in...'; }">
           {{ csrf() }}
           <input type="hidden" name="login_type" value="client">
           
@@ -79,7 +79,7 @@
         <p>{{ 'Choose a strong admin password to start your personal bookkeeping workspace.' if first_run else 'Sign in to access your ledger, clients, trade advisories, and price controls.' }}</p>
         {% include "_flashes.html" %}
 
-        <form method="post" action="{{ url_for('login') }}" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.innerText = 'Signing in...'; }">
+        <form method="post" action="{{ url_for('login') }}" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn && !btn.classList.contains('is-loading')) { btn.classList.add('is-loading'); btn.innerHTML = '<span class=\'spinner-circle\'></span> Opening Workspace...'; }">
           {{ csrf() }}
           <input type="hidden" name="login_type" value="admin">
           <label class="field" for="admin-password">

@@ -478,7 +478,8 @@
     const btn = document.getElementById('btn-ack-' + alertId);
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = 'Recording Acknowledgment...';
+      btn.classList.add('is-loading');
+      btn.innerHTML = '<span class="spinner-circle" style="margin-right:8px;"></span> Recording Acknowledgment...';
     }
     try {
       const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -508,6 +509,7 @@
       console.error('Failed to acknowledge alert:', err);
       if (btn) {
         btn.disabled = false;
+        btn.classList.remove('is-loading');
         btn.innerHTML = 'Acknowledge Trade Advisory';
       }
       alert('Unable to record acknowledgment. Please tap Acknowledge again.');
