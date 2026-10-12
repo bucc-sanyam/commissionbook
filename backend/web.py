@@ -48,7 +48,7 @@ from .security import (
 )
 from .storage import (
     DOWNLOAD_TTL, IMAGE_TYPES, MAX_CLOUD_IMAGE, MAX_LOCAL_IMAGE, UPLOAD_TTL,
-    StorageUnavailable, get_storage, safe_path,
+    StorageUnavailable, get_storage, safe_path, validate_image,
 )
 from .validation import (
     COMMISSION_TYPES, MAX_ROWS, MAX_TEXT, ValidationError, client_name,
@@ -1380,16 +1380,25 @@ def create_app(config=None):
         return render_template("uploads.html", uploads=upload_records())
 
     @app.route("/uploads/file/<path:name>")
-    @login_required
     def upload_file(name):
+        if not session.get("admin") and not session.get("client_id"):
+            abort(401)
+        safe_name = safe_path(name)
+        if session.get("client_id") and not session.get("admin"):
+            allowed = get_db().execute(
+                "SELECT 1 FROM uploads WHERE filename LIKE ? AND client_id=?",
+                (f"%{safe_name}%", session["client_id"]),
+            ).fetchone()
+            if not allowed:
+                abort(403)
         if app.config["BACKEND_MODE"] == "supabase":
             asset = get_db().execute(
-                "SELECT path FROM upload_assets WHERE path=? AND upload_id IS NOT NULL", (safe_path(name),)
+                "SELECT path FROM upload_assets WHERE path=? AND upload_id IS NOT NULL", (safe_name,)
             ).fetchone()
             if not asset:
                 abort(404)
-            return redirect(get_storage().sign_download(name), code=302)
-        return send_from_directory(app.config["UPLOAD_DIR"], name, as_attachment=True)
+            return redirect(get_storage().sign_download(safe_name), code=302)
+        return send_from_directory(app.config["UPLOAD_DIR"], safe_name, as_attachment=False)
 
     @app.route("/admin/scan")
     @login_required
@@ -1842,6 +1851,7 @@ def create_app(config=None):
             total_unrealized_pct=total_unrealized_pct,
             undismissed_alerts=undismissed_alerts,
             public_token=portal_token(),
+            today=date.today().isoformat(),
         )
 
     @app.route("/portal/shares/new", methods=["POST"])
@@ -1859,6 +1869,114 @@ def create_app(config=None):
             (cid, stock, quantity, buy_price),
         )
         flash(f"Holding for {stock} added to your portfolio.", "success")
+        return redirect(url_for("client_portal"))
+
+    @app.route("/portal/trades/sell", methods=["POST"])
+    @client_login_required
+    def portal_trade_sell():
+        cid = session["client_id"]
+        client = get_client(cid)
+
+        holding_id = request.form.get("holding_id", "").strip()
+        trade_id = request.form.get("trade_id", "").strip()
+        sell_price = number(request.form.get("sell_price"), "Sell Price", required=True, positive=True)
+        quantity = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
+        sell_date = valid_date(request.form.get("sell_date"), "Sell Date") or date.today().isoformat()
+
+        # Handle screenshot proof image
+        proof_file = request.files.get("proof_image")
+        upload_id = None
+        if proof_file and proof_file.filename:
+            content = proof_file.read()
+            if len(content) > 0:
+                mimetype = proof_file.mimetype or "image/png"
+                if mimetype not in IMAGE_TYPES:
+                    ext = os.path.splitext(proof_file.filename)[1].lower()
+                    if ext in (".jpg", ".jpeg"):
+                        mimetype = "image/jpeg"
+                    elif ext == ".png":
+                        mimetype = "image/png"
+                    elif ext == ".webp":
+                        mimetype = "image/webp"
+                    else:
+                        flash("Only PNG, JPEG, and WebP screenshots are supported.", "error")
+                        return redirect(url_for("client_portal"))
+
+                try:
+                    validate_image(content, mimetype)
+                except ValidationError as exc:
+                    flash(f"Screenshot error: {exc}", "error")
+                    return redirect(url_for("client_portal"))
+
+                storage_path = "evidence/" + uuid.uuid4().hex + IMAGE_TYPES[mimetype][1]
+                storage = get_storage()
+                storage.store(storage_path, content, mimetype)
+
+                sub_uuid = str(uuid.uuid4())
+                sub_hash = hashlib.sha256(content).hexdigest()
+                owner = f"client:{cid}"
+                up_row = get_db().execute(
+                    """INSERT INTO uploads (
+                        client_name, client_id, filename, platform, trade_count,
+                        submission_id, submission_hash, submission_owner
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
+                    (client["name"], cid, storage_path, "Client Portal Sell", 1, sub_uuid, sub_hash, owner),
+                ).fetchone()
+                upload_id = up_row["id"]
+
+                get_db().execute(
+                    """INSERT INTO upload_assets (path, owner_hash, scope_hash, content_type, byte_size, expires_at, upload_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (storage_path, owner, "portal", mimetype, len(content), int(time.time()) + 365 * 86400, upload_id),
+                )
+
+        if holding_id:
+            hid = identifier(holding_id)
+            holding = get_db().execute("SELECT * FROM client_shares WHERE id=? AND client_id=?", (hid, cid)).fetchone()
+            if not holding:
+                flash("Holding not found.", "error")
+                return redirect(url_for("client_portal"))
+
+            orig_qty = dec(holding["quantity"] or ZERO)
+            if quantity > orig_qty:
+                quantity = orig_qty
+
+            new_qty = orig_qty - quantity
+            if new_qty <= ZERO:
+                get_db().execute("DELETE FROM client_shares WHERE id=? AND client_id=?", (hid, cid))
+            else:
+                get_db().execute("UPDATE client_shares SET quantity=? WHERE id=? AND client_id=?", (new_qty, hid, cid))
+
+            buy_date = holding["added_on"][:10] if holding["added_on"] else date.today().isoformat()
+            insert_trades(cid, [{
+                "stock": holding["stock"],
+                "quantity": quantity,
+                "buy_price": holding["buy_price"],
+                "sell_price": sell_price,
+                "buy_date": buy_date,
+                "sell_date": sell_date,
+                "notes": "Sold via Client Portal",
+            }], source="portal_sell", upload_id=upload_id)
+            flash(f"Sold {quantity} shares of {holding['stock']} at ₹{sell_price:,.2f}. Recorded in Trade Ledger History with proof!", "success")
+
+        elif trade_id:
+            tid = identifier(trade_id)
+            trade = get_db().execute("SELECT * FROM trades WHERE id=? AND client_id=?", (tid, cid)).fetchone()
+            if not trade:
+                flash("Trade not found.", "error")
+                return redirect(url_for("client_portal"))
+
+            get_db().execute(
+                """UPDATE trades SET sell_price=?, sell_date=?,
+                   upload_id=COALESCE(?, upload_id),
+                   notes=COALESCE(notes, 'Closed via Client Portal')
+                   WHERE id=? AND client_id=?""",
+                (sell_price, sell_date, upload_id, tid, cid),
+            )
+            flash(f"Sold {trade['stock']} at ₹{sell_price:,.2f}. Position closed in Trade Ledger History!", "success")
+        else:
+            flash("No trade or holding selected to sell.", "error")
+
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/set-username", methods=["POST"])

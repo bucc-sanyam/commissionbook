@@ -1365,4 +1365,213 @@ body.app-obscured dialog {
   z-index: 10;
 }
 
+/* ==========================================================================
+   Mobile Expandable Trade & Holdings Cards (No Horizontal Scrolling)
+   ========================================================================== */
+.mobile-trade-list,
+.mobile-holdings-list {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.mobile-trade-card {
+  background: #ffffff;
+  border: 1px solid #e1eade;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(16, 42, 33, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mobile-trade-card[open] {
+  border-color: #388e3c;
+  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.08);
+}
+
+.mobile-trade-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  background: #ffffff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-trade-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-trade-summary:focus-visible {
+  outline: 2px solid #2e7d32;
+  outline-offset: -2px;
+}
+
+.mts-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.mts-stock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a3328;
+}
+
+.mts-dates {
+  font-size: 11px;
+  color: #667e71;
+}
+
+.mts-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+}
+
+.mts-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.mts-pnl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.mts-pnl strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mts-pnl small {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mts-chevron {
+  color: #7a9485;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-trade-card[open] .mts-chevron {
+  transform: rotate(180deg);
+  color: #2e7d32;
+}
+
+.mobile-trade-details {
+  padding: 12px 14px 14px;
+  border-top: 1px dashed #e4ede2;
+  background: #fafdf9;
+}
+
+.mtd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  font-size: 12px;
+}
+
+.mtd-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mtd-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #6d8678;
+}
+
+.mtd-val {
+  font-size: 13px;
+  color: #1a3328;
+  font-weight: 600;
+}
+
+.mtd-proof {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #edf4eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mtd-actions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e7efe5;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Sell Dialog Upload Dropzone */
+.sell-upload-dropzone {
+  border: 2px dashed #cbd5e0;
+  border-radius: 10px;
+  background: #f7fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sell-upload-dropzone:hover,
+.sell-upload-dropzone:focus-visible {
+  border-color: #3182ce;
+  background: #ebf8ff;
+}
+
+.sell-upload-dropzone.has-file {
+  border-style: solid;
+  border-color: #68d391;
+  background: #f0fff4;
+}
+
+@media (max-width: 768px) {
+  /* On mobile: Hide horizontal scrolling tables, show expandable cards */
+  .portal-desktop-table-wrap {
+    display: none !important;
+  }
+  .mobile-trade-list,
+  .mobile-holdings-list {
+    display: flex !important;
+  }
+  .btn-sell-trigger {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .portal-desktop-table-wrap {
+    display: block !important;
+  }
+  .mobile-trade-list,
+  .mobile-holdings-list {
+    display: none !important;
+  }
+}
+
 

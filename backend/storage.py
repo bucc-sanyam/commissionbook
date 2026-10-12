@@ -130,6 +130,9 @@ class SupabaseStorage:
             headers={"Content-Type": content_type, "x-upsert": "false"},
         )
 
+    def store(self, path, data, content_type):
+        self.upload_bytes(path, data, content_type)
+
     def remove(self, paths):
         for path in paths:
             safe_path(path)

@@ -139,7 +139,7 @@
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
           <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('add-holding-dialog').showModal()">
-            {{ icon('plus', 14) }} Add Stock Holding
+            {{ icon('plus', 14) }} Post Buy Trade / Holding
           </button>
           <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}" class="btn btn-secondary btn-sm">
             {{ icon('upload', 14) }} Upload Trade Proof
@@ -148,7 +148,8 @@
       </div>
 
       {% if shares %}
-      <div class="table-wrap">
+      <!-- Desktop Holdings View -->
+      <div class="portal-desktop-table-wrap table-wrap">
         <table class="data-table" id="portal-holdings-table">
           <thead>
             <tr>
@@ -159,6 +160,7 @@
               <th class="r">Current Value</th>
               <th class="r">Unrealized P&amp;L</th>
               <th class="r">Date Added</th>
+              <th class="r">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -195,10 +197,96 @@
                 {% endif %}
               </td>
               <td class="r date-cell muted">{{ h.added_on[:10] }}</td>
+              <td class="r">
+                <button type="button" class="btn btn-outline-danger btn-xs"
+                  data-holding-id="{{ h.id }}"
+                  data-stock="{{ h.stock }}"
+                  data-buy-price="{{ h.buy_price }}"
+                  data-quantity="{{ h.quantity }}"
+                  data-cmp="{{ h.cmp or '' }}"
+                  data-buy-date="{{ h.added_on[:10] }}"
+                  onclick="openSellModal(this)"
+                  style="color: #c53030; border: 1px solid #feb2b2; background: #fff5f5; padding: 3px 9px; font-size: 11px; font-weight: 700; border-radius: 6px;">
+                  {{ icon('trending-down', 12) }} Sell
+                </button>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Expandable Holdings View (Zero Horizontal Scrolling) -->
+      <div class="mobile-holdings-list">
+        {% for h in shares %}
+        <details class="mobile-trade-card">
+          <summary class="mobile-trade-summary">
+            <div class="mts-left">
+              <div class="mts-stock">
+                <strong>{{ h.stock }}</strong>
+                {% if h.price_change is defined and h.price_change != 0 %}
+                  <span class="daily-change {{ 'pos' if h.price_change > 0 else 'neg' }}">
+                    {{ '+' if h.price_change > 0 else '' }}{{ h.price_change_pct|round(2) }}%
+                  </span>
+                {% endif %}
+              </div>
+              <div class="mts-dates">
+                {{ h.quantity|num if h.quantity else '—' }} shares &bull; Added {{ h.added_on[:10] }}
+              </div>
+            </div>
+            <div class="mts-right">
+              <div class="mts-pnl {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}">
+                <strong>{{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }}</strong>
+                <small>{{ '%+.2f'|format(h.unrealized_pct) }}%</small>
+              </div>
+              <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+            </div>
+          </summary>
+          <div class="mobile-trade-details">
+            <div class="mtd-grid">
+              <div class="mtd-item">
+                <span class="mtd-label">Quantity</span>
+                <strong class="mtd-val">{{ h.quantity|num if h.quantity else '—' }} shares</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Avg Buy Price</span>
+                <strong class="mtd-val">{{ h.buy_price|money if h.buy_price else '—' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">CMP (Current)</span>
+                <strong class="mtd-val cmp-price">{{ h.cmp|money if h.cmp else '—' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Current Value</span>
+                <strong class="mtd-val">{{ h.current_value|money }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Unrealized P&amp;L</span>
+                <strong class="mtd-val {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}">
+                  {{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }} ({{ h.unrealized_pct|round(2) }}%)
+                </strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Date Added</span>
+                <strong class="mtd-val">{{ h.added_on[:10] }}</strong>
+              </div>
+            </div>
+            <div class="mtd-actions">
+              <button type="button" class="btn btn-primary btn-sm btn-sell-trigger"
+                data-holding-id="{{ h.id }}"
+                data-stock="{{ h.stock }}"
+                data-buy-price="{{ h.buy_price }}"
+                data-quantity="{{ h.quantity }}"
+                data-cmp="{{ h.cmp or '' }}"
+                data-buy-date="{{ h.added_on[:10] }}"
+                onclick="openSellModal(this)"
+                style="background: #c53030; border-color: #9b2c2c;">
+                {{ icon('trending-down', 14) }} Sell Position (Upload Proof)
+              </button>
+            </div>
+          </div>
+        </details>
+        {% endfor %}
       </div>
       {% else %}
         {{ empty_state('No holdings yet', 'Click "Add Stock Holding" above to record your first stock holding.', 'trend') }}
@@ -214,7 +302,8 @@
           <p class="muted">Your recorded trades and closed transactions.</p>
         </div>
       </div>
-      <div class="table-wrap">
+      <!-- Desktop Trades View -->
+      <div class="portal-desktop-table-wrap table-wrap">
         <table class="data-table">
           <thead>
             <tr>
@@ -225,6 +314,7 @@
               <th class="r">P&amp;L</th>
               <th class="r">Holding Days</th>
               <th class="r">Dates</th>
+              <th class="r">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -239,10 +329,119 @@
               </td>
               <td class="r tabular">{{ t.holding_days ~ ' d' if t.holding_days is not none else '—' }}</td>
               <td class="r date-cell">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}</td>
+              <td class="r">
+                {% if t.status == 'Open' or not t.sell_price %}
+                <button type="button" class="btn btn-outline-danger btn-xs"
+                  data-trade-id="{{ t.id }}"
+                  data-stock="{{ t.stock }}"
+                  data-buy-price="{{ t.buy_price }}"
+                  data-quantity="{{ t.quantity }}"
+                  data-buy-date="{{ t.buy_date or '' }}"
+                  onclick="openSellModal(this)"
+                  style="color: #c53030; border: 1px solid #feb2b2; background: #fff5f5; padding: 3px 9px; font-size: 11px; font-weight: 700; border-radius: 6px;">
+                  {{ icon('trending-down', 12) }} Sell
+                </button>
+                {% elif t.upload_filename %}
+                <a class="icon-btn" href="{{ url_for('upload_file', name=t.upload_filename.split(',')[0]) }}" target="_blank" rel="noopener noreferrer" title="View proof screenshot" style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
+                {% else %}
+                <span class="muted" style="font-size: 11px;">—</span>
+                {% endif %}
+              </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Expandable Trades View (Zero Horizontal Scrolling) -->
+      <div class="mobile-trade-list">
+        {% for t in trades %}
+        <details class="mobile-trade-card">
+          <summary class="mobile-trade-summary">
+            <div class="mts-left">
+              <div class="mts-stock">
+                <strong>{{ t.stock }}</strong>
+                <span class="mts-badge {{ 'badge-green' if t.status == 'Closed' else 'badge-amber' }}">
+                  {{ t.status }}
+                </span>
+              </div>
+              <div class="mts-dates">
+                {{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}
+              </div>
+            </div>
+            <div class="mts-right">
+              {% if t.status == 'Closed' %}
+                <div class="mts-pnl {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
+                  <strong>{{ t.pnl|money }}</strong>
+                  <small>{{ '%+.2f'|format(t.pnl_pct) }}%</small>
+                </div>
+              {% else %}
+                <div class="mts-pnl muted">
+                  <strong>Open</strong>
+                  <small>{{ t.quantity }} shares</small>
+                </div>
+              {% endif %}
+              <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+            </div>
+          </summary>
+          <div class="mobile-trade-details">
+            <div class="mtd-grid">
+              <div class="mtd-item">
+                <span class="mtd-label">Quantity</span>
+                <strong class="mtd-val">{{ t.quantity|num if t.quantity else '—' }} shares</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Buy Price</span>
+                <strong class="mtd-val">{{ t.buy_price|money if t.buy_price else '—' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Sell Price</span>
+                <strong class="mtd-val">{{ t.sell_price|money if t.sell_price else 'Open' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Holding Days</span>
+                <strong class="mtd-val">{{ t.holding_days ~ ' days' if t.holding_days is not none else '—' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Realized P&amp;L</span>
+                <strong class="mtd-val {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
+                  {{ t.pnl|money if t.status == 'Closed' else '—' }}
+                </strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Trade Dates</span>
+                <strong class="mtd-val">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}</strong>
+              </div>
+            </div>
+
+            {% if t.upload_filename %}
+            <div class="mtd-proof">
+              <span class="muted" style="font-size:11px;">Proof:</span>
+              {% for fn in t.upload_filename.split(',') if fn %}
+                <a class="btn btn-ghost btn-sm" href="{{ url_for('upload_file', name=fn) }}" target="_blank" rel="noopener noreferrer" style="font-size:11px; padding: 2px 8px;">
+                  {{ icon('image', 12) }} Screenshot
+                </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if t.status == 'Open' or not t.sell_price %}
+            <div class="mtd-actions">
+              <button type="button" class="btn btn-primary btn-sm btn-sell-trigger"
+                data-trade-id="{{ t.id }}"
+                data-stock="{{ t.stock }}"
+                data-buy-price="{{ t.buy_price }}"
+                data-quantity="{{ t.quantity }}"
+                data-buy-date="{{ t.buy_date or '' }}"
+                onclick="openSellModal(this)"
+                style="background: #c53030; border-color: #9b2c2c;">
+                {{ icon('trending-down', 14) }} Sell Position (Upload Proof)
+              </button>
+            </div>
+            {% endif %}
+          </div>
+        </details>
+        {% endfor %}
       </div>
     </section>
     {% endif %}
@@ -258,14 +457,14 @@
   </main>
 </div>
 
-<!-- CLIENT ADD HOLDING DIALOG (Client can post data, cannot delete/update) -->
+<!-- CLIENT ADD HOLDING / BUY TRADE DIALOG -->
 <dialog class="modal modal-sm" id="add-holding-dialog">
   <form method="post" action="{{ url_for('portal_share_add') }}" class="modal-inner">
     {{ csrf() }}
     <div class="modal-heading">
       <div>
         <span class="eyebrow">PORTFOLIO ENTRY</span>
-        <h2>Add Stock Holding</h2>
+        <h2>Post Buy Trade / Holding</h2>
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
@@ -290,7 +489,91 @@
 
     <div class="modal-actions" style="margin-top: 1rem;">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
-      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Add Holding</button>
+      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Post Buy Trade</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- CLIENT SELL TRADE / UPLOAD PROOF DIALOG (Upload image and enter price screen) -->
+<dialog class="modal modal-sm" id="sell-trade-dialog">
+  <form method="post" action="{{ url_for('portal_trade_sell') }}" enctype="multipart/form-data" class="modal-inner" id="sell-trade-form">
+    {{ csrf() }}
+    <input type="hidden" name="holding_id" id="sell-modal-holding-id" value="">
+    <input type="hidden" name="trade_id" id="sell-modal-trade-id" value="">
+
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow" style="color: #c53030;">EXECUTE SALE</span>
+        <h2 id="sell-modal-title">Sell Stock</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+
+    <!-- Stock Summary Card -->
+    <div class="sell-summary-box" style="background: #fdf8f6; border: 1px solid #fed7d7; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <span class="muted" style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block;">Position Details</span>
+        <strong id="sell-modal-stock-name" style="font-size: 18px; color: #742a2a;">STOCK</strong>
+      </div>
+      <div style="text-align: right;">
+        <span class="muted" style="font-size: 11px; display: block;">Bought @</span>
+        <strong id="sell-modal-buy-price-display" style="font-size: 14px; color: #2d3748;">₹0.00</strong>
+        <span id="sell-modal-cmp-display" class="muted" style="font-size: 11px; display: block;"></span>
+      </div>
+    </div>
+
+    <!-- Enter Price & Quantity Fields -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <label class="field" for="sell-price-input">
+        Sell Price (₹) <span style="color:#e53e3e">*</span>
+        <input id="sell-price-input" type="number" name="sell_price" step="any" min="0.01" required inputmode="decimal" placeholder="e.g. 3450.00">
+      </label>
+
+      <label class="field" for="sell-quantity-input">
+        Quantity to Sell <span style="color:#e53e3e">*</span>
+        <input id="sell-quantity-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
+      </label>
+    </div>
+
+    <label class="field full" for="sell-date-input" style="margin-top: 4px;">
+      Sell Execution Date
+      <input id="sell-date-input" type="date" name="sell_date" value="{{ today }}" required>
+    </label>
+
+    <!-- Upload Image Proof Section -->
+    <div class="field full" style="margin-top: 10px;">
+      <span style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px; color: #2d3748;">
+        Upload Sell Screenshot / Image Proof
+      </span>
+      <p class="muted" style="font-size: 11px; margin-bottom: 8px; line-height: 1.4;">
+        Attach broker screenshot (Zerodha, Groww, Angel, etc.) showing the executed sell order.
+      </p>
+      
+      <div class="sell-upload-dropzone" id="sell-upload-dropzone" onclick="document.getElementById('sell-image-file').click()" role="button" tabindex="0">
+        <input type="file" id="sell-image-file" name="proof_image" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleSellImageSelect(this)">
+        <div id="sell-dropzone-empty" style="text-align: center; padding: 16px 12px;">
+          <span style="color: #4a5568; display: inline-block; margin-bottom: 4px;">{{ icon('upload', 24) }}</span>
+          <div style="font-size: 13px; font-weight: 600; color: #2d3748;">Tap to upload sell screenshot</div>
+          <small class="muted" style="font-size: 11px;">Supports PNG, JPG, or WebP</small>
+        </div>
+        <div id="sell-dropzone-preview" style="display: none; padding: 10px 14px; align-items: center; gap: 12px;">
+          <img id="sell-preview-img" src="" alt="Sell proof preview" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0;">
+          <div style="flex: 1; min-width: 0;">
+            <div id="sell-file-name" style="font-size: 12px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">screenshot.png</div>
+            <div id="sell-file-size" class="muted" style="font-size: 11px;">0 KB</div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeSellImage();" style="color: #e53e3e; padding: 4px 8px;">
+            {{ icon('x', 14) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit" id="sell-submit-btn" style="background: #c53030; border-color: #9b2c2c;">
+        {{ icon('check', 16) }} Confirm Sale &amp; Submit Proof
+      </button>
     </div>
   </form>
 </dialog>
@@ -514,6 +797,84 @@
       }
       alert('Unable to record acknowledgment. Please tap Acknowledge again.');
     }
+  }
+
+  // Open Sell Modal with trade / holding details
+  function openSellModal(btn) {
+    const dialog = document.getElementById('sell-trade-dialog');
+    if (!dialog) return;
+
+    const holdingId = btn.dataset.holdingId || '';
+    const tradeId = btn.dataset.tradeId || '';
+    const stock = btn.dataset.stock || '';
+    const buyPrice = btn.dataset.buyPrice || '0';
+    const quantity = btn.dataset.quantity || '';
+    const cmp = btn.dataset.cmp || '';
+
+    document.getElementById('sell-modal-holding-id').value = holdingId;
+    document.getElementById('sell-modal-trade-id').value = tradeId;
+    document.getElementById('sell-modal-stock-name').textContent = stock;
+    document.getElementById('sell-modal-title').textContent = 'Sell ' + stock;
+    
+    const parsedBuy = parseFloat(buyPrice);
+    document.getElementById('sell-modal-buy-price-display').textContent = isNaN(parsedBuy) ? '—' : '₹' + parsedBuy.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    const cmpEl = document.getElementById('sell-modal-cmp-display');
+    const parsedCmp = parseFloat(cmp);
+    if (!isNaN(parsedCmp) && parsedCmp > 0) {
+      cmpEl.textContent = 'CMP: ₹' + parsedCmp.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      cmpEl.style.display = 'block';
+    } else {
+      cmpEl.style.display = 'none';
+    }
+
+    const qtyInput = document.getElementById('sell-quantity-input');
+    qtyInput.value = quantity;
+    if (quantity) qtyInput.max = quantity;
+
+    const priceInput = document.getElementById('sell-price-input');
+    priceInput.value = (!isNaN(parsedCmp) && parsedCmp > 0) ? parsedCmp : '';
+    priceInput.placeholder = (!isNaN(parsedCmp) && parsedCmp > 0) ? parsedCmp : 'e.g. 3450.00';
+
+    removeSellImage();
+    dialog.showModal();
+  }
+
+  function handleSellImageSelect(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const emptyBox = document.getElementById('sell-dropzone-empty');
+    const previewBox = document.getElementById('sell-dropzone-preview');
+    const dropzone = document.getElementById('sell-upload-dropzone');
+    const nameEl = document.getElementById('sell-file-name');
+    const sizeEl = document.getElementById('sell-file-size');
+    const imgEl = document.getElementById('sell-preview-img');
+
+    nameEl.textContent = file.name;
+    sizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imgEl.src = e.target.result;
+      emptyBox.style.display = 'none';
+      previewBox.style.display = 'flex';
+      dropzone.classList.add('has-file');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeSellImage() {
+    const input = document.getElementById('sell-image-file');
+    if (input) input.value = '';
+    const emptyBox = document.getElementById('sell-dropzone-empty');
+    const previewBox = document.getElementById('sell-dropzone-preview');
+    const dropzone = document.getElementById('sell-upload-dropzone');
+    const imgEl = document.getElementById('sell-preview-img');
+
+    if (emptyBox) emptyBox.style.display = 'block';
+    if (previewBox) previewBox.style.display = 'none';
+    if (dropzone) dropzone.classList.remove('has-file');
+    if (imgEl) imgEl.src = '';
   }
 </script>
 {% endblock %}
