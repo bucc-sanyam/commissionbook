@@ -1,82 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Background Gradient -->
-    <radialGradient id="bg-radial" cx="30%" cy="20%" r="90%">
-      <stop offset="0%" stop-color="#1b4d3e" />
-      <stop offset="45%" stop-color="#123d32" />
-      <stop offset="100%" stop-color="#07221a" />
+    <radialGradient id="bg-grad" cx="42%" cy="32%" r="80%">
+      <stop offset="0%" stop-color="#144d3d" />
+      <stop offset="55%" stop-color="#0e3c2f" />
+      <stop offset="100%" stop-color="#06221a" />
     </radialGradient>
-    
-    <!-- Specular Highlight for Squircle Rim -->
-    <linearGradient id="rim-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.22)" />
-      <stop offset="50%" stop-color="rgba(255, 255, 255, 0.06)" />
-      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.02)" />
+    <linearGradient id="m-glyph" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="420">
+      <stop offset="0%" stop-color="#efffb5" />
+      <stop offset="30%" stop-color="#d6fa7c" />
+      <stop offset="100%" stop-color="#8ee62e" />
     </linearGradient>
-
-    <!-- Glyph Gradients -->
-    <linearGradient id="glyph-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#e2ff9e" />
-      <stop offset="40%" stop-color="#bbf765" />
-      <stop offset="100%" stop-color="#72df3b" />
-    </linearGradient>
-
-    <linearGradient id="glyph-bevel" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)" />
-      <stop offset="100%" stop-color="rgba(0, 0, 0, 0.2)" />
-    </linearGradient>
-
-    <!-- Material Drop Shadows -->
-    <filter id="m3-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#020d09" flood-opacity="0.65" />
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#020d09" flood-opacity="0.4" />
+    <filter id="m-elevation" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#02100a" flood-opacity="0.6"/>
     </filter>
   </defs>
 
-  <!-- Squircle Base Canvas -->
-  <rect x="12" y="12" width="488" height="488" rx="128" fill="url(#bg-radial)" />
-  <rect x="13.5" y="13.5" width="485" height="485" rx="126.5" fill="none" stroke="url(#rim-stroke)" stroke-width="3" />
+  <rect x="6" y="6" width="500" height="500" rx="136" fill="url(#bg-grad)" />
+  <rect x="8" y="8" width="496" height="496" rx="134" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="3" />
 
-  <!-- Inner Ambient Glow Ring -->
-  <circle cx="256" cy="256" r="190" fill="none" stroke="#25624f" stroke-width="1.5" opacity="0.35" />
-
-  <!-- Material Emblem with Elevation -->
-  <g filter="url(#m3-shadow)">
-    <!-- Outer "C" Arc (Commission / Capital) -->
-    <path d="M336 182 A124 124 0 1 0 336 330" 
-          fill="none" 
-          stroke="url(#glyph-grad)" 
-          stroke-width="38" 
-          stroke-linecap="round" />
-
-    <!-- Indian Rupee (₹) Symbol nestled inside -->
-    <!-- Top Horizontal Bar -->
-    <path d="M222 198 H294" 
-          fill="none" 
-          stroke="url(#glyph-grad)" 
-          stroke-width="26" 
-          stroke-linecap="round" />
-
-    <!-- Middle Horizontal Bar -->
-    <path d="M222 238 H282" 
-          fill="none" 
-          stroke="url(#glyph-grad)" 
-          stroke-width="26" 
-          stroke-linecap="round" />
-
-    <!-- Rupee Upper Loop -->
-    <path d="M246 198 V238 C280 238 280 274 246 274 H222" 
-          fill="none" 
-          stroke="url(#glyph-grad)" 
-          stroke-width="26" 
-          stroke-linecap="round" 
-          stroke-linejoin="round" />
-
-    <!-- Rupee Downward Diagonal Leg -->
-    <path d="M242 274 L284 326" 
-          fill="none" 
-          stroke="url(#glyph-grad)" 
-          stroke-width="26" 
-          stroke-linecap="round" />
+  <g filter="url(#m-elevation)" stroke="url(#m-glyph)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 180 162 H 276 C 330 162 368 198 368 256 C 368 314 330 350 276 350 H 180 C 166 350 156 340 156 326 V 186 C 156 172 166 162 180 162 Z" />
+    <path d="M 228 96 L 228 416" />
+    <path d="M 156 256 L 344 256" />
   </g>
 </svg>

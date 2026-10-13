@@ -759,8 +759,8 @@ def sync_trade_profits_to_funds(db, cid=None):
         if not closed_trades:
             return
 
-        funds_params = [cid] if cid else []
-        funds_sql = "SELECT notes FROM funds WHERE notes LIKE '%[Trade #%'" + (" AND client_id=?" if cid else "")
+        funds_params = ["%[Trade #%"] + ([cid] if cid else [])
+        funds_sql = "SELECT notes FROM funds WHERE notes LIKE ?" + (" AND client_id=?" if cid else "")
         existing_notes_rows = db.execute(funds_sql, funds_params).fetchall()
         existing_notes_text = " ".join([r["notes"] or "" for r in existing_notes_rows])
 
@@ -1865,7 +1865,7 @@ def create_app(config=None):
             
         sell_qty = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
         sell_price = number(request.form.get("sell_price"), "Sell Price", required=True, positive=True)
-        sell_date = valid_date(request.form.get("sell_date")) or date.today().isoformat()
+        sell_date = valid_date(request.form.get("sell_date"), "Sell Date") or date.today().isoformat()
         
         new_qty = (holding["quantity"] or ZERO) - sell_qty
         if new_qty <= 0:
@@ -2510,8 +2510,8 @@ def create_app(config=None):
         quantity = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
         buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
         sell_price = number(request.form.get("sell_price"), "Sell Price") if request.form.get("sell_price") else None
-        buy_date = valid_date(request.form.get("buy_date")) or (date.today().isoformat() if buy_price is not None else None)
-        sell_date = valid_date(request.form.get("sell_date"))
+        buy_date = valid_date(request.form.get("buy_date"), "Buy Date") or (date.today().isoformat() if buy_price is not None else None)
+        sell_date = valid_date(request.form.get("sell_date"), "Sell Date")
         user_notes = text(request.form.get("notes"), "Notes", limit=200) or ""
 
         if buy_price is None and sell_price is None:
