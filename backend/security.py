@@ -44,6 +44,7 @@ def configure_app(app, overrides=None):
         "PERMANENT_SESSION_LIFETIME": timedelta(days=365),
         "REMEMBER_COOKIE_DURATION": timedelta(days=365),
         "SESSION_REFRESH_EACH_REQUEST": True,
+        "SEND_FILE_MAX_AGE_DEFAULT": 0,
     }
     if overrides:
         config.update(overrides)

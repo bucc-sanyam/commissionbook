@@ -25,14 +25,14 @@
   }
 
   function updatePrivacyMode(isPrivacy) {
-    document.body.classList.toggle("privacy-mode", isPrivacy);
+    document.body.classList.toggle("privacy-mode", Boolean(isPrivacy));
     const adminToggle = document.getElementById("privacy-toggle");
     if (adminToggle) {
-      adminToggle.setAttribute("aria-pressed", isPrivacy);
+      adminToggle.setAttribute("aria-pressed", isPrivacy ? "true" : "false");
     }
     const clientToggle = document.getElementById("client-privacy-toggle");
     if (clientToggle) {
-      clientToggle.setAttribute("aria-pressed", isPrivacy);
+      clientToggle.setAttribute("aria-pressed", isPrivacy ? "true" : "false");
       const iconOff = clientToggle.querySelector(".privacy-icon-off");
       const iconOn = clientToggle.querySelector(".privacy-icon-on");
       const label = clientToggle.querySelector(".privacy-label");
@@ -41,18 +41,44 @@
       if (label) label.textContent = isPrivacy ? "Show values" : "Hide values";
     }
   }
+  window.updatePrivacyMode = updatePrivacyMode;
 
-  const initialPrivacy = localStorage.getItem("privacyMode") === "true";
-  updatePrivacyMode(initialPrivacy);
-
+  let lastToggleTime = 0;
   function togglePrivacy() {
+    const now = Date.now();
+    if (now - lastToggleTime < 250) {
+      return document.body.classList.contains("privacy-mode");
+    }
+    lastToggleTime = now;
     const next = !document.body.classList.contains("privacy-mode");
-    localStorage.setItem("privacyMode", next);
+    localStorage.setItem("privacyMode", next ? "true" : "false");
     updatePrivacyMode(next);
+    return next;
+  }
+  window.togglePrivacy = togglePrivacy;
+
+  // Global event delegation for privacy toggles (works 100% reliably regardless of load timing)
+  document.addEventListener("click", (event) => {
+    const btn = event.target.closest("#privacy-toggle, #client-privacy-toggle");
+    if (btn) {
+      event.preventDefault();
+      togglePrivacy();
+    }
+  });
+
+  function initPrivacy() {
+    let isPrivacy = false;
+    try {
+      isPrivacy = localStorage.getItem("privacyMode") === "true";
+    } catch (e) {}
+    updatePrivacyMode(isPrivacy);
   }
 
-  document.getElementById("privacy-toggle")?.addEventListener("click", togglePrivacy);
-  document.getElementById("client-privacy-toggle")?.addEventListener("click", togglePrivacy);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initPrivacy);
+  } else {
+    initPrivacy();
+  }
   menu?.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
   scrim?.addEventListener("click", () => setMenu(false));
   document.addEventListener("keydown", (event) => {

@@ -129,7 +129,7 @@
           </button>
         </div>
         <div class="metric-value">{{ money_in_bank|money }}</div>
-        <div class="metric-sub muted tabular">Total Capital: {{ total_funds|money }}</div>
+        <div class="metric-sub muted">Total Capital: <span class="tabular" style="font-weight: 600;">{{ total_funds|money }}</span></div>
       </div>
 
       <div class="metric-card">
@@ -226,7 +226,7 @@
                 {% endif %}
               </div>
               <div class="mts-dates">
-                {{ h.quantity|num if h.quantity else '—' }} shares &bull; Added {{ h.added_on[:10] }}
+                <span class="tabular">{{ h.quantity|num if h.quantity else '—' }} shares</span> &bull; Added {{ h.added_on[:10] }}
               </div>
             </div>
             <div class="mts-right">
@@ -363,7 +363,7 @@
               {% else %}
                 <div class="mts-pnl muted">
                   <strong>Open</strong>
-                  <small>{{ t.quantity }} shares</small>
+                  <small class="tabular">{{ t.quantity }} shares</small>
                 </div>
               {% endif %}
               <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
@@ -546,11 +546,11 @@
     <div class="sell-summary-box" style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
       <div>
         <span class="muted" style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block;">Available Cash</span>
-        <strong style="font-size: 18px; color: #1e8751;">{{ money_in_bank|money }}</strong>
+        <strong class="tabular" style="font-size: 18px; color: #1e8751;">{{ money_in_bank|money }}</strong>
       </div>
       <div style="text-align: right;">
         <span class="muted" style="font-size: 11px; display: block;">Total Capital Added</span>
-        <strong style="font-size: 14px; color: #2d3748;">{{ total_funds|money }}</strong>
+        <strong class="tabular" style="font-size: 14px; color: #2d3748;">{{ total_funds|money }}</strong>
       </div>
     </div>
 
@@ -745,6 +745,14 @@
 {% endif %}
 
 <script>
+  // Immediate sync for privacy mode if stored in localStorage
+  try {
+    const isPrivacy = localStorage.getItem('privacyMode') === 'true';
+    if (isPrivacy) {
+      document.body.classList.add('privacy-mode');
+    }
+  } catch (e) {}
+
   // Auto-show popup alert modal if there are undismissed alerts
   window.addEventListener('DOMContentLoaded', function() {
     const popup = document.getElementById('popup-advisory-dialog');
