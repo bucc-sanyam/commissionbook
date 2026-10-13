@@ -44,6 +44,10 @@
           <td>
             {% if a.client_id %}
               <span class="client-cell">{{ avatar(a.client_name, a.client_id) }}<span>{{ a.client_name }}</span></span>
+            {% elif a.action == 'SELL' %}
+              <span class="badge" style="background: #fff8e1; color: #855700; font-weight: 600; border: 1px solid #ffe082;" title="Targeted automatically only to clients holding {{ a.stock }}">
+                {{ icon('users', 12) }} Holders of {{ a.stock }} ({{ a.target_count }})
+              </span>
             {% else %}
               <span class="badge" style="background: #eef3e8; color: #215935; font-weight: 600;">
                 {{ icon('users', 12) }} All Clients (Broadcast)
@@ -60,7 +64,11 @@
             {{ a.message or '<span class="muted">—</span>'|safe }}
           </td>
           <td class="r tabular">
-            {% if a.all_acknowledged %}
+            {% if a.target_count == 0 and a.action == 'SELL' and not a.client_id %}
+              <span class="badge" style="background:#f5f5f5; color:#777; font-weight:600; border:1px solid #ddd;">
+                0 Holders
+              </span>
+            {% elif a.all_acknowledged %}
               <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-weight:700; border:1px solid #c8e6c9; display:inline-flex; align-items:center; gap:4px;">
                 {{ icon('check-circle', 13) }} {{ a.ack_count }}/{{ a.target_count }} Done
               </span>
@@ -105,7 +113,9 @@
                   <span style="color: #1b5e20; font-weight: 700;">{{ a.ack_count }} Acknowledged</span>
                   <span style="color: #bbb;">·</span>
                   <span style="color: #b76e00; font-weight: 700;">{{ a.pending_clients|length }} Yet to Acknowledge</span>
-                  {% if a.all_acknowledged %}
+                  {% if a.target_count == 0 and a.action == 'SELL' and not a.client_id %}
+                    <span class="badge" style="background:#fff8e1; color:#855700; font-size:10px; font-weight:600; border:1px solid #ffe082;">No clients currently hold this stock</span>
+                  {% elif a.all_acknowledged %}
                     <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px; font-weight:700; border:1px solid #c8e6c9;">✓ 100% Target Acknowledged</span>
                   {% endif %}
                 </span>
@@ -154,6 +164,8 @@
                         </span>
                       {% endfor %}
                     </div>
+                  {% elif a.target_count == 0 and a.action == 'SELL' and not a.client_id %}
+                    <p style="margin: 0; font-size: 11px; color: #888; font-style: italic;">No clients currently hold {{ a.stock }}.</p>
                   {% else %}
                     <p style="margin: 0; font-size: 11px; color: #2e7d32; font-weight: 600;">All target clients have acknowledged! 🎉</p>
                   {% endif %}
@@ -207,6 +219,9 @@
           <option value="{{ c.id }}">{{ c.name }}</option>
         {% endfor %}
       </select>
+      <small class="muted" style="font-size: 11px; display: block; margin-top: 4px; color: #435443;">
+        💡 <strong>Note:</strong> When <strong>SELL</strong> is selected with 'All Clients', pop-ups are automatically sent <strong>only to clients who hold this stock</strong>.
+      </small>
     </label>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">

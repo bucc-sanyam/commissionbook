@@ -543,6 +543,31 @@ def get_client_calculated_holdings(cid, db=None):
     return results
 
 
+def get_clients_holding_stock(stock, db=None):
+    """Returns list of active clients ({'id': ..., 'name': ...}) who currently hold the specified stock (canonical-aware)."""
+    if db is None:
+        db = get_db()
+    if not stock:
+        return []
+    target_canonical = resolve_canonical_stock(db, stock)
+    try:
+        active_clients = db.execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+    except Exception:
+        return []
+
+    holding_clients = []
+    for c in active_clients:
+        try:
+            holdings = get_client_calculated_holdings(c["id"], db)
+            for h in holdings:
+                if resolve_canonical_stock(db, h["stock"]) == target_canonical and dec(h.get("quantity") or 0) > ZERO:
+                    holding_clients.append({"id": c["id"], "name": c["name"]})
+                    break
+        except Exception:
+            continue
+    return holding_clients
+
+
 def sync_trade_profits_to_funds(db, cid=None):
     """Ensure completed trades have their realized profit recorded in funds ledger exactly once."""
     try:
@@ -1522,7 +1547,7 @@ def create_app(config=None):
         summary["money_in_bank"] = total_funds - total_holdings_invested
 
         try:
-            advisories = get_db().execute(
+            raw_advisories = get_db().execute(
                 """
                 SELECT a.*, v.acknowledged, v.acknowledged_at
                 FROM client_alerts a
@@ -1532,6 +1557,17 @@ def create_app(config=None):
                 """,
                 (cid, cid),
             ).fetchall()
+            held_canonical_stocks = {
+                resolve_canonical_stock(get_db(), sh["stock"])
+                for sh in shares
+                if dec(sh.get("quantity") or 0) > ZERO
+            }
+            advisories = []
+            for adv in raw_advisories:
+                if adv["action"] == "SELL" and adv["client_id"] is None:
+                    if resolve_canonical_stock(get_db(), adv["stock"]) not in held_canonical_stocks and not adv.get("acknowledged"):
+                        continue
+                advisories.append(adv)
         except Exception:
             advisories = []
 
@@ -2197,7 +2233,7 @@ def create_app(config=None):
         total_funds = sum((dec(f["amount"]) for f in funds), ZERO)
         money_in_bank = total_funds - total_holdings_invested
 
-        undismissed_alerts = get_db().execute(
+        raw_undismissed_alerts = get_db().execute(
             """
             SELECT a.* FROM client_alerts a
             LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
@@ -2209,6 +2245,19 @@ def create_app(config=None):
             """,
             (cid, cid),
         ).fetchall()
+
+        # For broadcast SELL recommendations, only deliver pop-up to clients who currently hold the stock
+        held_canonical_stocks = {
+            resolve_canonical_stock(get_db(), sh["stock"])
+            for sh in shares
+            if dec(sh.get("quantity") or 0) > ZERO
+        }
+        undismissed_alerts = []
+        for a in raw_undismissed_alerts:
+            if a["action"] == "SELL" and a["client_id"] is None:
+                if resolve_canonical_stock(get_db(), a["stock"]) not in held_canonical_stocks:
+                    continue
+            undismissed_alerts.append(a)
 
         return render_template(
             "portal.html",
@@ -2561,6 +2610,15 @@ def create_app(config=None):
                     pending_clients = []
                 else:
                     pending_clients = [{"id": cid, "name": cname}]
+            elif ad.get("action") == "SELL":
+                # Sell pop-up broadcast: only sent to clients who hold the given stock
+                holders = get_clients_holding_stock(ad["stock"], get_db())
+                holder_map = {c["id"]: c["name"] for c in holders}
+                for v in acks:
+                    if v["client_id"] not in holder_map:
+                        holder_map[v["client_id"]] = v["client_name"]
+                target_clients = [{"id": cid, "name": holder_map[cid]} for cid in sorted(holder_map.keys(), key=lambda i: holder_map[i].lower())]
+                pending_clients = [c for c in target_clients if c["id"] not in acked_client_ids]
             else:
                 target_clients = active_clients_list
                 pending_clients = [c for c in active_clients_list if c["id"] not in acked_client_ids]
@@ -2570,6 +2628,7 @@ def create_app(config=None):
             ad["acknowledged_clients"] = acked_clients
             ad["pending_clients"] = pending_clients
             ad["all_acknowledged"] = (len(target_clients) > 0 and len(pending_clients) == 0)
+            ad["is_sell_broadcast"] = (ad.get("action") == "SELL" and not ad.get("client_id"))
             enriched_alerts.append(ad)
 
         return render_template("alerts.html", alerts=enriched_alerts, clients=clients)
@@ -2591,16 +2650,30 @@ def create_app(config=None):
         message = request.form.get("message", "").strip()
         client_id_raw = request.form.get("client_id", "").strip()
         client_id = int(client_id_raw) if client_id_raw and client_id_raw != "all" else None
+        canonical_stock = resolve_canonical_stock(get_db(), stock)
 
         get_db().execute(
             """
             INSERT INTO client_alerts (client_id, action, stock, price, target_price, stop_loss, message, active)
             VALUES (?, ?, ?, ?, ?, ?, ?, 1)
             """,
-            (client_id, action, stock, price, target_price, stop_loss, message),
+            (client_id, action, canonical_stock, price, target_price, stop_loss, message),
         )
-        recipient = "All clients (Broadcast)" if client_id is None else get_client(client_id)["name"]
-        flash(f"Pop-up trade for {stock} ({action}) sent to {recipient}.", "success")
+
+        if client_id is not None:
+            recipient = get_client(client_id)["name"]
+            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}.", "success")
+        elif action == "SELL":
+            holding_clients = get_clients_holding_stock(canonical_stock, get_db())
+            if holding_clients:
+                names = ", ".join(h["name"] for h in holding_clients[:3])
+                suffix = f" (+{len(holding_clients) - 3} more)" if len(holding_clients) > 3 else ""
+                flash(f"Pop-up SELL advisory for {canonical_stock} sent to {len(holding_clients)} client(s) holding this stock: {names}{suffix}.", "success")
+            else:
+                flash(f"Pop-up SELL advisory for {canonical_stock} recorded. Notice: No clients currently hold this stock, so no client portals will be prompted until holdings exist.", "info")
+        else:
+            recipient = "All clients (Broadcast)"
+            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}.", "success")
         return redirect(safe_redirect_target(back, url_for("alerts_list")))
 
     @app.route("/alerts/<int:aid>/toggle", methods=["POST"])
