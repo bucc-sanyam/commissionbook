@@ -315,7 +315,7 @@
                 {% if t.sell_price %}
                   {{ t.sell_price|money }}
                 {% else %}
-                  <button type="button" class="btn btn-ghost btn-xs" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}')" style="font-size: 11px; padding: 2px 7px; border: 1px solid #c6e7cf; color: #167e45; border-radius: 6px; background: #f0faf2; font-weight: 600;" title="Click to complete this trade">
+                  <button type="button" class="btn btn-ghost btn-xs" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}', '{{ t.id }}')" style="font-size: 11px; padding: 2px 7px; border: 1px solid #c6e7cf; color: #167e45; border-radius: 6px; background: #f0faf2; font-weight: 600;" title="Click to complete this trade">
                     Open &bull; Complete
                   </button>
                 {% endif %}
@@ -407,7 +407,7 @@
 
             {% if t.status != 'Closed' %}
             <div style="margin-top: 10px;">
-              <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}')" style="width: 100%; justify-content: center; font-size: 12px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}', '{{ t.id }}')" style="width: 100%; justify-content: center; font-size: 12px;">
                 {{ icon('check', 14) }} Complete Open Trade
               </button>
             </div>
@@ -447,16 +447,18 @@
 <dialog class="modal modal-md" id="add-trade-dialog">
   <form method="post" action="{{ url_for('portal_trade_add') }}" enctype="multipart/form-data" class="modal-inner" id="add-trade-form">
     {{ csrf() }}
+    <input type="hidden" name="trade_id" id="trade-edit-id" value="">
     <div class="modal-heading">
       <div>
         <span class="eyebrow">TRADE ENTRY</span>
-        <h2>Add Trade</h2>
+        <h2 id="trade-modal-title">Add Trade</h2>
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted" style="margin-bottom: 12px; font-size: 12px;">
-      Record a buy or sell trade. Leave Sell Price blank for an open holding position.
-    </p>
+    
+    <div style="padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 12px; color: #166534; line-height: 1.45; margin-bottom: 12px;">
+      <strong>Buy or Sell (both are optional, at least one required):</strong> Fill Buy details to record a new position, Sell details to record an exit, or both for a completed trade. You can add any number of trades freely.
+    </div>
 
     <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
       <label class="field" for="trade-stock-input" style="margin-bottom: 0;">
@@ -469,30 +471,32 @@
           <span class="field-title">Quantity <span class="field-req">*</span></span>
           <input id="trade-qty-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
         </label>
-        <label class="field" for="trade-buy-price" style="margin-bottom: 0;">
-          <span class="field-title">Buy Price (₹)</span>
-          <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="₹ per share">
-        </label>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <label class="field" for="trade-buy-date" style="margin-bottom: 0;">
-          <span class="field-title">Buy Date</span>
-          <input id="trade-buy-date" type="date" name="buy_date" value="{{ today }}">
-        </label>
         <label class="field" for="trade-notes" style="margin-bottom: 0;">
           <span class="field-title">Notes <span class="optional">(Optional)</span></span>
           <input id="trade-notes" name="notes" placeholder="e.g. Swing, Intraday">
         </label>
       </div>
 
+      <!-- Buy Section -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <label class="field" for="trade-buy-price" style="margin-bottom: 0;">
+          <span class="field-title">Buy Price (₹) <span class="optional">(Optional)</span></span>
+          <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if sell-only">
+        </label>
+        <label class="field" for="trade-buy-date" style="margin-bottom: 0;">
+          <span class="field-title">Buy Date <span class="optional">(Defaults to today)</span></span>
+          <input id="trade-buy-date" type="date" name="buy_date">
+        </label>
+      </div>
+
+      <!-- Sell Section -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #fafbf9; border: 1px dashed #d5ded2; border-radius: 8px;">
         <label class="field" for="trade-sell-price" style="margin-bottom: 0;">
           <span class="field-title">Sell Price (₹) <span class="optional">(Optional)</span></span>
-          <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open">
+          <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open holding">
         </label>
         <label class="field" for="trade-sell-date" style="margin-bottom: 0;">
-          <span class="field-title">Sell Date <span class="optional">(Optional)</span></span>
+          <span class="field-title">Sell Date <span class="optional">(Defaults to today)</span></span>
           <input id="trade-sell-date" type="date" name="sell_date">
         </label>
       </div>
@@ -525,7 +529,7 @@
 
     <div class="modal-actions" style="margin-top: 14px; padding-top: 12px;">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
-      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Add Trade</button>
+      <button class="btn btn-primary" id="trade-submit-btn" type="submit">{{ icon('check', 16) }} Add Trade</button>
     </div>
   </form>
 </dialog>
@@ -860,25 +864,73 @@
   }
 
   // Open Add Trade Modal with optional prefilled values
-  function openAddTradeModal(stock = '', qty = '', buyPrice = '', buyDate = '') {
+  function openAddTradeModal(stock = '', qty = '', buyPrice = '', buyDate = '', tradeId = '') {
     const dialog = document.getElementById('add-trade-dialog');
     if (!dialog) return;
     const form = document.getElementById('add-trade-form');
+    const titleEl = document.getElementById('trade-modal-title');
+    const submitBtn = document.getElementById('trade-submit-btn');
+    const editIdInput = document.getElementById('trade-edit-id');
+
     if (stock) {
       document.getElementById('trade-stock-input').value = stock;
       document.getElementById('trade-qty-input').value = qty;
       document.getElementById('trade-buy-price').value = buyPrice;
-      if (buyDate) document.getElementById('trade-buy-date').value = buyDate;
+      document.getElementById('trade-buy-date').value = buyDate || '';
       const sellInput = document.getElementById('trade-sell-price');
       sellInput.value = '';
+      document.getElementById('trade-sell-date').value = "{{ today }}";
+      if (editIdInput) editIdInput.value = tradeId || '';
+      if (titleEl) titleEl.textContent = tradeId ? 'Complete Open Trade' : 'Add Trade';
+      if (submitBtn) submitBtn.innerHTML = `{{ icon('check', 16) }} ${tradeId ? 'Save Trade' : 'Add Trade'}`;
       setTimeout(() => sellInput.focus(), 150);
     } else {
       if (form) form.reset();
-      document.getElementById('trade-buy-date').value = "{{ today }}";
+      if (editIdInput) editIdInput.value = '';
+      if (titleEl) titleEl.textContent = 'Add Trade';
+      if (submitBtn) submitBtn.innerHTML = `{{ icon('check', 16) }} Add Trade`;
       removeTradeProof();
     }
     dialog.showModal();
     window.initStockAutocomplete?.();
   }
+
+  // Auto-fill dates on input and enforce either buy or sell price
+  document.addEventListener('DOMContentLoaded', function() {
+    const buyPriceInput = document.getElementById('trade-buy-price');
+    const buyDateInput = document.getElementById('trade-buy-date');
+    const sellPriceInput = document.getElementById('trade-sell-price');
+    const sellDateInput = document.getElementById('trade-sell-date');
+    const addTradeForm = document.getElementById('add-trade-form');
+
+    if (buyPriceInput && buyDateInput) {
+      buyPriceInput.addEventListener('input', function() {
+        if (buyPriceInput.value.trim() && !buyDateInput.value) {
+          buyDateInput.value = "{{ today }}";
+        }
+      });
+    }
+
+    if (sellPriceInput && sellDateInput) {
+      sellPriceInput.addEventListener('input', function() {
+        if (sellPriceInput.value.trim() && !sellDateInput.value) {
+          sellDateInput.value = "{{ today }}";
+        }
+      });
+    }
+
+    if (addTradeForm) {
+      addTradeForm.addEventListener('submit', function(e) {
+        const bp = (buyPriceInput ? buyPriceInput.value : '').trim();
+        const sp = (sellPriceInput ? sellPriceInput.value : '').trim();
+        if (!bp && !sp) {
+          e.preventDefault();
+          alert('Please enter either a Buy Price or a Sell Price. At least one is mandatory.');
+          if (buyPriceInput) buyPriceInput.focus();
+          return false;
+        }
+      });
+    }
+  });
 </script>
 {% endblock %}

@@ -521,14 +521,40 @@ def insert_trade(cid, trade, source="manual", upload_id=None):
 def insert_trades(cid, trades, source="manual", upload_id=None):
     if not trades or len(trades) > MAX_ROWS:
         raise ValidationError(f"Save between 1 and {MAX_ROWS} trades in a batch.")
+    if source not in ("manual", "import", "upload"):
+        source = "manual"
     ctype, rate = effective_rule(get_client(cid))
     parameters = []
     db = get_db()
     for trade in trades:
         stock = resolve_canonical_stock(db, trade["stock"])
+        bp = trade.get("buy_price")
+        sp = trade.get("sell_price")
+        b_date = trade.get("buy_date")
+        s_date = trade.get("sell_date")
+
+        # Defensive pairs check to strictly satisfy DB constraints:
+        # trades_buy_pair: ((buy_price IS NULL) = (buy_date IS NULL))
+        if bp is not None:
+            if not b_date:
+                b_date = date.today().isoformat()
+        else:
+            b_date = None
+
+        # trades_sell_pair: ((sell_price IS NULL) = (sell_date IS NULL))
+        if sp is not None:
+            if not s_date:
+                s_date = date.today().isoformat()
+        else:
+            s_date = None
+
+        # trades_date_order: sell_date >= buy_date if both are present
+        if b_date and s_date and s_date < b_date:
+            s_date = b_date
+
         parameters.extend((
-            cid, stock, trade["quantity"], trade["buy_price"], trade["sell_price"],
-            trade["buy_date"], trade["sell_date"], trade.get("commission_override"),
+            cid, stock, trade["quantity"], bp, sp,
+            b_date, s_date, trade.get("commission_override"),
             ctype, rate, source, upload_id, trade.get("notes"),
         ))
     rows = db.execute(
@@ -2484,17 +2510,21 @@ def create_app(config=None):
         if not stock:
             flash("Stock symbol is required.", "error")
             return redirect(url_for("client_portal"))
-        quantity = number(request.form.get("quantity"), "Quantity", positive=True) if request.form.get("quantity") else 1
-        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
-        insert_trades(cid, [{
-            "stock": stock,
-            "quantity": quantity,
-            "buy_price": buy_price,
-            "sell_price": None,
-            "buy_date": date.today().isoformat(),
-            "notes": "Added from Client Portal",
-        }], source="portal")
-        flash(f"Trade for {stock} recorded. Your holdings have been updated.", "success")
+        try:
+            quantity = number(request.form.get("quantity"), "Quantity", positive=True) if request.form.get("quantity") else 1
+            buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+            insert_trades(cid, [{
+                "stock": stock,
+                "quantity": quantity,
+                "buy_price": buy_price,
+                "sell_price": None,
+                "buy_date": date.today().isoformat() if buy_price is not None else None,
+                "notes": "Added from Client Portal",
+            }], source="manual")
+            flash(f"Trade for {stock} recorded. Your holdings have been updated.", "success")
+        except Exception as exc:
+            current_app.logger.warning("Failed to add portal share: %s", exc)
+            flash(f"Could not record holding: {exc}", "error")
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/trades/new", methods=["POST"])
@@ -2502,21 +2532,62 @@ def create_app(config=None):
     def portal_trade_add():
         cid = session["client_id"]
         client = get_client(cid)
-        stock = resolve_canonical_stock(get_db(), request.form.get("stock", ""))
+        raw_stock = request.form.get("stock", "").strip()
+        stock = resolve_canonical_stock(get_db(), raw_stock) if raw_stock else ""
         if not stock:
             flash("Stock symbol is required.", "error")
             return redirect(url_for("client_portal"))
 
-        quantity = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
-        buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
-        sell_price = number(request.form.get("sell_price"), "Sell Price") if request.form.get("sell_price") else None
-        buy_date = valid_date(request.form.get("buy_date"), "Buy Date") or (date.today().isoformat() if buy_price is not None else None)
-        sell_date = valid_date(request.form.get("sell_date"), "Sell Date")
-        user_notes = text(request.form.get("notes"), "Notes", limit=200) or ""
-
-        if buy_price is None and sell_price is None:
-            flash("Please provide at least a Buy Price or Sell Price.", "error")
+        try:
+            quantity = number(request.form.get("quantity"), "Quantity", required=True, positive=True)
+        except Exception as exc:
+            flash(f"Invalid quantity: {exc}", "error")
             return redirect(url_for("client_portal"))
+
+        raw_bp = (request.form.get("buy_price") or "").strip()
+        raw_sp = (request.form.get("sell_price") or "").strip()
+
+        buy_price = None
+        if raw_bp:
+            try:
+                buy_price = number(raw_bp, "Buy Price")
+            except Exception as exc:
+                flash(f"Invalid buy price: {exc}", "error")
+                return redirect(url_for("client_portal"))
+
+        sell_price = None
+        if raw_sp:
+            try:
+                sell_price = number(raw_sp, "Sell Price")
+            except Exception as exc:
+                flash(f"Invalid sell price: {exc}", "error")
+                return redirect(url_for("client_portal"))
+
+        # Both buy and sell are optional, either one can be added, but either buy or sell is mandatory (both cannot be empty)
+        if buy_price is None and sell_price is None:
+            flash("Please enter either a Buy Price or a Sell Price. Both cannot be empty.", "error")
+            return redirect(url_for("client_portal"))
+
+        # Pair constraints for DB:
+        # trades_buy_pair: CHECK ((buy_price IS NULL) = (buy_date IS NULL))
+        if buy_price is not None:
+            raw_bdate = (request.form.get("buy_date") or "").strip()
+            buy_date = valid_date(raw_bdate, "Buy Date") if raw_bdate else date.today().isoformat()
+        else:
+            buy_date = None
+
+        # trades_sell_pair: CHECK ((sell_price IS NULL) = (sell_date IS NULL))
+        if sell_price is not None:
+            raw_sdate = (request.form.get("sell_date") or "").strip()
+            sell_date = valid_date(raw_sdate, "Sell Date") if raw_sdate else date.today().isoformat()
+        else:
+            sell_date = None
+
+        # trades_date_order: CHECK (sell_date IS NULL OR buy_date IS NULL OR sell_date >= buy_date)
+        if buy_date and sell_date and sell_date < buy_date:
+            sell_date = buy_date
+
+        user_notes = text(request.form.get("notes"), "Notes", limit=200) or ""
 
         # Handle optional proof image upload
         proof_file = request.files.get("proof_image")
@@ -2562,50 +2633,59 @@ def create_app(config=None):
                 except Exception as exc:
                     current_app.logger.warning("Trade screenshot upload skipped: %s", exc)
 
-        # Check if this completes an existing open trade for this stock
-        closed_existing = False
+        # Allow completing/updating a specific trade if trade_id provided
+        target_trade_id = (request.form.get("trade_id") or "").strip()
+        updated_existing = False
         trade_id = None
-        if sell_price is not None:
-            existing_open = get_db().execute(
-                """SELECT * FROM trades
-                   WHERE client_id=? AND UPPER(stock)=? AND (sell_price IS NULL OR sell_price=0)
-                   ORDER BY COALESCE(buy_date, created_at) ASC, id ASC LIMIT 1""",
-                (cid, stock),
-            ).fetchone()
-            if existing_open:
-                open_qty = dec(existing_open["quantity"])
-                eff_bp = buy_price if buy_price is not None else dec(existing_open["buy_price"])
-                eff_bdate = buy_date if buy_date else existing_open["buy_date"]
-                s_date = sell_date or date.today().isoformat()
 
-                if quantity >= open_qty:
-                    trade_id = existing_open["id"]
+        if target_trade_id and target_trade_id.isdigit():
+            tid = int(target_trade_id)
+            existing_trade = get_db().execute(
+                "SELECT * FROM trades WHERE id=? AND client_id=?", (tid, cid)
+            ).fetchone()
+            if existing_trade:
+                try:
+                    eff_bp = buy_price if buy_price is not None else existing_trade["buy_price"]
+                    eff_sp = sell_price if sell_price is not None else existing_trade["sell_price"]
+                    eff_bdate = buy_date if eff_bp is not None else (existing_trade["buy_date"] if existing_trade["buy_price"] is not None else None)
+                    eff_sdate = sell_date if eff_sp is not None else (existing_trade["sell_date"] if existing_trade["sell_price"] is not None else None)
+                    if eff_bdate and eff_sdate and eff_sdate < eff_bdate:
+                        eff_sdate = eff_bdate
+
                     get_db().execute(
                         """UPDATE trades SET
-                            buy_price=?, sell_price=?, buy_date=?, sell_date=?,
+                            stock=?, quantity=?, buy_price=?, sell_price=?,
+                            buy_date=?, sell_date=?,
                             upload_id=COALESCE(?, upload_id),
                             notes=COALESCE(?, notes)
-                        WHERE id=?""",
-                        (eff_bp, sell_price, eff_bdate, s_date, upload_id, user_notes or existing_open["notes"], trade_id)
+                        WHERE id=? AND client_id=?""",
+                        (stock, quantity, eff_bp, eff_sp, eff_bdate, eff_sdate, upload_id, user_notes or existing_trade["notes"], tid, cid)
                     )
-                    closed_existing = True
+                    trade_id = tid
+                    updated_existing = True
                     buy_price = eff_bp
-                else:
-                    new_open_qty = open_qty - quantity
-                    get_db().execute("UPDATE trades SET quantity=? WHERE id=?", (new_open_qty, existing_open["id"]))
-                    buy_price = eff_bp
+                    sell_price = eff_sp
+                    sell_date = eff_sdate
+                except Exception as exc:
+                    current_app.logger.warning("Failed to update existing trade %s: %s", tid, exc)
 
-        if not closed_existing:
-            trade_ids = insert_trades(cid, [{
-                "stock": stock,
-                "quantity": quantity,
-                "buy_price": buy_price,
-                "sell_price": sell_price,
-                "buy_date": buy_date,
-                "sell_date": sell_date,
-                "notes": user_notes or "Added via Client Portal",
-            }], source="portal", upload_id=upload_id)
-            trade_id = trade_ids[0] if trade_ids else None
+        # Clients can add any number of trades freely without conflict
+        if not updated_existing:
+            try:
+                trade_ids = insert_trades(cid, [{
+                    "stock": stock,
+                    "quantity": quantity,
+                    "buy_price": buy_price,
+                    "sell_price": sell_price,
+                    "buy_date": buy_date,
+                    "sell_date": sell_date,
+                    "notes": user_notes or "Added via Client Portal",
+                }], source="manual", upload_id=upload_id)
+                trade_id = trade_ids[0] if trade_ids else None
+            except Exception as exc:
+                current_app.logger.exception("Failed to insert portal trade: %s", exc)
+                flash(f"Could not record trade: {exc}", "error")
+                return redirect(url_for("client_portal"))
 
         # Eagerly fetch live price quote for the stock
         try:
@@ -2647,8 +2727,10 @@ def create_app(config=None):
                 flash(f"Trade completed for {stock}. Realized profit of ₹{pnl:,.2f} added to your bank funds.", "success")
             else:
                 flash(f"Trade completed for {stock}. Realized loss of ₹{abs(pnl):,.2f} recorded in your funds ledger.", "success")
+        elif buy_price is not None:
+            flash(f"Buy trade for {quantity:g} shares of {stock} recorded. Your holdings and live valuations have been updated.", "success")
         else:
-            flash(f"Trade for {stock} recorded. Your holdings and live valuations have been updated.", "success")
+            flash(f"Sell trade for {quantity:g} shares of {stock} recorded. Your holdings have been updated.", "success")
 
         return redirect(url_for("client_portal"))
 

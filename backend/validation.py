@@ -133,22 +133,45 @@ def trade_values(values, *, public=False):
         ("commission", "commission_override", "commission_type", "commission_rate")
     ):
         raise ValidationError("Commission fields cannot be submitted through the upload portal.")
+    bp = number(values.get("buy_price"), "Buy price") if values.get("buy_price") not in (None, "") else None
+    sp = number(values.get("sell_price"), "Sell price") if values.get("sell_price") not in (None, "") else None
+    if bp is None and sp is None:
+        raise ValidationError("Enter at least one buy or sell price.")
+
+    raw_bdate = values.get("buy_date")
+    raw_sdate = values.get("sell_date")
+    b_date = valid_date(raw_bdate, "Buy date") if raw_bdate else None
+    s_date = valid_date(raw_sdate, "Sell date") if raw_sdate else None
+
+    # Enforce Postgres check constraint: trades_buy_pair ((buy_price IS NULL) = (buy_date IS NULL))
+    if bp is not None:
+        if not b_date:
+            b_date = date.today().isoformat()
+    else:
+        b_date = None
+
+    # Enforce Postgres check constraint: trades_sell_pair ((sell_price IS NULL) = (sell_date IS NULL))
+    if sp is not None:
+        if not s_date:
+            s_date = date.today().isoformat()
+    else:
+        s_date = None
+
+    if b_date and s_date and s_date < b_date:
+        raise ValidationError("Sell date cannot be before buy date.")
+
     result = {
         "stock": text(values.get("stock"), "Stock", limit=120, required=True).upper(),
         "quantity": number(values.get("quantity"), "Quantity", required=True, positive=True),
-        "buy_price": number(values.get("buy_price"), "Buy price"),
-        "sell_price": number(values.get("sell_price"), "Sell price"),
-        "buy_date": valid_date(values.get("buy_date"), "Buy date"),
-        "sell_date": valid_date(values.get("sell_date"), "Sell date"),
+        "buy_price": bp,
+        "sell_price": sp,
+        "buy_date": b_date,
+        "sell_date": s_date,
         "commission_override": None if public else number(
             values.get("commission_override"), "Commission", places=2
         ),
         "notes": text(values.get("notes"), "Notes", multiline=True) or None,
     }
-    if result["buy_price"] is None and result["sell_price"] is None:
-        raise ValidationError("Enter at least one buy or sell price.")
-    if result["buy_date"] and result["sell_date"] and result["sell_date"] < result["buy_date"]:
-        raise ValidationError("Sell date cannot be before buy date.")
     return result
 
 
