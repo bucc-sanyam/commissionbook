@@ -34,6 +34,13 @@
         </div>
       </div>
 
+      <!-- Hide Values / Privacy Toggle Button -->
+      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values" title="Hide or show portfolio values" style="gap: 5px;">
+        <span class="privacy-icon-off">{{ icon('eye-off', 15) }}</span>
+        <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 15) }}</span>
+        <span class="privacy-label">Hide values</span>
+      </button>
+
       <form method="post" action="{{ url_for('logout') }}" style="margin: 0;">
         {{ csrf() }}
         <button type="submit" class="btn btn-ghost btn-sm" aria-label="Sign out">
@@ -122,7 +129,7 @@
           </button>
         </div>
         <div class="metric-value">{{ money_in_bank|money }}</div>
-        <div class="metric-sub muted">Total Capital: {{ total_funds|money }}</div>
+        <div class="metric-sub muted tabular">Total Capital: {{ total_funds|money }}</div>
       </div>
 
       <div class="metric-card">

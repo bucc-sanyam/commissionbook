@@ -787,10 +787,33 @@ pre.ocr-text { color: #60734f; }
 }
 
 /* Privacy Mode */
-.privacy-mode .tabular { filter: blur(5px); transition: filter 0.2s ease; user-select: none; }
-.privacy-mode .tabular:hover { filter: blur(0); }
-.privacy-mode .kpi-value { filter: blur(7px); transition: filter 0.2s ease; user-select: none; }
-.privacy-mode .kpi-value:hover { filter: blur(0); }
+.privacy-mode .tabular,
+.privacy-mode .kpi-value,
+.privacy-mode .metric-value,
+.privacy-mode .portal-metric-val,
+.privacy-mode .cmp-price,
+.privacy-mode .mtd-val,
+.privacy-mode .mts-pnl,
+.privacy-mode .pill-pos,
+.privacy-mode .pill-neg,
+.privacy-mode [data-privacy-value] {
+  filter: blur(6px) !important;
+  transition: filter 0.2s ease;
+  user-select: none;
+}
+
+.privacy-mode .tabular:hover,
+.privacy-mode .kpi-value:hover,
+.privacy-mode .metric-value:hover,
+.privacy-mode .portal-metric-val:hover,
+.privacy-mode .cmp-price:hover,
+.privacy-mode .mtd-val:hover,
+.privacy-mode .mts-pnl:hover,
+.privacy-mode .pill-pos:hover,
+.privacy-mode .pill-neg:hover,
+.privacy-mode [data-privacy-value]:hover {
+  filter: blur(0) !important;
+}
 
 /* ==========================================================================
    Client Portal Styles & Layout

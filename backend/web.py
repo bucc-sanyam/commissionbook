@@ -324,7 +324,7 @@ POPULAR_STOCKS = [
     "ONGC",
     "PAYTM", "PFC", "PIDILITIND", "PNB", "POWERGRID",
     "REC", "RELIANCE", "RVNL",
-    "SAIL", "SBC", "SBILIFE", "SBIN", "SHREECEM", "SIEMENS", "SUNPHARMA", "SUZLON",
+    "SAIL", "SBICARD", "SBILIFE", "SBIN", "SHREECEM", "SIEMENS", "SUNPHARMA", "SUZLON",
     "TATAMOTORS", "TATAPOWER", "TATASTEEL", "TCS", "TECHM", "TITAN", "TRENT",
     "ULTRACEMCO", "UPL",
     "VBL", "VEDL", "VOLTAS",
@@ -334,59 +334,71 @@ POPULAR_STOCKS = [
 ]
 
 
+def cleanup_stock_aliases_table(db):
+    """Ensure that only main canonical stock names stay in stock_aliases, removing old variant aliases and updating ledger/holdings."""
+    try:
+        ensure_stock_aliases_table(db)
+        rows = db.execute("SELECT DISTINCT canonical_name FROM stock_aliases WHERE canonical_name IS NOT NULL AND TRIM(canonical_name) != ''").fetchall()
+        for r in rows:
+            c = r["canonical_name"].strip().upper()
+            if c:
+                # Find all child aliases that are different from canonical
+                child_aliases = db.execute("SELECT alias FROM stock_aliases WHERE canonical_name=? AND UPPER(TRIM(alias)) != ?", (c, c)).fetchall()
+                for ca in child_aliases:
+                    alias_name = ca["alias"].strip().upper()
+                    if alias_name and alias_name != c:
+                        db.execute("UPDATE trades SET stock=? WHERE UPPER(TRIM(stock))=?", (c, alias_name))
+                        db.execute("UPDATE client_shares SET stock=? WHERE UPPER(TRIM(stock))=?", (c, alias_name))
+                        db.execute("UPDATE client_alerts SET stock=? WHERE UPPER(TRIM(stock))=?", (c, alias_name))
+                        try:
+                            db.execute("DELETE FROM stock_prices WHERE UPPER(TRIM(stock))=?", (alias_name,))
+                        except Exception:
+                            pass
+                # Delete all child alias rows so only the main name stays
+                db.execute("DELETE FROM stock_aliases WHERE canonical_name=? AND UPPER(TRIM(alias)) != ?", (c, c))
+                # Ensure main canonical name exists as (canonical, canonical)
+                db.execute(
+                    """INSERT INTO stock_aliases (canonical_name, alias) VALUES (?, ?)
+                       ON CONFLICT(alias) DO UPDATE SET canonical_name=excluded.canonical_name""",
+                    (c, c)
+                )
+    except Exception as exc:
+        current_app.logger.warning("cleanup_stock_aliases_table error: %s", exc)
+
+
 def get_stock_suggestions(db):
-    """Returns a list of deduplicated stock suggestion dicts."""
+    """Returns a list of deduplicated main stock suggestion dicts (only standard/main names)."""
     ensure_stock_aliases_table(db)
+    cleanup_stock_aliases_table(db)
     items_map = {}
 
-    # 1. Configured canonical stocks and aliases
+    # 1. Configured canonical stocks from stock_aliases
     try:
-        rows = db.execute("SELECT canonical_name, alias FROM stock_aliases ORDER BY canonical_name ASC, alias ASC").fetchall()
+        rows = db.execute("SELECT DISTINCT canonical_name FROM stock_aliases WHERE canonical_name IS NOT NULL AND TRIM(canonical_name) != '' ORDER BY canonical_name ASC").fetchall()
         for r in rows:
             c = (r["canonical_name"] or "").strip().upper()
-            a = (r["alias"] or "").strip().upper()
-            if c:
-                if c not in items_map:
-                    items_map[c] = {"symbol": c, "canonical": c, "is_alias": False}
-                if a and a != c:
-                    items_map[a] = {"symbol": a, "canonical": c, "is_alias": True}
+            if c and c not in items_map:
+                items_map[c] = {"symbol": c, "canonical": c}
     except Exception:
         pass
 
-    # 2. Distinct stocks from trades
-    try:
-        rows = db.execute("SELECT DISTINCT stock FROM trades WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
-        for r in rows:
-            s = r["stock"].strip().upper()
-            if s and s not in items_map:
-                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
-    except Exception:
-        pass
+    # 2. Distinct stocks from trades, client_shares, and stock_prices (resolved to their canonical/main name)
+    for table in ("trades", "client_shares", "stock_prices"):
+        try:
+            rows = db.execute(f"SELECT DISTINCT stock FROM {table} WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+            for r in rows:
+                raw_s = r["stock"].strip().upper()
+                canon = resolve_canonical_stock(db, raw_s) or raw_s
+                if canon and canon not in items_map:
+                    items_map[canon] = {"symbol": canon, "canonical": canon}
+        except Exception:
+            pass
 
-    # 3. Distinct stocks from client_shares
-    try:
-        rows = db.execute("SELECT DISTINCT stock FROM client_shares WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
-        for r in rows:
-            s = r["stock"].strip().upper()
-            if s and s not in items_map:
-                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
-    except Exception:
-        pass
-
-    # 4. Distinct stocks from stock_prices
-    try:
-        rows = db.execute("SELECT DISTINCT stock FROM stock_prices WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
-        for r in rows:
-            s = r["stock"].strip().upper()
-            if s and s not in items_map:
-                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
-    except Exception:
-        pass
-
-    # 5. Common market stocks
+    # 3. Common market stocks (resolved to canonical name)
     for sym in POPULAR_STOCKS:
-        if sym not in items_map:
-            items_map[sym] = {"symbol": sym, "canonical": sym, "is_alias": False}
+        canon = resolve_canonical_stock(db, sym) or sym
+        if canon not in items_map:
+            items_map[canon] = {"symbol": canon, "canonical": canon}
 
     return sorted(items_map.values(), key=lambda x: x["symbol"])
 
@@ -1508,18 +1520,7 @@ def create_app(config=None):
         except Exception:
             pass
 
-        # Upsert canonical_raw itself and all selected aliases into stock_aliases
-        for a in [canonical_raw] + alias_tokens:
-            try:
-                db.execute(
-                    """INSERT INTO stock_aliases (canonical_name, alias) VALUES (?, ?)
-                       ON CONFLICT(alias) DO UPDATE SET canonical_name=excluded.canonical_name""",
-                    (canonical_raw, a)
-                )
-            except Exception as exc:
-                current_app.logger.warning("Error saving stock alias %s -> %s: %s", a, canonical_raw, exc)
-
-        # Update all client portals: trades, client_shares, client_alerts, stock_prices
+        # Update all client portals: trades, client_shares, client_alerts, stock_prices to the main canonical name
         updated_trades = 0
         updated_shares = 0
         for a in alias_tokens:
@@ -1539,8 +1540,21 @@ def create_app(config=None):
             if hasattr(r2, "rowcount") and r2.rowcount:
                 updated_shares += r2.rowcount
 
+        # Remove all other aliases so only the main standard name stays in stock_aliases
+        try:
+            db.execute("DELETE FROM stock_aliases WHERE canonical_name=? AND UPPER(TRIM(alias)) != ?", (canonical_raw, canonical_raw))
+            for a in alias_tokens:
+                db.execute("DELETE FROM stock_aliases WHERE UPPER(TRIM(alias))=? AND UPPER(TRIM(canonical_name)) != ?", (a, canonical_raw))
+            db.execute(
+                """INSERT INTO stock_aliases (canonical_name, alias) VALUES (?, ?)
+                   ON CONFLICT(alias) DO UPDATE SET canonical_name=excluded.canonical_name""",
+                (canonical_raw, canonical_raw)
+            )
+        except Exception as exc:
+            current_app.logger.warning("Error saving stock alias: %s", exc)
+
         flash(
-            f"Configured standard term '{canonical_raw}' with {len(alias_tokens)} alias(es). Updated {updated_trades} trade(s) and {updated_shares} position(s) across all client portals.",
+            f"Configured main stock name '{canonical_raw}'. Updated {updated_trades} trade(s) and {updated_shares} position(s). All other aliases removed so only the main name stays.",
             "success"
         )
         return redirect(redirect_to)

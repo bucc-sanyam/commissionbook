@@ -24,17 +24,35 @@
     menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
   }
 
-  const privacyToggle = document.getElementById("privacy-toggle");
-  if (privacyToggle) {
-    const isPrivacy = localStorage.getItem("privacyMode") === "true";
+  function updatePrivacyMode(isPrivacy) {
     document.body.classList.toggle("privacy-mode", isPrivacy);
-    privacyToggle.setAttribute("aria-pressed", isPrivacy);
-    privacyToggle.addEventListener("click", () => {
-      const mode = document.body.classList.toggle("privacy-mode");
-      localStorage.setItem("privacyMode", mode);
-      privacyToggle.setAttribute("aria-pressed", mode);
-    });
+    const adminToggle = document.getElementById("privacy-toggle");
+    if (adminToggle) {
+      adminToggle.setAttribute("aria-pressed", isPrivacy);
+    }
+    const clientToggle = document.getElementById("client-privacy-toggle");
+    if (clientToggle) {
+      clientToggle.setAttribute("aria-pressed", isPrivacy);
+      const iconOff = clientToggle.querySelector(".privacy-icon-off");
+      const iconOn = clientToggle.querySelector(".privacy-icon-on");
+      const label = clientToggle.querySelector(".privacy-label");
+      if (iconOff) iconOff.style.display = isPrivacy ? "none" : "inline-flex";
+      if (iconOn) iconOn.style.display = isPrivacy ? "inline-flex" : "none";
+      if (label) label.textContent = isPrivacy ? "Show values" : "Hide values";
+    }
   }
+
+  const initialPrivacy = localStorage.getItem("privacyMode") === "true";
+  updatePrivacyMode(initialPrivacy);
+
+  function togglePrivacy() {
+    const next = !document.body.classList.contains("privacy-mode");
+    localStorage.setItem("privacyMode", next);
+    updatePrivacyMode(next);
+  }
+
+  document.getElementById("privacy-toggle")?.addEventListener("click", togglePrivacy);
+  document.getElementById("client-privacy-toggle")?.addEventListener("click", togglePrivacy);
   menu?.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
   scrim?.addEventListener("click", () => setMenu(false));
   document.addEventListener("keydown", (event) => {
@@ -390,7 +408,7 @@
           row.className = "stock-autocomplete-item";
           row.dataset.index = index;
 
-          const sym = item.symbol;
+          const sym = item.canonical || item.symbol;
           const qUpper = query.toUpperCase();
           const matchIdx = sym.toUpperCase().indexOf(qUpper);
 
@@ -406,14 +424,6 @@
           symSpan.className = "stock-sym-label";
           symSpan.innerHTML = symHtml;
           row.appendChild(symSpan);
-
-          if (item.is_alias && item.canonical) {
-            const aliasBadge = document.createElement("span");
-            aliasBadge.className = "stock-alias-badge";
-            aliasBadge.innerHTML = `&rarr; ${item.canonical}`;
-            aliasBadge.title = `Standardized to ${item.canonical}`;
-            row.appendChild(aliasBadge);
-          }
 
           row.addEventListener("pointerdown", (e) => {
             e.preventDefault();
@@ -460,14 +470,21 @@
 
         const startsWithMatches = [];
         const containsMatches = [];
+        const seenSymbols = new Set();
 
         allList.forEach((item) => {
+          const mainSym = (item.canonical || item.symbol || "").toUpperCase();
+          if (!mainSym || seenSymbols.has(mainSym)) return;
+
           const sym = (item.symbol || "").toUpperCase();
           const canon = (item.canonical || "").toUpperCase();
-          if (sym.startsWith(query)) {
-            startsWithMatches.push(item);
-          } else if (sym.includes(query) || canon.includes(query)) {
-            containsMatches.push(item);
+
+          if (mainSym.startsWith(query) || sym.startsWith(query)) {
+            seenSymbols.add(mainSym);
+            startsWithMatches.push({ symbol: mainSym, canonical: mainSym });
+          } else if (mainSym.includes(query) || canon.includes(query) || sym.includes(query)) {
+            seenSymbols.add(mainSym);
+            containsMatches.push({ symbol: mainSym, canonical: mainSym });
           }
         });
 
