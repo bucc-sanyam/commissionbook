@@ -6,6 +6,7 @@ import os
 import re
 import secrets
 import sqlite3
+import threading
 import time
 import urllib.request
 import urllib.parse
@@ -177,7 +178,19 @@ def effective_rule(client):
     return ctype, dec(rate if rate is not None else setting("default_commission_rate", "10"))
 
 
+_stock_aliases_ensured = False
+_stock_aliases_cache = None  # in-memory dict: UPPER(alias) -> UPPER(canonical)
+_stock_aliases_lock = threading.Lock()
+_stock_suggestions_cache = None
+_stock_suggestions_time = 0
+_stock_suggestions_ttl = 60  # seconds
+_client_phones_cleaned = False
+
+
 def ensure_stock_aliases_table(db):
+    global _stock_aliases_ensured
+    if _stock_aliases_ensured:
+        return
     try:
         if getattr(db, "postgres", False):
             db.execute("""
@@ -201,25 +214,49 @@ def ensure_stock_aliases_table(db):
             """)
             db.execute("CREATE INDEX IF NOT EXISTS idx_stock_aliases_canonical ON stock_aliases(canonical_name)")
             db.execute("CREATE INDEX IF NOT EXISTS idx_stock_aliases_alias ON stock_aliases(alias)")
+        _stock_aliases_ensured = True
     except Exception as exc:
         current_app.logger.warning("ensure_stock_aliases_table: %s", exc)
+
+
+def invalidate_stock_caches():
+    global _stock_aliases_cache, _stock_suggestions_cache, _stock_suggestions_time
+    with _stock_aliases_lock:
+        _stock_aliases_cache = None
+        _stock_suggestions_cache = None
+        _stock_suggestions_time = 0
+
+
+def get_alias_mapping(db):
+    global _stock_aliases_cache
+    if _stock_aliases_cache is not None:
+        return _stock_aliases_cache
+    with _stock_aliases_lock:
+        if _stock_aliases_cache is not None:
+            return _stock_aliases_cache
+        ensure_stock_aliases_table(db)
+        mapping = {}
+        try:
+            rows = db.execute("SELECT canonical_name, alias FROM stock_aliases").fetchall()
+            for r in rows:
+                c = (r["canonical_name"] or "").strip().upper()
+                a = (r["alias"] or "").strip().upper()
+                if c:
+                    mapping[c] = c
+                if a and c:
+                    mapping[a] = c
+        except Exception:
+            pass
+        _stock_aliases_cache = mapping
+        return _stock_aliases_cache
 
 
 def resolve_canonical_stock(db, raw_stock):
     if not raw_stock:
         return raw_stock
     cleaned = raw_stock.strip().upper()
-    try:
-        ensure_stock_aliases_table(db)
-        row = db.execute(
-            "SELECT canonical_name FROM stock_aliases WHERE UPPER(TRIM(alias)) = ? OR UPPER(TRIM(canonical_name)) = ? LIMIT 1",
-            (cleaned, cleaned),
-        ).fetchone()
-        if row and row.get("canonical_name"):
-            return row["canonical_name"].strip().upper()
-    except Exception:
-        pass
-    return cleaned
+    mapping = get_alias_mapping(db)
+    return mapping.get(cleaned, cleaned)
 
 
 def get_known_stocks(db):
@@ -362,14 +399,19 @@ def cleanup_stock_aliases_table(db):
                        ON CONFLICT(alias) DO UPDATE SET canonical_name=excluded.canonical_name""",
                     (c, c)
                 )
+        invalidate_stock_caches()
     except Exception as exc:
         current_app.logger.warning("cleanup_stock_aliases_table error: %s", exc)
 
 
 def get_stock_suggestions(db):
-    """Returns a list of deduplicated main stock suggestion dicts (only standard/main names)."""
-    ensure_stock_aliases_table(db)
-    cleanup_stock_aliases_table(db)
+    """Returns a list of deduplicated main stock suggestion dicts (cached in memory for speed)."""
+    global _stock_suggestions_cache, _stock_suggestions_time
+    now = time.time()
+    if _stock_suggestions_cache is not None and (now - _stock_suggestions_time < _stock_suggestions_ttl):
+        return _stock_suggestions_cache
+
+    alias_map = get_alias_mapping(db)
     items_map = {}
 
     # 1. Configured canonical stocks from stock_aliases
@@ -382,25 +424,28 @@ def get_stock_suggestions(db):
     except Exception:
         pass
 
-    # 2. Distinct stocks from trades, client_shares, and stock_prices (resolved to their canonical/main name)
+    # 2. Distinct stocks from trades, client_shares, and stock_prices (resolved to their canonical/main name in memory)
     for table in ("trades", "client_shares", "stock_prices"):
         try:
             rows = db.execute(f"SELECT DISTINCT stock FROM {table} WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
             for r in rows:
-                raw_s = r["stock"].strip().upper()
-                canon = resolve_canonical_stock(db, raw_s) or raw_s
+                raw_s = (r["stock"] or "").strip().upper()
+                canon = alias_map.get(raw_s, raw_s)
                 if canon and canon not in items_map:
                     items_map[canon] = {"symbol": canon, "canonical": canon}
         except Exception:
             pass
 
-    # 3. Common market stocks (resolved to canonical name)
+    # 3. Common market stocks (resolved to canonical name in memory)
     for sym in POPULAR_STOCKS:
-        canon = resolve_canonical_stock(db, sym) or sym
+        canon = alias_map.get(sym, sym)
         if canon not in items_map:
             items_map[canon] = {"symbol": canon, "canonical": canon}
 
-    return sorted(items_map.values(), key=lambda x: x["symbol"])
+    res = sorted(items_map.values(), key=lambda x: x["symbol"])
+    _stock_suggestions_cache = res
+    _stock_suggestions_time = now
+    return res
 
 
 def clean_phone_number(raw_phone):
@@ -711,22 +756,27 @@ def sync_trade_profits_to_funds(db, cid=None):
             f"SELECT id, client_id, stock, quantity, buy_price, sell_price, sell_date, created_at FROM trades {where_clause}",
             params
         ).fetchall()
+        if not closed_trades:
+            return
+
+        funds_params = [cid] if cid else []
+        funds_sql = "SELECT notes FROM funds WHERE notes LIKE '%[Trade #%'" + (" AND client_id=?" if cid else "")
+        existing_notes_rows = db.execute(funds_sql, funds_params).fetchall()
+        existing_notes_text = " ".join([r["notes"] or "" for r in existing_notes_rows])
+
         for t in closed_trades:
             pnl = ((dec(t["sell_price"]) - dec(t["buy_price"])) * dec(t["quantity"])).quantize(CENT, rounding=ROUND_HALF_UP)
             if pnl == ZERO:
                 continue
             tag = f"[Trade #{t['id']}]"
-            existing = db.execute(
-                "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
-                (t["client_id"], f"%{tag}%")
-            ).fetchone()
-            if not existing:
+            if tag not in existing_notes_text:
                 note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {t['stock']} ({t['quantity']} sh) {tag}"
                 date_val = t["sell_date"] or str(t["created_at"])[:10] or date.today().isoformat()
                 db.execute(
                     "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
                     (t["client_id"], pnl, date_val, note)
                 )
+                existing_notes_text += " " + note
     except Exception as exc:
         current_app.logger.warning("sync_trade_profits_to_funds error: %s", exc)
 
@@ -970,7 +1020,6 @@ def create_app(config=None):
         error = g.get("error_response", False)
         try:
             db = get_db()
-            cleanup_existing_client_phones(db)
             stock_suggestions = get_stock_suggestions(db) if not error else []
             known_stocks_list = get_known_stocks(db) if not error else []
         except Exception:
@@ -1553,6 +1602,7 @@ def create_app(config=None):
         except Exception as exc:
             current_app.logger.warning("Error saving stock alias: %s", exc)
 
+        invalidate_stock_caches()
         flash(
             f"Configured main stock name '{canonical_raw}'. Updated {updated_trades} trade(s) and {updated_shares} position(s). All other aliases removed so only the main name stays.",
             "success"
@@ -1571,9 +1621,11 @@ def create_app(config=None):
 
         if alias_to_delete:
             db.execute("DELETE FROM stock_aliases WHERE UPPER(TRIM(alias))=?", (alias_to_delete,))
+            invalidate_stock_caches()
             flash(f"Alias '{alias_to_delete}' removed.", "success")
         elif canonical_to_delete:
             db.execute("DELETE FROM stock_aliases WHERE UPPER(TRIM(canonical_name))=?", (canonical_to_delete,))
+            invalidate_stock_caches()
             flash(f"Stock mapping for '{canonical_to_delete}' removed.", "success")
 
         return redirect(redirect_to)
