@@ -109,7 +109,7 @@
         <form action="{{ url_for('public_upload', token=public_token) }}" method="GET" id="proof-form">
           <label class="field" for="quick-phone">
             Your registered phone number
-            <input id="quick-phone" name="phone" type="tel" required placeholder="Enter mobile number" autocomplete="tel">
+            <input id="quick-phone" name="phone" type="tel" required placeholder="10-digit mobile number, e.g. 9876543210" autocomplete="tel">
           </label>
           <button type="submit" class="btn btn-primary btn-wide">
             Proceed to Upload Proof {{ icon('arrow-right', 16) }}

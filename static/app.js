@@ -57,7 +57,11 @@
 
   function showDialog(id) {
     const dialog = document.getElementById(id);
-    if (dialog instanceof HTMLDialogElement && !dialog.open) dialog.showModal();
+    if (dialog instanceof HTMLDialogElement && !dialog.open) {
+      dialog.showModal();
+      if (typeof initStockAutocomplete === "function") initStockAutocomplete();
+      if (typeof initPhoneInputs === "function") initPhoneInputs();
+    }
   }
   document.querySelectorAll("[data-dialog]").forEach((button) => {
     button.addEventListener("click", () => showDialog(button.dataset.dialog));
@@ -266,8 +270,266 @@
     validate();
   });
 
+  // -------------------------------------------------------------
+  // Phone Number Sanitization (+91 removal, strictly 10 digits)
+  // -------------------------------------------------------------
+  function cleanPhoneNumberValue(val) {
+    if (!val) return "";
+    let s = String(val).trim();
+    if (s.startsWith("+91")) {
+      s = s.slice(3);
+    } else if (s.startsWith("+")) {
+      s = s.slice(1);
+    }
+    let digits = s.replace(/\D/g, "");
+    if (digits.startsWith("91") && digits.length > 10) {
+      digits = digits.slice(2);
+    }
+    while (digits.startsWith("0") && digits.length > 10) {
+      digits = digits.slice(1);
+    }
+    if (digits.length > 10) {
+      digits = digits.slice(-10);
+    }
+    return digits;
+  }
+
+  function initPhoneInputs() {
+    const phoneSelectors = 'input[type="tel"], input[name="phone"], #phone, #quick-phone';
+    document.querySelectorAll(phoneSelectors).forEach((input) => {
+      if (input.dataset.phoneSanitized === "true") return;
+      input.dataset.phoneSanitized = "true";
+
+      const sanitize = () => {
+        const orig = input.value;
+        const cleaned = cleanPhoneNumberValue(orig);
+        if (orig !== cleaned) {
+          input.value = cleaned;
+        }
+      };
+
+      input.addEventListener("input", sanitize);
+      input.addEventListener("paste", () => setTimeout(sanitize, 10));
+      input.addEventListener("blur", sanitize);
+
+      // Initial check if prefilled
+      if (input.value) sanitize();
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Stock Autocomplete (Starts showing suggestions after 1 letter)
+  // -------------------------------------------------------------
+  let cachedStockSuggestions = window.__STOCK_SUGGESTIONS__ || [];
+
+  async function loadStockSuggestions() {
+    if (Array.isArray(cachedStockSuggestions) && cachedStockSuggestions.length > 0) {
+      return cachedStockSuggestions;
+    }
+    try {
+      const res = await fetch("/api/stocks/suggestions");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          cachedStockSuggestions = data;
+          window.__STOCK_SUGGESTIONS__ = data;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch stock suggestions:", e);
+    }
+    return cachedStockSuggestions || [];
+  }
+
+  function initStockAutocomplete() {
+    const targets = document.querySelectorAll(
+      'input.stock-autocomplete-input, input[name="stock"], #trade-stock-input, #popup-trade-stock-input'
+    );
+
+    targets.forEach((input) => {
+      if (input.dataset.stockAutocompleteActive === "true") return;
+      input.dataset.stockAutocompleteActive = "true";
+
+      input.setAttribute("autocomplete", "off");
+      input.setAttribute("autocorrect", "off");
+      input.setAttribute("spellcheck", "false");
+
+      let wrapper = input.parentElement;
+      if (!wrapper || !wrapper.classList.contains("stock-autocomplete-wrapper")) {
+        const wrap = document.createElement("div");
+        wrap.className = "stock-autocomplete-wrapper";
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        wrapper = wrap;
+      }
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "stock-autocomplete-dropdown";
+      dropdown.hidden = true;
+      wrapper.appendChild(dropdown);
+
+      let filteredItems = [];
+      let selectedIndex = -1;
+
+      function renderDropdown(items, query) {
+        filteredItems = items;
+        selectedIndex = -1;
+        dropdown.innerHTML = "";
+
+        if (!items || items.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "stock-autocomplete-empty";
+          empty.textContent = `No stocks matching "${query}"`;
+          dropdown.appendChild(empty);
+          dropdown.hidden = false;
+          return;
+        }
+
+        items.forEach((item, index) => {
+          const row = document.createElement("div");
+          row.className = "stock-autocomplete-item";
+          row.dataset.index = index;
+
+          const sym = item.symbol;
+          const qUpper = query.toUpperCase();
+          const matchIdx = sym.toUpperCase().indexOf(qUpper);
+
+          let symHtml = sym;
+          if (matchIdx !== -1) {
+            const before = sym.slice(0, matchIdx);
+            const match = sym.slice(matchIdx, matchIdx + qUpper.length);
+            const after = sym.slice(matchIdx + qUpper.length);
+            symHtml = `${before}<span class="stock-match-highlight">${match}</span>${after}`;
+          }
+
+          const symSpan = document.createElement("span");
+          symSpan.className = "stock-sym-label";
+          symSpan.innerHTML = symHtml;
+          row.appendChild(symSpan);
+
+          if (item.is_alias && item.canonical) {
+            const aliasBadge = document.createElement("span");
+            aliasBadge.className = "stock-alias-badge";
+            aliasBadge.innerHTML = `&rarr; ${item.canonical}`;
+            aliasBadge.title = `Standardized to ${item.canonical}`;
+            row.appendChild(aliasBadge);
+          }
+
+          row.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            selectItem(item);
+          });
+
+          dropdown.appendChild(row);
+        });
+
+        dropdown.hidden = false;
+      }
+
+      function selectItem(item) {
+        const targetVal = item.canonical || item.symbol;
+        input.value = targetVal;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        dropdown.hidden = true;
+        selectedIndex = -1;
+      }
+
+      function updateActiveItem() {
+        const rows = dropdown.querySelectorAll(".stock-autocomplete-item");
+        rows.forEach((r, idx) => {
+          if (idx === selectedIndex) {
+            r.classList.add("is-selected");
+            r.scrollIntoView({ block: "nearest" });
+          } else {
+            r.classList.remove("is-selected");
+          }
+        });
+      }
+
+      async function handleInput() {
+        const query = input.value.trim().toUpperCase();
+        if (!query || query.length < 1) {
+          dropdown.hidden = true;
+          filteredItems = [];
+          selectedIndex = -1;
+          return;
+        }
+
+        const allList = await loadStockSuggestions();
+
+        const startsWithMatches = [];
+        const containsMatches = [];
+
+        allList.forEach((item) => {
+          const sym = (item.symbol || "").toUpperCase();
+          const canon = (item.canonical || "").toUpperCase();
+          if (sym.startsWith(query)) {
+            startsWithMatches.push(item);
+          } else if (sym.includes(query) || canon.includes(query)) {
+            containsMatches.push(item);
+          }
+        });
+
+        const combined = [...startsWithMatches, ...containsMatches].slice(0, 16);
+        renderDropdown(combined, query);
+      }
+
+      input.addEventListener("input", handleInput);
+      input.addEventListener("focus", () => {
+        if (input.value.trim().length >= 1) {
+          handleInput();
+        }
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (dropdown.hidden) {
+          if (e.key === "ArrowDown" && input.value.trim().length >= 1) {
+            e.preventDefault();
+            handleInput();
+          }
+          return;
+        }
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (filteredItems.length > 0) {
+            selectedIndex = (selectedIndex + 1) % filteredItems.length;
+            updateActiveItem();
+          }
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (filteredItems.length > 0) {
+            selectedIndex = (selectedIndex - 1 + filteredItems.length) % filteredItems.length;
+            updateActiveItem();
+          }
+        } else if (e.key === "Enter" || e.key === "Tab") {
+          if (selectedIndex >= 0 && selectedIndex < filteredItems.length) {
+            e.preventDefault();
+            selectItem(filteredItems[selectedIndex]);
+          }
+        } else if (e.key === "Escape") {
+          dropdown.hidden = true;
+          selectedIndex = -1;
+        }
+      });
+
+      document.addEventListener("pointerdown", (e) => {
+        if (!wrapper.contains(e.target)) {
+          dropdown.hidden = true;
+          selectedIndex = -1;
+        }
+      });
+    });
+  }
+
   const autoDialog = document.querySelector("[data-auto-open='true']");
   if (autoDialog) showDialog(autoDialog.id);
+
+  initStockAutocomplete();
+  initPhoneInputs();
+  window.initStockAutocomplete = initStockAutocomplete;
+  window.initPhoneInputs = initPhoneInputs;
 })();
 
 // Cryptographically Strong Password Generator

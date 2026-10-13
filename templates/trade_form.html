@@ -12,7 +12,7 @@
     <div class="form-section-heading"><span class="section-number">01</span><div><h2>The essentials</h2><p>Who made the trade, and what did they buy?</p></div></div>
     <div class="form-grid">
       <label class="field">Client name<input name="client_name" list="clientList" required maxlength="120" autocomplete="off" value="{{ trade.client_name if trade else preset_client }}" placeholder="Choose or add a client"><datalist id="clientList">{% for c in clients %}<option value="{{ c.name }}">{% endfor %}</datalist><span class="field-hint">New names create a client automatically.</span></label>
-      <label class="field">Stock name or symbol<input name="stock" required maxlength="120" value="{{ trade.stock if trade else '' }}" placeholder="e.g. RELIANCE" autocomplete="off"></label>
+      <label class="field">Stock name or symbol<input name="stock" class="stock-autocomplete-input" required maxlength="120" value="{{ trade.stock if trade else '' }}" placeholder="e.g. RELIANCE, TCS, SBC" autocomplete="off" style="text-transform: uppercase;"></label>
       <label class="field">Quantity<input name="quantity" type="number" step="any" min="0.000001" required value="{{ trade.quantity if trade else '' }}" placeholder="Number of shares" inputmode="decimal"></label>
     </div>
   </section>

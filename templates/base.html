@@ -25,6 +25,9 @@
   <link rel="preload" href="{{ url_for('static', filename='fonts/dm-sans-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    window.__STOCK_SUGGESTIONS__ = {{ (all_stock_suggestions | default([])) | tojson }};
+  </script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
   {% block head %}{% endblock %}
 </head>
@@ -111,7 +114,7 @@
 
       <label class="field">
         Stock Symbol
-        <input name="stock" id="popup-trade-stock-input" required placeholder="e.g. RELIANCE, INFY" autocomplete="off" style="text-transform: uppercase; font-weight: 700;">
+        <input name="stock" id="popup-trade-stock-input" class="stock-autocomplete-input" required placeholder="e.g. RELIANCE, INFY" autocomplete="off" style="text-transform: uppercase; font-weight: 700;">
       </label>
     </div>
 

@@ -306,6 +306,124 @@ def get_client_entered_stocks(db):
     return stocks_list
 
 
+POPULAR_STOCKS = [
+    "ADANIENT", "ADANIPORTS", "ADANIGREEN", "ADANIPOWER", "APOLLOHOSP", "ASIANPAINT", "AXISBANK",
+    "BAJAJ-AUTO", "BAJAJFINSV", "BAJFINANCE", "BEL", "BHEL", "BHARTIARTL", "BPCL",
+    "CIPLA", "COALINDIA", "CHOLAFIN",
+    "DABUR", "DIVISLAB", "DLF", "DRREDDY",
+    "EICHERMOT",
+    "FEDERALBNK",
+    "GAIL", "GODREJCP", "GRASIM",
+    "HAL", "HAVELLS", "HCLTECH", "HDFCBANK", "HDFCLIFE", "HEROMOTOCO", "HINDALCO", "HINDUNILVR",
+    "ICICIBANK", "IDEA", "INDIGO", "INDUSINDBK", "INFY", "IOC", "IRFC", "ITC",
+    "JINDALSTEL", "JIOFIN", "JSWSTEEL",
+    "KOTAKBANK", "KPITTECH",
+    "LT", "LTIM",
+    "M&M", "MARUTI", "MOTHERSON",
+    "NAUKRI", "NESTLEIND", "NHPC", "NTPC",
+    "ONGC",
+    "PAYTM", "PFC", "PIDILITIND", "PNB", "POWERGRID",
+    "REC", "RELIANCE", "RVNL",
+    "SAIL", "SBC", "SBILIFE", "SBIN", "SHREECEM", "SIEMENS", "SUNPHARMA", "SUZLON",
+    "TATAMOTORS", "TATAPOWER", "TATASTEEL", "TCS", "TECHM", "TITAN", "TRENT",
+    "ULTRACEMCO", "UPL",
+    "VBL", "VEDL", "VOLTAS",
+    "WIPRO",
+    "YESBANK",
+    "ZEEL", "ZOMATO"
+]
+
+
+def get_stock_suggestions(db):
+    """Returns a list of deduplicated stock suggestion dicts."""
+    ensure_stock_aliases_table(db)
+    items_map = {}
+
+    # 1. Configured canonical stocks and aliases
+    try:
+        rows = db.execute("SELECT canonical_name, alias FROM stock_aliases ORDER BY canonical_name ASC, alias ASC").fetchall()
+        for r in rows:
+            c = (r["canonical_name"] or "").strip().upper()
+            a = (r["alias"] or "").strip().upper()
+            if c:
+                if c not in items_map:
+                    items_map[c] = {"symbol": c, "canonical": c, "is_alias": False}
+                if a and a != c:
+                    items_map[a] = {"symbol": a, "canonical": c, "is_alias": True}
+    except Exception:
+        pass
+
+    # 2. Distinct stocks from trades
+    try:
+        rows = db.execute("SELECT DISTINCT stock FROM trades WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in rows:
+            s = r["stock"].strip().upper()
+            if s and s not in items_map:
+                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
+    except Exception:
+        pass
+
+    # 3. Distinct stocks from client_shares
+    try:
+        rows = db.execute("SELECT DISTINCT stock FROM client_shares WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in rows:
+            s = r["stock"].strip().upper()
+            if s and s not in items_map:
+                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
+    except Exception:
+        pass
+
+    # 4. Distinct stocks from stock_prices
+    try:
+        rows = db.execute("SELECT DISTINCT stock FROM stock_prices WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in rows:
+            s = r["stock"].strip().upper()
+            if s and s not in items_map:
+                items_map[s] = {"symbol": s, "canonical": resolve_canonical_stock(db, s), "is_alias": False}
+    except Exception:
+        pass
+
+    # 5. Common market stocks
+    for sym in POPULAR_STOCKS:
+        if sym not in items_map:
+            items_map[sym] = {"symbol": sym, "canonical": sym, "is_alias": False}
+
+    return sorted(items_map.values(), key=lambda x: x["symbol"])
+
+
+def clean_phone_number(raw_phone):
+    """Strip any +91, 91, or 0 country codes and keep only the 10-digit mobile number."""
+    if not raw_phone:
+        return ""
+    s = str(raw_phone).strip()
+    if s.startswith("+91"):
+        s = s[3:]
+    elif s.startswith("+"):
+        s = s[1:]
+    digits = re.sub(r"\D", "", s)
+    if digits.startswith("91") and len(digits) > 10:
+        digits = digits[2:]
+    while digits.startswith("0") and len(digits) > 10:
+        digits = digits[1:]
+    if len(digits) > 10:
+        digits = digits[-10:]
+    return digits
+
+
+def cleanup_existing_client_phones(db):
+    """Ensure any client phones with +91 prefixes in SQLite/Supabase are normalized to 10 digits."""
+    try:
+        rows = db.execute("SELECT id, phone FROM clients WHERE phone IS NOT NULL AND phone != ''").fetchall()
+        for r in rows:
+            clean = clean_phone_number(r["phone"])
+            if clean and clean != r["phone"]:
+                conflict = db.execute("SELECT id FROM clients WHERE phone=? AND id!=?", (clean, r["id"])).fetchone()
+                if not conflict:
+                    db.execute("UPDATE clients SET phone=? WHERE id=?", (clean, r["id"]))
+    except Exception:
+        pass
+
+
 def get_client(cid):
     client = get_db().execute("SELECT * FROM clients WHERE id=?", (cid,)).fetchone()
     if not client:
@@ -317,15 +435,16 @@ def get_or_create_client(name, phone=None):
     name = client_name(name)
     database = get_db()
     if phone:
-        phone = text(phone, "Phone", limit=80)
-        row = database.execute("SELECT id FROM clients WHERE phone=?", (phone,)).fetchone()
-        if row:
-            return row["id"]
-        row = database.execute(
-            "INSERT INTO clients(name, phone) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING id", (name, phone)
-        ).fetchone()
-        if row:
-            return row["id"]
+        phone = clean_phone_number(phone)
+        if phone:
+            row = database.execute("SELECT id FROM clients WHERE phone=?", (phone,)).fetchone()
+            if row:
+                return row["id"]
+            row = database.execute(
+                "INSERT INTO clients(name, phone) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING id", (name, phone)
+            ).fetchone()
+            if row:
+                return row["id"]
 
     row = database.execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (name,)).fetchone()
     if row:
@@ -612,9 +731,10 @@ def rule_label(ctype, rate):
 
 def client_values(values, name):
     ctype, rate = rule_values(values.get("commission_type"), values.get("commission_rate"), allow_default=True)
-    phone = text(values.get("phone"), "Phone", limit=80)
-    if not phone:
-        raise ValidationError("Phone number is required.")
+    raw_phone = values.get("phone")
+    phone = clean_phone_number(raw_phone)
+    if not phone or len(phone) != 10:
+        raise ValidationError("Please provide a valid 10-digit mobile number.")
     return (
         name, phone,
         text(values.get("email"), "Email", limit=254) or None, ctype, rate,
@@ -836,6 +956,14 @@ def create_app(config=None):
     @app.context_processor
     def inject_globals():
         error = g.get("error_response", False)
+        try:
+            db = get_db()
+            cleanup_existing_client_phones(db)
+            stock_suggestions = get_stock_suggestions(db) if not error else []
+            known_stocks_list = get_known_stocks(db) if not error else []
+        except Exception:
+            stock_suggestions = []
+            known_stocks_list = []
         return {
             "COMMISSION_TYPES": COMMISSION_TYPES, "logged_in": bool(session.get("admin")),
             "is_admin": bool(session.get("admin")),
@@ -851,6 +979,8 @@ def create_app(config=None):
             "admin_password_managed": bool(app.config["ADMIN_PASSWORD_HASH"]),
             "commission_policy": "snapshot",
             "upload_url": portal_url() if session.get("admin") and not error else None,
+            "all_stock_suggestions": stock_suggestions,
+            "known_stocks": known_stocks_list,
         }
 
     def error_response(status, title, message):
@@ -909,15 +1039,16 @@ def create_app(config=None):
             if login_type == "client":
                 identifier = request.form.get("identifier", "").strip()
                 clean_ident = identifier.lstrip("@").strip()
+                clean_phone = clean_phone_number(identifier)
                 password = request.form.get("client_password", "")
                 if not identifier or not password:
                     flash("Please provide your ID/phone and password.", "error")
                     return render_template("login.html", first_run=first_run, active_tab="client", public_token=portal_token()), 400
                 client = get_db().execute(
                     """SELECT * FROM clients 
-                    WHERE (lower(phone)=lower(?) OR lower(phone)=lower(?) OR lower(email)=lower(?) OR lower(username)=lower(?) OR lower(username)=lower(?) OR lower(name)=lower(?) OR CAST(id AS TEXT)=?) 
+                    WHERE (phone=? OR phone=? OR lower(phone)=lower(?) OR lower(email)=lower(?) OR lower(username)=lower(?) OR lower(username)=lower(?) OR lower(name)=lower(?) OR CAST(id AS TEXT)=?) 
                       AND active=1""",
-                    (identifier, clean_ident, identifier, identifier, clean_ident, identifier, identifier),
+                    (identifier, clean_phone, identifier, identifier, identifier, clean_ident, identifier, identifier),
                 ).fetchone()
                 if not client or not client.get("password_hash"):
                     flash("Invalid credentials or client password has not been configured yet.", "error")
@@ -2007,9 +2138,10 @@ def create_app(config=None):
         data = json_object()
         authorization = authorize_upload(data)
         name = client_name(data.get("name"))
-        phone = data.get("phone")
-        if not phone:
-            raise ValidationError("Phone number is required.")
+        raw_phone = data.get("phone")
+        phone = clean_phone_number(raw_phone)
+        if not phone or len(phone) != 10:
+            raise ValidationError("Please provide a valid 10-digit mobile number.")
         submission_id = submission_uuid(data.get("submission_id"))
         rows = data.get("rows")
         if not isinstance(rows, list) or not 1 <= len(rows) <= MAX_ROWS:
@@ -2556,6 +2688,10 @@ def create_app(config=None):
             (aid, cid),
         )
         return jsonify(success=True, acknowledged=True)
+
+    @app.route("/api/stocks/suggestions", methods=["GET"])
+    def api_stock_suggestions():
+        return jsonify(get_stock_suggestions(get_db()))
 
     @app.route("/alerts", methods=["GET"])
     @login_required
