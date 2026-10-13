@@ -184,7 +184,7 @@
                   {% endif %}
                 </div>
               </td>
-              <td class="r tabular"><strong>{{ h.quantity|num if h.quantity else '—' }}</strong></td>
+              <td class="r tabular"><strong>{{ (h.quantity|int) if h.quantity else '—' }}</strong></td>
               <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if h.cmp %}
@@ -226,7 +226,7 @@
                 {% endif %}
               </div>
               <div class="mts-dates">
-                <span class="tabular">{{ h.quantity|num if h.quantity else '—' }} shares</span> &bull; Added {{ h.added_on[:10] }}
+                <span class="tabular">{{ (h.quantity|int) if h.quantity else '—' }} shares</span> &bull; Added {{ h.added_on[:10] }}
               </div>
             </div>
             <div class="mts-right">
@@ -241,7 +241,7 @@
             <div class="mtd-grid">
               <div class="mtd-item">
                 <span class="mtd-label">Quantity</span>
-                <strong class="mtd-val">{{ h.quantity|num if h.quantity else '—' }} shares</strong>
+                <strong class="mtd-val">{{ (h.quantity|int) if h.quantity else '—' }} shares</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Avg Buy Price</span>
@@ -309,15 +309,13 @@
             {% for t in trades %}
             <tr>
               <td><strong>{{ t.stock }}</strong></td>
-              <td class="r tabular">{{ t.quantity }}</td>
+              <td class="r tabular">{{ (t.quantity|int) if t.quantity else '—' }}</td>
               <td class="r tabular">{{ t.buy_price|money if t.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if t.sell_price %}
                   {{ t.sell_price|money }}
                 {% else %}
-                  <button type="button" class="btn btn-ghost btn-xs" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}', '{{ t.id }}')" style="font-size: 11px; padding: 2px 7px; border: 1px solid #c6e7cf; color: #167e45; border-radius: 6px; background: #f0faf2; font-weight: 600;" title="Click to complete this trade">
-                    Open &bull; Complete
-                  </button>
+                  <span style="color: #b7791f; font-weight: 600;">Open</span>
                 {% endif %}
               </td>
               <td class="r tabular {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
@@ -363,7 +361,7 @@
               {% else %}
                 <div class="mts-pnl muted">
                   <strong>Open</strong>
-                  <small class="tabular">{{ t.quantity }} shares</small>
+                  <small class="tabular">{{ (t.quantity|int) if t.quantity else '—' }} shares</small>
                 </div>
               {% endif %}
               <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
@@ -373,7 +371,7 @@
             <div class="mtd-grid">
               <div class="mtd-item">
                 <span class="mtd-label">Quantity</span>
-                <strong class="mtd-val">{{ t.quantity|num if t.quantity else '—' }} shares</strong>
+                <strong class="mtd-val">{{ (t.quantity|int) if t.quantity else '—' }} shares</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Buy Price</span>
@@ -404,14 +402,6 @@
                 <strong class="mtd-val">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}</strong>
               </div>
             </div>
-
-            {% if t.status != 'Closed' %}
-            <div style="margin-top: 10px;">
-              <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal('{{ t.stock }}', '{{ t.quantity }}', '{{ t.buy_price or '' }}', '{{ t.buy_date or '' }}', '{{ t.id }}')" style="width: 100%; justify-content: center; font-size: 12px;">
-                {{ icon('check', 14) }} Complete Open Trade
-              </button>
-            </div>
-            {% endif %}
 
             {% if t.upload_filename %}
             <div class="mtd-proof">
@@ -469,7 +459,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label class="field" for="trade-qty-input" style="margin-bottom: 0;">
           <span class="field-title">Quantity <span class="field-req">*</span></span>
-          <input id="trade-qty-input" type="number" name="quantity" step="any" min="0.0001" required inputmode="decimal" placeholder="Shares count">
+          <input id="trade-qty-input" type="number" name="quantity" step="1" min="1" required inputmode="numeric" placeholder="Shares count">
         </label>
         <label class="field" for="trade-notes" style="margin-bottom: 0;">
           <span class="field-title">Notes <span class="optional">(Optional)</span></span>
@@ -863,34 +853,22 @@
     if (imgEl) imgEl.src = '';
   }
 
-  // Open Add Trade Modal with optional prefilled values
-  function openAddTradeModal(stock = '', qty = '', buyPrice = '', buyDate = '', tradeId = '') {
+  // Open Add Trade Modal for adding a new trade
+  function openAddTradeModal(stock = '') {
     const dialog = document.getElementById('add-trade-dialog');
     if (!dialog) return;
     const form = document.getElementById('add-trade-form');
-    const titleEl = document.getElementById('trade-modal-title');
-    const submitBtn = document.getElementById('trade-submit-btn');
+    if (form) form.reset();
     const editIdInput = document.getElementById('trade-edit-id');
-
+    if (editIdInput) editIdInput.value = '';
+    const titleEl = document.getElementById('trade-modal-title');
+    if (titleEl) titleEl.textContent = 'Add Trade';
+    const submitBtn = document.getElementById('trade-submit-btn');
+    if (submitBtn) submitBtn.innerHTML = `{{ icon('check', 16) }} Add Trade`;
     if (stock) {
       document.getElementById('trade-stock-input').value = stock;
-      document.getElementById('trade-qty-input').value = qty;
-      document.getElementById('trade-buy-price').value = buyPrice;
-      document.getElementById('trade-buy-date').value = buyDate || '';
-      const sellInput = document.getElementById('trade-sell-price');
-      sellInput.value = '';
-      document.getElementById('trade-sell-date').value = "{{ today }}";
-      if (editIdInput) editIdInput.value = tradeId || '';
-      if (titleEl) titleEl.textContent = tradeId ? 'Complete Open Trade' : 'Add Trade';
-      if (submitBtn) submitBtn.innerHTML = `{{ icon('check', 16) }} ${tradeId ? 'Save Trade' : 'Add Trade'}`;
-      setTimeout(() => sellInput.focus(), 150);
-    } else {
-      if (form) form.reset();
-      if (editIdInput) editIdInput.value = '';
-      if (titleEl) titleEl.textContent = 'Add Trade';
-      if (submitBtn) submitBtn.innerHTML = `{{ icon('check', 16) }} Add Trade`;
-      removeTradeProof();
     }
+    removeTradeProof();
     dialog.showModal();
     window.initStockAutocomplete?.();
   }
