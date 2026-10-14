@@ -1607,19 +1607,24 @@ def create_app(config=None):
             client_entered_stocks=get_client_entered_stocks(get_db()),
         )
 
-    @app.route("/admin/update-prices", methods=["POST"])
+    @app.route("/admin/update-prices", methods=["GET", "POST"])
+    @app.route("/update-prices", methods=["GET", "POST"])
     @login_required
     def admin_update_prices():
-        res = update_all_stock_prices(get_db())
-        count = len(res["updated"])
-        failed = len(res["failed"])
-        if count:
-            flash(f"Updated market prices for {count} stock(s).", "success")
-        elif failed:
-            flash(f"Could not fetch prices for {failed} stock(s). Check symbols or internet connection.", "warning")
-        else:
-            flash("No holdings currently recorded to update.", "info")
-        return redirect(safe_redirect_target(request.referrer, url_for("holdings_list")))
+        try:
+            res = update_all_stock_prices(get_db())
+            count = len(res.get("updated", []))
+            failed = len(res.get("failed", []))
+            if count:
+                flash(f"Updated market prices for {count} stock(s).", "success")
+            elif failed:
+                flash(f"Could not fetch prices for {failed} stock(s). Check symbols or internet connection.", "warning")
+            else:
+                flash("No holdings currently recorded to update.", "info")
+        except Exception as e:
+            app.logger.exception("Error updating stock prices: %s", e)
+            flash(f"Could not update market prices: {e}", "warning")
+        return redirect(url_for("holdings_list"))
 
     @app.route("/admin/stocks/alias", methods=["POST"])
     @login_required
