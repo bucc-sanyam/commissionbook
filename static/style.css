@@ -1338,25 +1338,61 @@ pre.ocr-text { color: #60734f; }
 
 @media (max-width: 640px) {
   .client-portal-topbar {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    overflow-x: hidden;
+  }
+  
+  .portal-brand {
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+  
+  .portal-logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
   }
   
   .portal-brand strong {
     font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    display: block;
+  }
+  
+  .portal-brand-meta {
+    gap: 4px;
+  }
+  
+  .portal-brand-meta button {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
   }
   
   .portal-brand small {
     display: none;
   }
   
-  .portal-user-meta {
-    display: none;
+  .portal-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
-  
-  .portal-user-chip {
-    padding: 3px;
-    background: transparent;
-    border: none;
+
+  .portal-user-actions .btn {
+    padding: 6px 8px;
+    font-size: 11px;
   }
   
   .client-portal-main {

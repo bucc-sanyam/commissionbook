@@ -8,49 +8,42 @@
   <header class="client-portal-topbar">
     <div class="portal-brand">
       <span class="portal-logo-icon">{{ icon('trend', 20) }}</span>
-      <div>
-        <strong>{{ business_name or 'Commission Book' }}</strong>
-        <small>Client Portfolio Portal</small>
+      <div class="portal-brand-text">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <strong style="font-size: 15px; color: #142a26; line-height: 1.2;">{{ client.name }}</strong>
+          <span class="portal-avatar" style="width: 22px; height: 22px; font-size: 11px; flex-shrink: 0;">{{ client.name[0]|upper }}</span>
+        </div>
+        <div class="portal-brand-meta" style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+          {% if client.username %}
+            <small style="font-weight: 700; color: #1b5e20; font-size: 11px;">@{{ client.username }}</small>
+          {% else %}
+            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('claim-username-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600;">
+              + Set @username
+            </button>
+          {% endif %}
+          <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
+            {{ icon('lock', 10) }} Password
+          </button>
+        </div>
       </div>
     </div>
     <div class="portal-user-actions">
-      <!-- Client Profile Info -->
-      <div class="portal-user-chip">
-        <span class="portal-avatar">{{ client.name[0]|upper }}</span>
-        <div class="portal-user-meta">
-          <strong>{{ client.name }}</strong>
-          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px;">
-            {% if client.username %}
-              <small style="font-weight: 700; color: #1b5e20;">@{{ client.username }}</small>
-            {% else %}
-              <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('claim-username-dialog').showModal()" style="font-size: 11px; padding: 1px 6px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600;">
-                + Set @username
-              </button>
-            {% endif %}
-            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 11px; padding: 1px 6px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
-              {{ icon('lock', 11) }} Password
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Web Push Notifications Toggle Button -->
-      <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle" onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications" title="Get notified when trade recommendations are posted" style="gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9;">
-        <span class="push-icon-inactive">{{ icon('send', 14) }}</span>
-        <span class="push-icon-active" style="display:none;">{{ icon('check-circle', 14) }}</span>
-        <span class="push-label">Enable Alerts</span>
+      <!-- Web Push Notifications Button (Removed once activated) -->
+      <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle" onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications" title="Get notified when trade recommendations are posted" style="display: none; gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 6px 10px; font-size: 12px; font-weight: 600; flex-shrink: 0;">
+        <span class="push-icon-inactive">{{ icon('send', 13) }}</span>
+        <span class="push-label"><span class="desktop-only">Enable </span>Alerts</span>
       </button>
 
       <!-- Hide Values / Privacy Toggle Button -->
-      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values" title="Hide or show portfolio values" style="gap: 5px;">
+      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values" title="Hide or show portfolio values" style="gap: 5px; flex-shrink: 0; padding: 6px 10px;">
         <span class="privacy-icon-off">{{ icon('eye-off', 15) }}</span>
         <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 15) }}</span>
-        <span class="privacy-label">Hide values</span>
+        <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
       </button>
 
-      <form method="post" action="{{ url_for('logout') }}" style="margin: 0;">
+      <form method="post" action="{{ url_for('logout') }}" style="margin: 0; flex-shrink: 0;">
         {{ csrf() }}
-        <button type="submit" class="btn btn-ghost btn-sm" aria-label="Sign out">
+        <button type="submit" class="btn btn-ghost btn-sm" aria-label="Sign out" style="padding: 6px 8px;">
           {{ icon('logout', 15) }}<span class="desktop-only">Sign out</span>
         </button>
       </form>
@@ -953,48 +946,45 @@
     const toggleBtn = document.getElementById('client-push-toggle');
     if (!toggleBtn) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      toggleBtn.style.display = 'none';
+      toggleBtn.remove();
       return;
     }
 
     try {
+      if (window.Notification && Notification.permission === 'granted') {
+        const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+        if (reg) {
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            toggleBtn.remove();
+            return;
+          }
+        }
+      }
+
       const reg = await navigator.serviceWorker.getRegistration('/sw.js');
       if (reg) {
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-          updatePushBtnState(true);
+          toggleBtn.remove();
           return;
         }
       }
-      updatePushBtnState(false);
+      toggleBtn.style.display = 'inline-flex';
     } catch (e) {
-      updatePushBtnState(false);
+      toggleBtn.style.display = 'inline-flex';
     }
   }
 
   function updatePushBtnState(isActive) {
     const toggleBtn = document.getElementById('client-push-toggle');
     if (!toggleBtn) return;
-    const iconInactive = toggleBtn.querySelector('.push-icon-inactive');
-    const iconActive = toggleBtn.querySelector('.push-icon-active');
-    const label = toggleBtn.querySelector('.push-label');
 
     if (isActive) {
-      if (iconInactive) iconInactive.style.display = 'none';
-      if (iconActive) iconActive.style.display = 'inline-flex';
-      if (label) label.textContent = 'Alerts Active ✓';
-      toggleBtn.style.background = '#e8f5e9';
-      toggleBtn.style.color = '#1b5e20';
-      toggleBtn.style.borderColor = '#a5d6a7';
-      toggleBtn.title = 'Push alerts are active on this device. Click to manage.';
+      // User has activated notifications: REMOVE THE BUTTON completely!
+      toggleBtn.remove();
     } else {
-      if (iconInactive) iconInactive.style.display = 'inline-flex';
-      if (iconActive) iconActive.style.display = 'none';
-      if (label) label.textContent = 'Enable Alerts';
-      toggleBtn.style.background = '#f0f7ee';
-      toggleBtn.style.color = '#2e7d32';
-      toggleBtn.style.borderColor = '#c8e6c9';
-      toggleBtn.title = 'Get instant notifications on your phone or desktop when trade recommendations are posted.';
+      toggleBtn.style.display = 'inline-flex';
     }
   }
 
@@ -1015,17 +1005,7 @@
 
       let sub = await reg.pushManager.getSubscription();
       if (sub) {
-        const confirmTurnOff = confirm('Push trade alerts are currently active on this device. Would you like to turn them off?');
-        if (confirmTurnOff) {
-          await sub.unsubscribe();
-          await fetch('{{ url_for("portal_push_unsubscribe") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
-            body: JSON.stringify({ endpoint: sub.endpoint })
-          });
-          updatePushBtnState(false);
-          alert('Trade push alerts turned off for this device.');
-        }
+        toggleBtn.remove();
         return;
       }
 
