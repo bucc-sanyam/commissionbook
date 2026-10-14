@@ -29,6 +29,11 @@
     const adminToggle = document.getElementById("privacy-toggle");
     if (adminToggle) {
       adminToggle.setAttribute("aria-pressed", isPrivacy ? "true" : "false");
+      adminToggle.classList.toggle("privacy-active", Boolean(isPrivacy));
+      const iconOff = adminToggle.querySelector(".privacy-icon-off");
+      const iconOn = adminToggle.querySelector(".privacy-icon-on");
+      if (iconOff) iconOff.style.display = isPrivacy ? "none" : "inline-flex";
+      if (iconOn) iconOn.style.display = isPrivacy ? "inline-flex" : "none";
     }
     const clientToggle = document.getElementById("client-privacy-toggle");
     if (clientToggle) {
@@ -40,6 +45,8 @@
       if (iconOn) iconOn.style.display = isPrivacy ? "inline-flex" : "none";
       if (label) label.textContent = isPrivacy ? "Show values" : "Hide values";
     }
+    // Clear any temporary peek reveals when toggling global mode
+    document.querySelectorAll(".privacy-revealed").forEach((el) => el.classList.remove("privacy-revealed"));
   }
   window.updatePrivacyMode = updatePrivacyMode;
 
@@ -57,12 +64,27 @@
   }
   window.togglePrivacy = togglePrivacy;
 
-  // Global event delegation for privacy toggles (works 100% reliably regardless of load timing)
+  // Global event delegation for privacy toggles and tap-to-reveal
   document.addEventListener("click", (event) => {
     const btn = event.target.closest("#privacy-toggle, #client-privacy-toggle");
     if (btn) {
       event.preventDefault();
+      event.stopPropagation();
       togglePrivacy();
+      return;
+    }
+
+    // Tap/click to peek/reveal individual card or number when in privacy mode
+    if (document.body.classList.contains("privacy-mode")) {
+      // Ignore clicks on actionable controls
+      if (event.target.closest("button, a, input, select, textarea, form, dialog, .actions, .filter-actions")) {
+        return;
+      }
+      const card = event.target.closest(".kpi-card, .metric-card, .activity-row, .ledger-summary-item, [data-privacy-value], .chart-summary, .mobile-trade-card");
+      if (card) {
+        event.preventDefault();
+        card.classList.toggle("privacy-revealed");
+      }
     }
   });
 

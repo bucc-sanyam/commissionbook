@@ -125,6 +125,16 @@ CREATE INDEX IF NOT EXISTS idx_payments_date ON payments(paid_on);
 CREATE INDEX IF NOT EXISTS idx_assets_upload ON upload_assets(upload_id);
 CREATE INDEX IF NOT EXISTS idx_assets_owner ON upload_assets(owner_hash, expires_at);
 CREATE INDEX IF NOT EXISTS idx_client_alerts_client ON client_alerts(client_id, active);
+CREATE TABLE IF NOT EXISTS client_push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    user_agent TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_push_client ON client_push_subscriptions(client_id);
 """
 
 

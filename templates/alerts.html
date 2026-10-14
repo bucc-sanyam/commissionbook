@@ -9,7 +9,13 @@
       <h2>Pop-up Trade Recommendations</h2>
       <p class="muted">Send compliant buy/sell trade popups directly to client portals (admin portal only).</p>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <span class="badge" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; font-weight: 600; padding: 5px 10px;" title="Active client devices receiving Web Push alerts">
+        {{ icon('send', 12) }} {{ push_subs_count }} client device{{ 's' if push_subs_count != 1 }} subscribed
+      </span>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('test-push-dialog').showModal()">
+        {{ icon('sparkle', 14) }} Test Push Alert
+      </button>
       <button type="button" class="btn btn-primary" onclick="document.getElementById('new-alert-dialog').showModal()">
         {{ icon('send', 15) }} Send Pop-up Trade
       </button>
@@ -246,9 +252,44 @@
       <textarea name="message" rows="3" placeholder="e.g. Breakout on high daily volume. Hold for 2-3 weeks."></textarea>
     </label>
 
+    <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; color: #164237; background: #e8f5e9; padding: 9px 12px; border-radius: 8px; border: 1px solid #c8e6c9; cursor: pointer;">
+      <input type="checkbox" name="send_push" value="1" checked style="accent-color: #1b5e20; width: 17px; height: 17px; margin: 0;">
+      <span>{{ icon('send', 14) }} Send instant Web Push notification to client device(s)</span>
+    </label>
+
     <div class="modal-actions" style="margin-top: 1.25rem;">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
       <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Post Advisory</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- TEST PUSH MODAL -->
+<dialog class="modal modal-sm" id="test-push-dialog">
+  <form method="post" action="{{ url_for('admin_push_test') }}" class="modal-inner">
+    {{ csrf() }}
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">DIAGNOSTIC TEST</span>
+        <h2>Test Web Push Delivery</h2>
+      </div>
+      <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+    </div>
+    <p class="muted">Dispatches a live test push notification to verify browser &amp; phone lock screen reception.</p>
+
+    <label class="field full">
+      Target Device / Recipient
+      <select name="client_id" required>
+        <option value="all" selected>All Subscribed Client Devices</option>
+        {% for c in clients %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div class="modal-actions" style="margin-top: 1.25rem;">
+      <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">{{ icon('send', 15) }} Send Test Push</button>
     </div>
   </form>
 </dialog>

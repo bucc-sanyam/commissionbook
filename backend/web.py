@@ -3246,7 +3246,202 @@ def create_app(config=None):
             ad["is_sell_broadcast"] = (ad.get("action") == "SELL" and not ad.get("client_id"))
             enriched_alerts.append(ad)
 
-        return render_template("alerts.html", alerts=enriched_alerts, clients=clients)
+        ensure_push_tables(db)
+        try:
+            push_subs_count = db.execute("SELECT COUNT(*) AS c FROM client_push_subscriptions").fetchone()["c"]
+        except Exception:
+            push_subs_count = 0
+
+        return render_template("alerts.html", alerts=enriched_alerts, clients=clients, push_subs_count=push_subs_count)
+
+    def ensure_push_tables(db):
+        try:
+            if db.postgres:
+                db.execute("""
+                CREATE TABLE IF NOT EXISTS client_push_subscriptions (
+                    id BIGSERIAL PRIMARY KEY,
+                    client_id BIGINT REFERENCES clients(id) ON DELETE CASCADE,
+                    endpoint TEXT NOT NULL UNIQUE,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    user_agent TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+                """)
+                db.execute("CREATE INDEX IF NOT EXISTS idx_push_client ON client_push_subscriptions(client_id)")
+            else:
+                db.execute("""
+                CREATE TABLE IF NOT EXISTS client_push_subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+                    endpoint TEXT NOT NULL UNIQUE,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    user_agent TEXT,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """)
+                db.execute("CREATE INDEX IF NOT EXISTS idx_push_client ON client_push_subscriptions(client_id)")
+        except Exception as exc:
+            current_app.logger.warning("ensure_push_tables notice: %s", exc)
+
+    def dispatch_web_push(client_id=None, title="Trade Alert", body="New trade recommendation", url="/portal", stock=None, action=None):
+        db = get_db()
+        ensure_push_tables(db)
+        try:
+            if client_id is not None:
+                subs = db.execute("SELECT id, endpoint, p256dh, auth FROM client_push_subscriptions WHERE client_id=?", (client_id,)).fetchall()
+            else:
+                subs = db.execute("SELECT id, endpoint, p256dh, auth FROM client_push_subscriptions").fetchall()
+        except Exception as exc:
+            current_app.logger.warning("Push query failed: %s", exc)
+            return 0
+
+        if not subs:
+            return 0
+
+        try:
+            from pywebpush import webpush, WebPushException
+        except ImportError:
+            current_app.logger.warning("pywebpush not installed, skipping push dispatch")
+            return 0
+
+        vapid_priv = app.config.get("VAPID_PRIVATE_KEY")
+        vapid_claims = {"sub": app.config.get("VAPID_CLAIM_EMAIL", "mailto:admin@commissionbook.com")}
+
+        payload = json.dumps({
+            "title": title,
+            "body": body,
+            "icon": "/static/icon-192.png",
+            "badge": "/static/icon-192.png",
+            "url": url,
+            "tag": f"trade-{stock or 'alert'}",
+            "data": {"url": url}
+        })
+
+        sent_count = 0
+        expired_ids = []
+        for sub in subs:
+            sub_info = {
+                "endpoint": sub["endpoint"],
+                "keys": {
+                    "p256dh": sub["p256dh"],
+                    "auth": sub["auth"],
+                }
+            }
+            try:
+                webpush(
+                    subscription_info=sub_info,
+                    data=payload,
+                    vapid_private_key=vapid_priv,
+                    vapid_claims=vapid_claims,
+                    ttl=86400
+                )
+                sent_count += 1
+            except WebPushException as ex:
+                current_app.logger.warning("WebPush send failed: %s", ex)
+                if hasattr(ex, "response") and ex.response is not None and ex.response.status_code in (404, 410):
+                    expired_ids.append(sub["id"])
+            except Exception as ex:
+                current_app.logger.warning("WebPush unexpected error: %s", ex)
+
+        if expired_ids:
+            try:
+                for eid in expired_ids:
+                    db.execute("DELETE FROM client_push_subscriptions WHERE id=?", (eid,))
+                db.commit()
+            except Exception:
+                pass
+
+        return sent_count
+
+    @app.route("/sw.js")
+    def service_worker():
+        response = send_from_directory(app.static_folder, "sw.js", mimetype="application/javascript")
+        response.headers["Service-Worker-Allowed"] = "/"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
+
+    @app.route("/api/push/public-key")
+    def push_public_key():
+        return jsonify(publicKey=app.config.get("VAPID_PUBLIC_KEY", ""))
+
+    @app.route("/portal/push/subscribe", methods=["POST"])
+    @client_login_required
+    def portal_push_subscribe():
+        cid = session["client_id"]
+        data = request.get_json(silent=True) or {}
+        endpoint = (data.get("endpoint") or "").strip()
+        keys = data.get("keys") or {}
+        p256dh = (keys.get("p256dh") or "").strip()
+        auth = (keys.get("auth") or "").strip()
+        user_agent = (request.headers.get("User-Agent") or "")[:250]
+
+        if not endpoint or not p256dh or not auth:
+            return jsonify(ok=False, error="Invalid subscription payload"), 400
+
+        db = get_db()
+        ensure_push_tables(db)
+        if db.postgres:
+            db.execute(
+                """
+                INSERT INTO client_push_subscriptions (client_id, endpoint, p256dh, auth, user_agent)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (endpoint) DO UPDATE SET
+                    client_id = EXCLUDED.client_id,
+                    p256dh = EXCLUDED.p256dh,
+                    auth = EXCLUDED.auth,
+                    user_agent = EXCLUDED.user_agent,
+                    created_at = CURRENT_TIMESTAMP
+                """,
+                (cid, endpoint, p256dh, auth, user_agent)
+            )
+        else:
+            db.execute(
+                """
+                INSERT INTO client_push_subscriptions (client_id, endpoint, p256dh, auth, user_agent)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (endpoint) DO UPDATE SET
+                    client_id = excluded.client_id,
+                    p256dh = excluded.p256dh,
+                    auth = excluded.auth,
+                    user_agent = excluded.user_agent,
+                    created_at = CURRENT_TIMESTAMP
+                """,
+                (cid, endpoint, p256dh, auth, user_agent)
+            )
+        db.commit()
+        return jsonify(ok=True, message="Push notifications enabled")
+
+    @app.route("/portal/push/unsubscribe", methods=["POST"])
+    @client_login_required
+    def portal_push_unsubscribe():
+        data = request.get_json(silent=True) or {}
+        endpoint = (data.get("endpoint") or "").strip()
+        if endpoint:
+            db = get_db()
+            ensure_push_tables(db)
+            db.execute("DELETE FROM client_push_subscriptions WHERE endpoint=?", (endpoint,))
+            db.commit()
+        return jsonify(ok=True)
+
+    @app.route("/admin/push/test", methods=["POST"])
+    @login_required
+    def admin_push_test():
+        client_id_raw = (request.form.get("client_id") or "").strip()
+        client_id = int(client_id_raw) if client_id_raw and client_id_raw != "all" else None
+        target_name = get_client(client_id)["name"] if client_id else "All Subscribed Clients"
+        sent = dispatch_web_push(
+            client_id=client_id,
+            title="🔔 Commission Book Test Alert",
+            body="Push notifications are active and working on this device!",
+            url="/portal"
+        )
+        if sent > 0:
+            flash(f"Test push notification dispatched to {sent} active device(s) for {target_name}.", "success")
+        else:
+            flash(f"No active push subscriptions found for {target_name}. Ask the client to tap 'Enable Alerts' on their portal first.", "info")
+        return redirect(safe_redirect_target(request.referrer, url_for("alerts_list")))
 
     @app.route("/alerts/new", methods=["POST"])
     @login_required
@@ -3275,20 +3470,46 @@ def create_app(config=None):
             (client_id, action, canonical_stock, price, target_price, stop_loss, message),
         )
 
+        send_push = request.form.get("send_push", "1") == "1"
+        push_sent = 0
+        if send_push:
+            action_verb = "BUY" if action == "BUY" else "SELL"
+            push_title = f"📢 Trade Advisory: {action_verb} {canonical_stock}"
+            details = []
+            if price:
+                details.append(f"Price: ₹{price:,.2f}")
+            if target_price:
+                details.append(f"Target: ₹{target_price:,.2f}")
+            if stop_loss:
+                details.append(f"SL: ₹{stop_loss:,.2f}")
+            push_body = " | ".join(details) if details else (message or "New trade recommendation posted.")
+            if message and details:
+                push_body += f"\n{message}"
+
+            if client_id is not None:
+                push_sent = dispatch_web_push(client_id=client_id, title=push_title, body=push_body, stock=canonical_stock, action=action)
+            elif action == "SELL":
+                holding_clients = get_clients_holding_stock(canonical_stock, get_db())
+                for hc in holding_clients:
+                    push_sent += dispatch_web_push(client_id=hc["id"], title=push_title, body=push_body, stock=canonical_stock, action=action)
+            else:
+                push_sent = dispatch_web_push(client_id=None, title=push_title, body=push_body, stock=canonical_stock, action=action)
+
+        push_note = f" (Pushed to {push_sent} device{'s' if push_sent != 1 else ''})" if push_sent > 0 else ""
         if client_id is not None:
             recipient = get_client(client_id)["name"]
-            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}.", "success")
+            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}{push_note}.", "success")
         elif action == "SELL":
             holding_clients = get_clients_holding_stock(canonical_stock, get_db())
             if holding_clients:
                 names = ", ".join(h["name"] for h in holding_clients[:3])
                 suffix = f" (+{len(holding_clients) - 3} more)" if len(holding_clients) > 3 else ""
-                flash(f"Pop-up SELL advisory for {canonical_stock} sent to {len(holding_clients)} client(s) holding this stock: {names}{suffix}.", "success")
+                flash(f"Pop-up SELL advisory for {canonical_stock} sent to {len(holding_clients)} client(s) holding this stock: {names}{suffix}{push_note}.", "success")
             else:
                 flash(f"Pop-up SELL advisory for {canonical_stock} recorded. Notice: No clients currently hold this stock, so no client portals will be prompted until holdings exist.", "info")
         else:
             recipient = "All clients (Broadcast)"
-            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}.", "success")
+            flash(f"Pop-up trade for {canonical_stock} ({action}) sent to {recipient}{push_note}.", "success")
         return redirect(safe_redirect_target(back, url_for("alerts_list")))
 
     @app.route("/alerts/<int:aid>/toggle", methods=["POST"])

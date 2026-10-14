@@ -858,6 +858,61 @@ pre.ocr-text { color: #60734f; }
   filter: blur(8px) !important;
 }
 
+/* Prevent accidental text selection and Google Assistant sheet on mobile when tapping cards */
+.privacy-mode .kpi-card,
+.privacy-mode .metric-card,
+.privacy-mode .card,
+.privacy-mode .activity-row,
+.privacy-mode .ledger-summary-item,
+.privacy-mode .portal-card,
+.privacy-mode .mobile-trade-card,
+.privacy-mode .tabular,
+.privacy-mode .kpi-value,
+.privacy-mode .metric-value,
+.privacy-mode [data-privacy-value],
+.privacy-mode .kpi-bottom,
+.privacy-mode .chart-summary {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.privacy-mode .kpi-card,
+.privacy-mode .metric-card,
+.privacy-mode .activity-row,
+.privacy-mode .ledger-summary-item,
+.privacy-mode [data-privacy-value],
+.privacy-mode .chart-summary,
+.privacy-mode .mobile-trade-card {
+  cursor: pointer;
+}
+
+/* Tap/click to peek/reveal individual cards or values */
+.privacy-mode .kpi-card.privacy-revealed .kpi-value,
+.privacy-mode .kpi-card.privacy-revealed .stat-pill,
+.privacy-mode .kpi-card.privacy-revealed [data-privacy-value],
+.privacy-mode .metric-card.privacy-revealed .metric-value,
+.privacy-mode .metric-card.privacy-revealed .pill-pos,
+.privacy-mode .metric-card.privacy-revealed .pill-neg,
+.privacy-mode .activity-row.privacy-revealed .activity-value,
+.privacy-mode .activity-row.privacy-revealed .activity-value strong,
+.privacy-mode .ledger-summary-item.privacy-revealed strong,
+.privacy-mode [data-privacy-value].privacy-revealed,
+.privacy-mode [data-privacy-value].privacy-revealed *,
+.privacy-mode .chart-summary.privacy-revealed strong,
+.privacy-mode .mobile-trade-card.privacy-revealed .mts-pnl,
+.privacy-mode .mobile-trade-card.privacy-revealed .mtd-val {
+  filter: none !important;
+}
+
+#privacy-toggle.privacy-active {
+  background: #e8f5e9 !important;
+  color: #1b5e20 !important;
+  border: 1px solid #c8e6c9 !important;
+}
+
 /* ==========================================================================
    Client Portal Styles & Layout
    ========================================================================== */

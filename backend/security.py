@@ -34,6 +34,9 @@ def configure_app(app, overrides=None):
         "SUPABASE_SERVICE_ROLE_KEY": os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ""),
         "SUPABASE_STORAGE_BUCKET": os.environ.get("SUPABASE_STORAGE_BUCKET", "commission-evidence"),
         "PUBLIC_BASE_URL": os.environ.get("PUBLIC_BASE_URL", "").rstrip("/"),
+        "VAPID_PUBLIC_KEY": os.environ.get("VAPID_PUBLIC_KEY", "BFh4MmkU91trJBfue0z1Vui12MjKxbwSYJu9M6-1bBbdH9W6GVQv_Ecsyd-YtJvo3hjIuZNKwTG1c1d2qt9GjXM"),
+        "VAPID_PRIVATE_KEY": os.environ.get("VAPID_PRIVATE_KEY", "Ud2Mxq4o3kyenGuud7DvRuJnPqW-hWctvlzd_zZQpbQ"),
+        "VAPID_CLAIM_EMAIL": os.environ.get("VAPID_CLAIM_EMAIL", "mailto:admin@commissionbook.com"),
         "MAX_CONTENT_LENGTH": 4 * 1024 * 1024,
         "MAX_FORM_MEMORY_SIZE": 256 * 1024,
         "MAX_FORM_PARTS": 1000,
@@ -146,7 +149,7 @@ def require_csrf():
         return
     if request.path == "/login":
         return
-    provided = request.headers.get("X-CSRF-Token")
+    provided = request.headers.get("X-CSRF-Token") or request.headers.get("X-CSRFToken")
     if not provided and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
         provided = request.form.get("csrf_token")
     expected = session.get("_csrf")

@@ -28,11 +28,11 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=20261013-3">
   <link rel="preload" href="{{ url_for('static', filename='fonts/dm-sans-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261014-2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261014-3">
   <script>
     window.__STOCK_SUGGESTIONS__ = {{ (all_stock_suggestions | default([])) | tojson }};
   </script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=20261014-2" defer></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=20261014-3" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}app-body{% endblock %}">
@@ -72,7 +72,10 @@
   <header class="topbar">
     <div class="breadcrumb"><button class="icon-btn mobile-menu" id="menu-toggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('menu') }}</button><span class="breadcrumb-root">Workspace</span>{{ icon('chevron-right', 13) }}<span>{% block breadcrumb %}Overview{% endblock %}</span></div>
     <div class="topbar-right">
-      <button type="button" class="icon-btn" id="privacy-toggle" aria-label="Toggle privacy mode" title="Hide numbers" aria-pressed="false">{{ icon('eye-off', 16) }}</button>
+      <button type="button" class="icon-btn" id="privacy-toggle" aria-label="Toggle privacy mode" title="Hide or show numbers" aria-pressed="false" style="min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+        <span class="privacy-icon-off">{{ icon('eye-off', 16) }}</span>
+        <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 16) }}</span>
+      </button>
       <span class="private-label">{{ icon('shield', 14) }}Admin only</span>
       <span class="topbar-divider"></span>
       <span class="topbar-date" data-today="{{ today }}">{{ today }}</span>
@@ -156,6 +159,9 @@
     <label class="field">
       Trade Rationale / Note
       <textarea name="message" rows="3" placeholder="e.g. Breakout on high daily volume. Target 2-3 weeks."></textarea>
+    <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; color: #164237; background: #e8f5e9; padding: 9px 12px; border-radius: 8px; border: 1px solid #c8e6c9; cursor: pointer;">
+      <input type="checkbox" name="send_push" value="1" checked style="accent-color: #1b5e20; width: 17px; height: 17px; margin: 0;">
+      <span>{{ icon('send', 14) }} Send instant Web Push notification to client device(s)</span>
     </label>
 
     <div class="modal-actions" style="margin-top: 1.25rem;">

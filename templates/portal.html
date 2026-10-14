@@ -34,6 +34,13 @@
         </div>
       </div>
 
+      <!-- Web Push Notifications Toggle Button -->
+      <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle" onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications" title="Get notified when trade recommendations are posted" style="gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9;">
+        <span class="push-icon-inactive">{{ icon('send', 14) }}</span>
+        <span class="push-icon-active" style="display:none;">{{ icon('check-circle', 14) }}</span>
+        <span class="push-label">Enable Alerts</span>
+      </button>
+
       <!-- Hide Values / Privacy Toggle Button -->
       <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values" title="Hide or show portfolio values" style="gap: 5px;">
         <span class="privacy-icon-off">{{ icon('eye-off', 15) }}</span>
@@ -924,5 +931,143 @@
       });
     }
   });
+
+  // -------------------------------------------------------------
+  // Web Push Notifications Client Registration
+  // -------------------------------------------------------------
+  const VAPID_PUBLIC_KEY = "{{ config.VAPID_PUBLIC_KEY }}";
+  const CSRF_TOKEN = "{{ csrf_token() }}";
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  async function checkPushSubscriptionStatus() {
+    const toggleBtn = document.getElementById('client-push-toggle');
+    if (!toggleBtn) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toggleBtn.style.display = 'none';
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          updatePushBtnState(true);
+          return;
+        }
+      }
+      updatePushBtnState(false);
+    } catch (e) {
+      updatePushBtnState(false);
+    }
+  }
+
+  function updatePushBtnState(isActive) {
+    const toggleBtn = document.getElementById('client-push-toggle');
+    if (!toggleBtn) return;
+    const iconInactive = toggleBtn.querySelector('.push-icon-inactive');
+    const iconActive = toggleBtn.querySelector('.push-icon-active');
+    const label = toggleBtn.querySelector('.push-label');
+
+    if (isActive) {
+      if (iconInactive) iconInactive.style.display = 'none';
+      if (iconActive) iconActive.style.display = 'inline-flex';
+      if (label) label.textContent = 'Alerts Active ✓';
+      toggleBtn.style.background = '#e8f5e9';
+      toggleBtn.style.color = '#1b5e20';
+      toggleBtn.style.borderColor = '#a5d6a7';
+      toggleBtn.title = 'Push alerts are active on this device. Click to manage.';
+    } else {
+      if (iconInactive) iconInactive.style.display = 'inline-flex';
+      if (iconActive) iconActive.style.display = 'none';
+      if (label) label.textContent = 'Enable Alerts';
+      toggleBtn.style.background = '#f0f7ee';
+      toggleBtn.style.color = '#2e7d32';
+      toggleBtn.style.borderColor = '#c8e6c9';
+      toggleBtn.title = 'Get instant notifications on your phone or desktop when trade recommendations are posted.';
+    }
+  }
+
+  async function toggleClientPushNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Web Push notifications are not supported by this browser. If on iPhone/iOS, tap Share > "Add to Home Screen" first to enable notifications.');
+      return;
+    }
+
+    const toggleBtn = document.getElementById('client-push-toggle');
+    const label = toggleBtn ? toggleBtn.querySelector('.push-label') : null;
+
+    try {
+      let reg = await navigator.serviceWorker.getRegistration('/sw.js');
+      if (!reg) {
+        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      }
+
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const confirmTurnOff = confirm('Push trade alerts are currently active on this device. Would you like to turn them off?');
+        if (confirmTurnOff) {
+          await sub.unsubscribe();
+          await fetch('{{ url_for("portal_push_unsubscribe") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+            body: JSON.stringify({ endpoint: sub.endpoint })
+          });
+          updatePushBtnState(false);
+          alert('Trade push alerts turned off for this device.');
+        }
+        return;
+      }
+
+      if (label) label.textContent = 'Subscribing...';
+
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        updatePushBtnState(false);
+        if (permission === 'denied') {
+          alert('Notifications are blocked by your browser settings. Please allow notifications for this site to receive trade alerts.');
+        }
+        return;
+      }
+
+      const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      const newSub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+
+      const response = await fetch('{{ url_for("portal_push_subscribe") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': CSRF_TOKEN
+        },
+        body: JSON.stringify(newSub)
+      });
+
+      if (response.ok) {
+        updatePushBtnState(true);
+        alert('🎉 Instant trade alerts enabled! You will now receive push notifications directly to this device whenever recommendations are posted.');
+      } else {
+        throw new Error('Failed to save subscription to server.');
+      }
+    } catch (err) {
+      console.error('Push subscription failed:', err);
+      updatePushBtnState(false);
+      alert('Could not enable push alerts: ' + (err.message || err));
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', checkPushSubscriptionStatus);
 </script>
 {% endblock %}
