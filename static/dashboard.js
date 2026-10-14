@@ -67,6 +67,7 @@
       });
       bar.append(svgElement("title", {}, `${monthLabel(chart.months[index], true)}: ${money(value)}`));
       const showTip = () => {
+        if (document.body.classList.contains("privacy-mode")) return;
         tooltip.textContent = `${monthLabel(chart.months[index], true)} · ${money(value)}`;
         tooltip.hidden = false;
         tooltip.style.left = `${Math.max(90, Math.min(width - 90, xx))}px`;
@@ -138,6 +139,8 @@
       const name = document.createElement("span");
       name.textContent = slice.name;
       const amount = document.createElement("strong");
+      amount.className = "tabular";
+      amount.setAttribute("data-privacy-value", "true");
       amount.textContent = money(slice.value);
       item.append(dot, name, amount);
       legend.append(item);

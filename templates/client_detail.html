@@ -32,7 +32,7 @@
   <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Their realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div><div class="kpi-value {{ 'neg' if s.pnl < 0 else 'pos' }}">{{ s.pnl|money }}</div><div class="kpi-bottom">{{ s.wins }} profitable · {{ s.losses }} losing trades</div></section>
 </div>
 <section class="card">
-  <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · {{ s.invested_open|money }} invested</p></div><span class="badge">{{ rule }}</span></div>
+  <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · <span class="tabular" data-privacy-value>{{ s.invested_open|money }}</span> invested</p></div><span class="badge">{{ rule }}</span></div>
   {{ trade_table(trades, s, show_client=False) }}
 </section>
 

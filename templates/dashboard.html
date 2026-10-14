@@ -49,23 +49,23 @@
       </details>
     </div>
     <div class="chart-toolbar">
-      <div class="chart-summary"><strong id="chart-total">{{ total.commission|money }}</strong><span id="chart-metric-label">commission earned</span></div>
+      <div class="chart-summary"><strong id="chart-total" class="tabular" data-privacy-value>{{ total.commission|money }}</strong><span id="chart-metric-label">commission earned</span></div>
       <div class="segmented" role="tablist" aria-label="Chart metric"><button type="button" id="commission-tab" role="tab" aria-selected="true" aria-controls="earnings-chart" data-chart-metric="commission">Commission</button><button type="button" role="tab" aria-selected="false" aria-controls="earnings-chart" data-chart-metric="pnl">Client P&amp;L</button></div>
     </div>
     {% if chart.months %}
-    <div class="earnings-chart" id="earnings-chart" role="tabpanel" aria-labelledby="commission-tab"></div>
+    <div class="earnings-chart" id="earnings-chart" data-privacy-value role="tabpanel" aria-labelledby="commission-tab"></div>
     {% else %}
-    <div class="chart-empty" id="earnings-chart"><div class="empty-icon">{{ icon('trend', 25) }}</div><strong>Your next chapter is a trade away.</strong><p>Close your first trade to start seeing your earnings here.</p></div>
+    <div class="chart-empty" id="earnings-chart" data-privacy-value><div class="empty-icon">{{ icon('trend', 25) }}</div><strong>Your next chapter is a trade away.</strong><p>Close your first trade to start seeing your earnings here.</p></div>
     {% endif %}
     <div class="chart-legend"><span><span class="legend-dot"></span><span id="chart-legend-label">Monthly commission</span></span><span>{{ (args['from'] or 'Beginning') ~ ' to ' ~ (args['to'] or 'today') if args['from'] or args['to'] else 'All-time view' }}</span></div>
   </section>
   <section class="card donut-card">
     <div class="card-header"><div><h2>Where earnings come from</h2><p>Commission, split by client.</p></div>{{ icon('pie', 17) }}</div>
-    <div class="donut-area" id="client-donut">
+    <div class="donut-area" id="client-donut" data-privacy-value>
       <svg viewBox="0 0 180 180" role="img" aria-label="Commission distribution by client"><circle cx="90" cy="90" r="66" fill="none" stroke="#eef2e8" stroke-width="22"/></svg>
-      <div class="donut-label"><strong>{{ per_client|length }}</strong><small>client{{ 's' if per_client|length != 1 }}</small></div>
+      <div class="donut-label"><strong data-privacy-value>{{ per_client|length }}</strong><small>client{{ 's' if per_client|length != 1 }}</small></div>
     </div>
-    <div class="donut-legend" id="donut-legend">
+    <div class="donut-legend" id="donut-legend" data-privacy-value>
       {% if not chart.clients %}<p class="muted">Your client breakdown will appear as you earn commission.</p>{% endif %}
     </div>
   </section>
@@ -112,13 +112,13 @@
       {% endfor %}</tbody>
     </table></div>
     {% else %}{{ empty_state('A fresh page', 'Your recent trades will appear here.', 'book', compact=True) }}{% endif %}
-    <div class="card-footer"><span>{{ total.count }} trades in view</span><span>{{ total.open }} open · {{ total.invested_open|money }} invested</span></div>
+    <div class="card-footer"><span>{{ total.count }} trades in view</span><span>{{ total.open }} open · <span class="tabular" data-privacy-value>{{ total.invested_open|money }}</span> invested</span></div>
   </section>
   <section class="card">
     <div class="card-header"><div><h2>Stocks doing the work</h2><p>Ranked by commission earned.</p></div>{{ icon('trend', 18) }}</div>
     {% if top_stocks %}
     <div class="activity-list">{% for stock in top_stocks[:4] %}
-      <a class="activity-row" href="{{ url_for('trades_list', stock=stock.stock) }}"><span class="activity-icon">{{ icon('arrow-up-right', 16) }}</span><div><strong>{{ stock.stock }}</strong><small>{{ stock.count }} trade{{ 's' if stock.count != 1 }}</small></div><div class="activity-value"><strong>{{ stock.commission|money }}</strong><small>commission</small></div></a>
+      <a class="activity-row" href="{{ url_for('trades_list', stock=stock.stock) }}"><span class="activity-icon">{{ icon('arrow-up-right', 16) }}</span><div><strong>{{ stock.stock }}</strong><small>{{ stock.count }} trade{{ 's' if stock.count != 1 }}</small></div><div class="activity-value" data-privacy-value><strong class="tabular" data-privacy-value>{{ stock.commission|money }}</strong><small>commission</small></div></a>
     {% endfor %}</div>
     {% else %}{{ empty_state('Find your standout stocks', 'A breakdown will appear as your ledger grows.', 'trend', compact=True) }}{% endif %}
     <div class="quick-note">{{ icon('sparkle', 21) }}<div><strong>Less typing. More living.</strong>Turn a screenshot into a trade with the <a class="text-link" href="{{ url_for('admin_scan') }}">scanner</a>.</div></div>
@@ -136,5 +136,5 @@
 {% endblock %}
 {% block scripts %}
 <script id="dashboard-data" type="application/json">{{ {'chart': chart, 'currency': currency|default('₹'), 'totals': {'commission': total.commission, 'pnl': total.pnl}}|tojson }}</script>
-<script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}?v=20261014-2" defer></script>
 {% endblock %}

@@ -14,10 +14,10 @@
 </div>
 <section class="card">
   <div class="ledger-summary">
-    <div class="ledger-summary-item"><span>Trades in view</span><strong>{{ total.count }}</strong></div>
-    <div class="ledger-summary-item"><span>Realised P&amp;L</span><strong class="{{ 'neg' if total.pnl < 0 else 'pos' }}">{{ total.pnl|money }}</strong></div>
-    <div class="ledger-summary-item"><span>Commission earned</span><strong>{{ total.commission|money }}</strong></div>
-    <div class="ledger-summary-item"><span>Open positions</span><strong>{{ total.open }}</strong></div>
+    <div class="ledger-summary-item"><span>Trades in view</span><strong class="tabular" data-privacy-value>{{ total.count }}</strong></div>
+    <div class="ledger-summary-item"><span>Realised P&amp;L</span><strong class="tabular {{ 'neg' if total.pnl < 0 else 'pos' }}" data-privacy-value>{{ total.pnl|money }}</strong></div>
+    <div class="ledger-summary-item"><span>Commission earned</span><strong class="tabular" data-privacy-value>{{ total.commission|money }}</strong></div>
+    <div class="ledger-summary-item"><span>Open positions</span><strong class="tabular" data-privacy-value>{{ total.open }}</strong></div>
   </div>
   <form class="filter-bar" method="get">
     <label class="field"><span>Stock</span><input name="stock" value="{{ args.stock }}" placeholder="Search a stock..." aria-label="Filter by stock"></label>

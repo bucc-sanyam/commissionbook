@@ -797,18 +797,50 @@ pre.ocr-text { color: #60734f; }
 .privacy-mode .mts-pnl,
 .privacy-mode .pill-pos,
 .privacy-mode .pill-neg,
+.privacy-mode .stat-pill,
+.privacy-mode .daily-change,
+.privacy-mode .ledger-summary-item strong,
+.privacy-mode #chart-total,
+.privacy-mode .chart-summary strong,
+.privacy-mode #earnings-chart,
+.privacy-mode .earnings-chart,
+.privacy-mode .earnings-chart text,
+.privacy-mode #client-donut,
+.privacy-mode #donut-legend strong,
+.privacy-mode .donut-legend-item strong,
+.privacy-mode .donut-label strong,
+.privacy-mode .activity-value,
+.privacy-mode .activity-value strong,
+.privacy-mode .activity-value *,
 .privacy-mode [data-privacy-value] {
   filter: blur(8px) !important;
   transition: filter 0.2s ease;
   user-select: none;
 }
 
-/* Hover reveal for admin dashboard only */
-body:not(.portal-body).privacy-mode .tabular:hover,
-body:not(.portal-body).privacy-mode .tabular > *:hover,
-body:not(.portal-body).privacy-mode .kpi-value:hover,
-body:not(.portal-body).privacy-mode [data-privacy-value]:hover {
-  filter: blur(0) !important;
+.privacy-mode .chart-tooltip {
+  display: none !important;
+}
+
+/* Strictly prevent hover unblur leaks across admin dashboard and portal while privacy mode is active */
+.privacy-mode #earnings-chart:hover,
+.privacy-mode .earnings-chart:hover,
+.privacy-mode #client-donut:hover,
+.privacy-mode .activity-row:hover .activity-value,
+.privacy-mode .activity-row:hover .activity-value *,
+.privacy-mode .ledger-summary-item strong:hover,
+.privacy-mode #chart-total:hover,
+.privacy-mode .kpi-value:hover,
+.privacy-mode [data-privacy-value]:hover {
+  filter: blur(8px) !important;
+}
+
+/* On desktop with fine pointer, allow subtle peek on individual table cells only if directly hovered */
+@media (hover: hover) and (pointer: fine) {
+  body:not(.portal-body).privacy-mode td.tabular:hover,
+  body:not(.portal-body).privacy-mode td.tabular > *:hover {
+    filter: blur(0) !important;
+  }
 }
 
 /* On client portal, keep numbers strictly hidden while privacy mode is active (no hover unblur leaks) */
