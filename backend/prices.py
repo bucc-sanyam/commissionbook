@@ -93,6 +93,19 @@ def get_all_held_stocks(db) -> list[str]:
     return [row["stock"].strip().upper() for row in rows if row.get("stock")]
 
 
+_cached_prices_data: dict[str, dict] | None = None
+_cached_prices_time: float = 0.0
+_cached_prices_ttl: float = 60.0
+_prices_cache_lock = threading.Lock()
+
+
+def invalidate_prices_cache():
+    global _cached_prices_data, _cached_prices_time
+    with _prices_cache_lock:
+        _cached_prices_data = None
+        _cached_prices_time = 0.0
+
+
 def update_all_stock_prices(db) -> dict:
     """Fetch and update prices for all held stocks in the database."""
     stocks = get_all_held_stocks(db)
@@ -126,6 +139,7 @@ def update_all_stock_prices(db) -> dict:
             failed.append(stock)
 
     db.commit()
+    invalidate_prices_cache()
     return {
         "total": len(stocks),
         "updated": updated,
@@ -134,23 +148,33 @@ def update_all_stock_prices(db) -> dict:
 
 
 def get_cached_prices(db) -> dict[str, dict]:
-    """Return dictionary of stock prices keyed by uppercase stock symbol."""
-    try:
-        rows = db.execute("SELECT * FROM stock_prices").fetchall()
-        result = {}
-        for row in rows:
-            sym = row["stock"].upper()
-            result[sym] = {
-                "current_price": Decimal(str(row["current_price"])),
-                "previous_close": Decimal(str(row["previous_close"])) if row.get("previous_close") is not None else None,
-                "change": Decimal(str(row["change"])) if row.get("change") is not None else Decimal("0"),
-                "change_pct": Decimal(str(row["change_pct"])) if row.get("change_pct") is not None else Decimal("0"),
-                "updated_at": row.get("updated_at"),
-            }
-        return result
-    except Exception as exc:
-        logger.warning("Could not read stock_prices: %s", exc)
-        return {}
+    """Return dictionary of stock prices keyed by uppercase stock symbol (cached in memory)."""
+    global _cached_prices_data, _cached_prices_time
+    now = time.time()
+    if _cached_prices_data is not None and (now - _cached_prices_time < _cached_prices_ttl):
+        return _cached_prices_data
+
+    with _prices_cache_lock:
+        if _cached_prices_data is not None and (now - _cached_prices_time < _cached_prices_ttl):
+            return _cached_prices_data
+        try:
+            rows = db.execute("SELECT * FROM stock_prices").fetchall()
+            result = {}
+            for row in rows:
+                sym = row["stock"].upper()
+                result[sym] = {
+                    "current_price": Decimal(str(row["current_price"])),
+                    "previous_close": Decimal(str(row["previous_close"])) if row.get("previous_close") is not None else None,
+                    "change": Decimal(str(row["change"])) if row.get("change") is not None else Decimal("0"),
+                    "change_pct": Decimal(str(row["change_pct"])) if row.get("change_pct") is not None else Decimal("0"),
+                    "updated_at": row.get("updated_at"),
+                }
+            _cached_prices_data = result
+            _cached_prices_time = now
+            return result
+        except Exception as exc:
+            logger.warning("Could not read stock_prices: %s", exc)
+            return {}
 
 
 class DailyPriceScheduler:

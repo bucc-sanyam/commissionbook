@@ -1609,4 +1609,53 @@ body:not(.portal-body).privacy-mode [data-privacy-value]:hover {
   text-align: center;
 }
 
+/* ==========================================================================
+   Instant Top Navigation Progress Bar
+   ========================================================================== */
+.app-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #34d399 100%);
+  z-index: 999999;
+  width: 0%;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  transition: width 0.25s ease-out, opacity 0.2s ease;
+}
+
+.app-progress-bar.loading {
+  display: block;
+  width: 78%;
+}
+
+.app-progress-bar.done {
+  width: 100%;
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Progressive Table Lazy Controls
+   ========================================================================== */
+.table-lazy-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #fbfdfb;
+  border-top: 1px solid #e1eee3;
+  font-size: 12px;
+  color: #3f5d47;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-lazy-controls .btn-xs {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+
 

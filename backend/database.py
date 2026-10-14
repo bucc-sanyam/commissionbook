@@ -256,6 +256,10 @@ def get_db():
                         "prepare_threshold": None,
                         "connect_timeout": 8,
                         "row_factory": dict_row,
+                        "keepalives": 1,
+                        "keepalives_idle": 30,
+                        "keepalives_interval": 10,
+                        "keepalives_count": 5,
                     }
                     if "sslmode" not in config["DATABASE_URL"]:
                         conn_kwargs["sslmode"] = "require"

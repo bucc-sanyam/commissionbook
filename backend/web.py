@@ -41,7 +41,7 @@ from trade_parser import parse_text
 from .database import get_db, install_database
 from .prices import (
     DailyPriceScheduler, fetch_stock_quote, get_all_held_stocks,
-    get_cached_prices, update_all_stock_prices,
+    get_cached_prices, invalidate_prices_cache, update_all_stock_prices,
 )
 from .security import (
     configure_app, credential_version, csrf_token, local_setup_allowed, require_csrf,
@@ -73,12 +73,33 @@ EXPORT_COLS = [
 ]
 
 
+_settings_cache = None
+_settings_cache_time = 0.0
+_settings_cache_ttl = 300.0  # 5 minutes
+_settings_lock = threading.Lock()
+
+
 def settings_values():
-    if "settings_values" not in g:
-        g.settings_values = {
-            row["key"]: row["value"] for row in get_db().execute("SELECT key,value FROM settings").fetchall()
-        }
-    return g.settings_values
+    global _settings_cache, _settings_cache_time
+    if "settings_values" in g:
+        return g.settings_values
+    now = time.time()
+    if _settings_cache is not None and (now - _settings_cache_time < _settings_cache_ttl):
+        g.settings_values = dict(_settings_cache)
+        return g.settings_values
+    with _settings_lock:
+        if _settings_cache is not None and (now - _settings_cache_time < _settings_cache_ttl):
+            g.settings_values = dict(_settings_cache)
+            return g.settings_values
+        try:
+            _settings_cache = {
+                row["key"]: row["value"] for row in get_db().execute("SELECT key,value FROM settings").fetchall()
+            }
+            _settings_cache_time = now
+        except Exception:
+            _settings_cache = {}
+        g.settings_values = dict(_settings_cache)
+        return g.settings_values
 
 
 def setting(key, default=None):
@@ -86,10 +107,15 @@ def setting(key, default=None):
 
 
 def set_setting(key, value):
+    global _settings_cache, _settings_cache_time
     get_db().execute(
         "INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
         (key, value),
     )
+    with _settings_lock:
+        if _settings_cache is not None:
+            _settings_cache[key] = value
+        _settings_cache_time = time.time()
     settings_values()[key] = value
 
 
@@ -183,7 +209,13 @@ _stock_aliases_cache = None  # in-memory dict: UPPER(alias) -> UPPER(canonical)
 _stock_aliases_lock = threading.Lock()
 _stock_suggestions_cache = None
 _stock_suggestions_time = 0
-_stock_suggestions_ttl = 60  # seconds
+_stock_suggestions_ttl = 300  # 5 minutes
+_known_stocks_cache = None
+_known_stocks_time = 0.0
+_known_stocks_ttl = 300.0  # 5 minutes
+_known_stocks_lock = threading.Lock()
+_active_clients_cache = None
+_active_clients_time = 0.0
 _client_phones_cleaned = False
 
 
@@ -220,11 +252,14 @@ def ensure_stock_aliases_table(db):
 
 
 def invalidate_stock_caches():
-    global _stock_aliases_cache, _stock_suggestions_cache, _stock_suggestions_time
+    global _stock_aliases_cache, _stock_suggestions_cache, _stock_suggestions_time, _known_stocks_cache, _known_stocks_time
     with _stock_aliases_lock:
         _stock_aliases_cache = None
         _stock_suggestions_cache = None
         _stock_suggestions_time = 0
+    with _known_stocks_lock:
+        _known_stocks_cache = None
+        _known_stocks_time = 0.0
 
 
 def get_alias_mapping(db):
@@ -260,29 +295,39 @@ def resolve_canonical_stock(db, raw_stock):
 
 
 def get_known_stocks(db):
-    ensure_stock_aliases_table(db)
-    mapping = {}
-    try:
-        rows = db.execute("SELECT canonical_name, alias FROM stock_aliases ORDER BY canonical_name ASC, alias ASC").fetchall()
-        for r in rows:
-            c = r["canonical_name"].strip().upper()
-            a = r["alias"].strip().upper()
-            if c not in mapping:
-                mapping[c] = set()
-            if a and a != c:
-                mapping[c].add(a)
-    except Exception:
-        pass
+    global _known_stocks_cache, _known_stocks_time
+    now = time.time()
+    if _known_stocks_cache is not None and (now - _known_stocks_time < _known_stocks_ttl):
+        return _known_stocks_cache
 
-    result = []
-    for c in sorted(mapping.keys()):
-        alias_list = sorted(list(mapping[c]))
-        result.append({
-            "canonical_name": c,
-            "aliases": ", ".join(alias_list),
-            "alias_list": alias_list,
-        })
-    return result
+    with _known_stocks_lock:
+        if _known_stocks_cache is not None and (now - _known_stocks_time < _known_stocks_ttl):
+            return _known_stocks_cache
+        ensure_stock_aliases_table(db)
+        mapping = {}
+        try:
+            rows = db.execute("SELECT canonical_name, alias FROM stock_aliases ORDER BY canonical_name ASC, alias ASC").fetchall()
+            for r in rows:
+                c = (r["canonical_name"] or "").strip().upper()
+                a = (r["alias"] or "").strip().upper()
+                if c not in mapping:
+                    mapping[c] = set()
+                if a and a != c:
+                    mapping[c].add(a)
+        except Exception:
+            pass
+
+        result = []
+        for c in sorted(mapping.keys()):
+            alias_list = sorted(list(mapping[c]))
+            result.append({
+                "canonical_name": c,
+                "aliases": ", ".join(alias_list),
+                "alias_list": alias_list,
+            })
+        _known_stocks_cache = result
+        _known_stocks_time = now
+        return _known_stocks_cache
 
 
 def get_client_entered_stocks(db):
@@ -424,17 +469,26 @@ def get_stock_suggestions(db):
     except Exception:
         pass
 
-    # 2. Distinct stocks from trades, client_shares, and stock_prices (resolved to their canonical/main name in memory)
-    for table in ("trades", "client_shares", "stock_prices"):
-        try:
-            rows = db.execute(f"SELECT DISTINCT stock FROM {table} WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
-            for r in rows:
-                raw_s = (r["stock"] or "").strip().upper()
-                canon = alias_map.get(raw_s, raw_s)
-                if canon and canon not in items_map:
-                    items_map[canon] = {"symbol": canon, "canonical": canon}
-        except Exception:
-            pass
+    # 2. Distinct stocks from trades, client_shares, and stock_prices in a single UNION query
+    try:
+        rows = db.execute(
+            """
+            SELECT DISTINCT stock FROM (
+                SELECT stock FROM trades WHERE stock IS NOT NULL AND TRIM(stock) != ''
+                UNION
+                SELECT stock FROM client_shares WHERE stock IS NOT NULL AND TRIM(stock) != ''
+                UNION
+                SELECT stock FROM stock_prices WHERE stock IS NOT NULL AND TRIM(stock) != ''
+            ) u
+            """
+        ).fetchall()
+        for r in rows:
+            raw_s = (r["stock"] or "").strip().upper()
+            canon = alias_map.get(raw_s, raw_s)
+            if canon and canon not in items_map:
+                items_map[canon] = {"symbol": canon, "canonical": canon}
+    except Exception:
+        pass
 
     # 3. Common market stocks (resolved to canonical name in memory)
     for sym in POPULAR_STOCKS:
@@ -664,7 +718,7 @@ def funds_by_client():
 
 
 def sync_client_holdings_from_trades(cid=None, db=None):
-    """Sync any open buy trades into client_shares so client_shares remains the single canonical store."""
+    """Sync open buy trades into client_shares in batch so client_shares remains the single canonical store."""
     if db is None:
         db = get_db()
 
@@ -679,32 +733,53 @@ def sync_client_holdings_from_trades(cid=None, db=None):
                 ORDER BY id ASC""",
             params
         ).fetchall()
+        if not open_trades:
+            return
+
+        client_ids = list({ot["client_id"] for ot in open_trades})
+        placeholders = ",".join("?" for _ in client_ids)
+        existing_rows = db.execute(
+            f"SELECT client_id, UPPER(TRIM(stock)) as stock FROM client_shares WHERE client_id IN ({placeholders})",
+            client_ids
+        ).fetchall()
+        existing_set = {(r["client_id"], r["stock"]) for r in existing_rows}
+        alias_map = get_alias_mapping(db)
+
+        to_insert = []
         for ot in open_trades:
             c_id = ot["client_id"]
-            stk = resolve_canonical_stock(db, (ot["stock"] or "").strip().upper())
+            raw_s = (ot["stock"] or "").strip().upper()
+            stk = alias_map.get(raw_s, raw_s)
             if not stk:
                 continue
-            existing = db.execute(
-                "SELECT id, quantity, buy_price FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
-                (c_id, stk)
-            ).fetchone()
-            if not existing:
+            if (c_id, stk) not in existing_set:
                 qty = int(round(dec(ot["quantity"])))
                 bp = dec(ot["buy_price"]).quantize(CENT, rounding=ROUND_HALF_UP)
-                db.execute(
-                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on) VALUES (?, ?, ?, ?, ?)",
-                    (c_id, stk, qty, bp, ot["added_on"] or date.today().isoformat())
-                )
-        db.commit()
+                added_on = ot["added_on"] or date.today().isoformat()
+                if isinstance(added_on, (date, datetime)):
+                    added_on = added_on.isoformat()
+                elif len(str(added_on)) > 10:
+                    added_on = str(added_on)[:10]
+                to_insert.append((c_id, stk, qty, bp, added_on))
+                existing_set.add((c_id, stk))
+
+        for item in to_insert:
+            db.execute(
+                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on) VALUES (?, ?, ?, ?, ?)",
+                item
+            )
+        if to_insert:
+            db.commit()
     except Exception as exc:
         current_app.logger.warning("sync_client_holdings_from_trades: %s", exc)
 
 
-def get_client_calculated_holdings(cid, db=None):
+def get_client_calculated_holdings(cid, db=None, sync_trades=False):
     if db is None:
         db = get_db()
 
-    sync_client_holdings_from_trades(cid, db)
+    if sync_trades:
+        sync_client_holdings_from_trades(cid, db)
 
     try:
         raw_shares = db.execute(
@@ -714,9 +789,11 @@ def get_client_calculated_holdings(cid, db=None):
     except Exception:
         raw_shares = []
 
+    alias_map = get_alias_mapping(db)
     results = []
     for r in raw_shares:
-        stk = resolve_canonical_stock(db, (r["stock"] or "").strip().upper())
+        raw_s = (r["stock"] or "").strip().upper()
+        stk = alias_map.get(raw_s, raw_s)
         if not stk:
             continue
         qty = dec(r["quantity"]) if r["quantity"] is not None else ZERO
@@ -744,22 +821,27 @@ def get_clients_holding_stock(stock, db=None):
     if not stock:
         return []
     target_canonical = resolve_canonical_stock(db, stock)
+    alias_map = get_alias_mapping(db)
     try:
-        active_clients = db.execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+        rows = db.execute(
+            """
+            SELECT DISTINCT c.id, c.name, h.stock, h.quantity
+            FROM client_shares h
+            JOIN clients c ON c.id = h.client_id
+            WHERE c.active = 1 AND h.quantity > 0
+            ORDER BY lower(c.name)
+            """
+        ).fetchall()
+        holding_clients = []
+        seen = set()
+        for r in rows:
+            sym = (r["stock"] or "").strip().upper()
+            if alias_map.get(sym, sym) == target_canonical and r["id"] not in seen:
+                seen.add(r["id"])
+                holding_clients.append({"id": r["id"], "name": r["name"]})
+        return holding_clients
     except Exception:
         return []
-
-    holding_clients = []
-    for c in active_clients:
-        try:
-            holdings = get_client_calculated_holdings(c["id"], db)
-            for h in holdings:
-                if resolve_canonical_stock(db, h["stock"]) == target_canonical and dec(h.get("quantity") or 0) > ZERO:
-                    holding_clients.append({"id": c["id"], "name": c["name"]})
-                    break
-        except Exception:
-            continue
-    return holding_clients
 
 
 def sync_trade_profits_to_funds(db, cid=None):
@@ -983,10 +1065,15 @@ def create_app(config=None):
     @app.context_processor
     def inject_admin_context():
         if session.get("admin"):
+            global _active_clients_cache, _active_clients_time
+            now = time.time()
+            if _active_clients_cache is not None and (now - _active_clients_time < 60.0):
+                return {"active_clients": _active_clients_cache}
             try:
                 clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
-                alerts_count = get_db().execute("SELECT COUNT(*) as c FROM client_alerts WHERE active=1").fetchone()["c"]
-                return {"active_clients": clients, "active_alerts_count": alerts_count}
+                _active_clients_cache = clients
+                _active_clients_time = now
+                return {"active_clients": clients}
             except Exception:
                 return {}
         return {}
@@ -1036,13 +1123,6 @@ def create_app(config=None):
     @app.context_processor
     def inject_globals():
         error = g.get("error_response", False)
-        try:
-            db = get_db()
-            stock_suggestions = get_stock_suggestions(db) if not error else []
-            known_stocks_list = get_known_stocks(db) if not error else []
-        except Exception:
-            stock_suggestions = []
-            known_stocks_list = []
         return {
             "COMMISSION_TYPES": COMMISSION_TYPES, "logged_in": bool(session.get("admin")),
             "is_admin": bool(session.get("admin")),
@@ -1058,8 +1138,8 @@ def create_app(config=None):
             "admin_password_managed": bool(app.config["ADMIN_PASSWORD_HASH"]),
             "commission_policy": "snapshot",
             "upload_url": portal_url() if session.get("admin") and not error else None,
-            "all_stock_suggestions": stock_suggestions,
-            "known_stocks": known_stocks_list,
+            "all_stock_suggestions": [],
+            "known_stocks": [],
         }
 
     def error_response(status, title, message):
@@ -1242,9 +1322,15 @@ def create_app(config=None):
                     (cid, values["stock"], values["quantity"], values["buy_price"], values["sell_price"],
                      values["buy_date"], values["sell_date"], values["commission_override"], values["notes"], tid),
                 )
+                sync_trade_profits_to_funds(get_db(), cid)
+                sync_client_holdings_from_trades(cid, get_db())
+                invalidate_stock_caches()
                 flash("Trade updated.", "success")
             else:
                 insert_trade(cid, values)
+                sync_trade_profits_to_funds(get_db(), cid)
+                sync_client_holdings_from_trades(cid, get_db())
+                invalidate_stock_caches()
                 flash("Trade added.", "success")
             if request.form.get("add_another"):
                 return redirect(url_for("trade_form", client=name))
@@ -1432,7 +1518,11 @@ def create_app(config=None):
         for name, values in validated:
             grouped.setdefault(name, []).append(values)
         for name, values in grouped.items():
-            insert_trades(get_or_create_client(name), values, source="import")
+            cid = get_or_create_client(name)
+            insert_trades(cid, values, source="import")
+            sync_trade_profits_to_funds(get_db(), cid)
+            sync_client_holdings_from_trades(cid, get_db())
+        invalidate_stock_caches()
         flash(f"Imported {len(validated)} trade(s).", "success")
         return redirect(url_for("trades_list"))
 
@@ -1441,7 +1531,6 @@ def create_app(config=None):
     def holdings_list():
         stock_query = request.args.get("stock", "").strip().upper()
         db = get_db()
-        sync_client_holdings_from_trades(None, db)
 
         base_query = """
             SELECT h.id, h.stock, c.name as client_name, c.id as client_id, h.quantity, h.buy_price, h.added_on
@@ -1691,6 +1780,8 @@ def create_app(config=None):
                 "UPDATE clients SET name=?,phone=?,email=?,commission_type=?,commission_rate=?,notes=?,portfolio_amount=?,username=? WHERE id=?",
                 (*values, username, cid),
             )
+            global _active_clients_cache
+            _active_clients_cache = None
             flash("User updated.", "success")
             return redirect(url_for("client_detail", cid=cid))
         trades = query_trades({"client_id": cid})
@@ -1708,10 +1799,8 @@ def create_app(config=None):
         except Exception:
             funds = []
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
-        
-        sync_trade_profits_to_funds(get_db(), cid)
-        
-        raw_shares = get_client_calculated_holdings(cid, get_db())
+
+        raw_shares = get_client_calculated_holdings(cid, get_db(), sync_trades=False)
         prices = get_cached_prices(get_db())
         shares = []
         total_holdings_invested = ZERO
@@ -1759,15 +1848,17 @@ def create_app(config=None):
                 """,
                 (cid, cid),
             ).fetchall()
+            alias_map = get_alias_mapping(get_db())
             held_canonical_stocks = {
-                resolve_canonical_stock(get_db(), sh["stock"])
+                alias_map.get((sh.get("stock") or "").strip().upper(), (sh.get("stock") or "").strip().upper())
                 for sh in shares
                 if dec(sh.get("quantity") or 0) > ZERO
             }
             advisories = []
             for adv in raw_advisories:
                 if adv["action"] == "SELL" and adv["client_id"] is None:
-                    if resolve_canonical_stock(get_db(), adv["stock"]) not in held_canonical_stocks and not adv.get("acknowledged"):
+                    adv_stock = alias_map.get((adv.get("stock") or "").strip().upper(), (adv.get("stock") or "").strip().upper())
+                    if adv_stock not in held_canonical_stocks and not adv.get("acknowledged"):
                         continue
                 advisories.append(adv)
         except Exception:
@@ -2380,6 +2471,9 @@ def create_app(config=None):
                 (upload_id, asset["path"]),
             )
         insert_trades(cid, validated, source="upload", upload_id=upload_id)
+        sync_trade_profits_to_funds(get_db(), cid)
+        sync_client_holdings_from_trades(cid, get_db())
+        invalidate_stock_caches()
         return jsonify(ok=True, saved=len(validated), submission_id=submission_id)
 
     @app.cli.command("init-db")
@@ -2473,8 +2567,7 @@ def create_app(config=None):
         cid = session["client_id"]
         client = get_client(cid)
         trades = query_trades({"client_id": cid})
-        sync_trade_profits_to_funds(get_db(), cid)
-        shares = get_client_calculated_holdings(cid, get_db())
+        shares = get_client_calculated_holdings(cid, get_db(), sync_trades=False)
 
         prices = get_cached_prices(get_db())
         enriched_shares = []
@@ -2542,16 +2635,18 @@ def create_app(config=None):
             (cid, cid),
         ).fetchall()
 
+        alias_map = get_alias_mapping(get_db())
         # For broadcast SELL recommendations, only deliver pop-up to clients who currently hold the stock
         held_canonical_stocks = {
-            resolve_canonical_stock(get_db(), sh["stock"])
+            alias_map.get((sh.get("stock") or "").strip().upper(), (sh.get("stock") or "").strip().upper())
             for sh in shares
             if dec(sh.get("quantity") or 0) > ZERO
         }
         undismissed_alerts = []
         for a in raw_undismissed_alerts:
             if a["action"] == "SELL" and a["client_id"] is None:
-                if resolve_canonical_stock(get_db(), a["stock"]) not in held_canonical_stocks:
+                a_stock = alias_map.get((a.get("stock") or "").strip().upper(), (a.get("stock") or "").strip().upper())
+                if a_stock not in held_canonical_stocks:
                     continue
             undismissed_alerts.append(a)
 
@@ -2866,6 +2961,8 @@ def create_app(config=None):
         else:
             flash(f"Sell trade for {quantity} shares of {stock} recorded. Your holdings have been updated.", "success")
 
+        invalidate_prices_cache()
+        invalidate_stock_caches()
         db.commit()
         return redirect(url_for("client_portal"))
 
@@ -2979,7 +3076,8 @@ def create_app(config=None):
     @app.route("/alerts", methods=["GET"])
     @login_required
     def alerts_list():
-        alerts = get_db().execute(
+        db = get_db()
+        alerts = db.execute(
             """
             SELECT a.*, c.name as client_name,
                    (SELECT COUNT(*) FROM client_alert_views v WHERE v.alert_id=a.id AND (v.dismissed=1 OR v.acknowledged=1)) as view_count
@@ -2988,9 +3086,9 @@ def create_app(config=None):
             ORDER BY a.created_at DESC
             """
         ).fetchall()
-        clients = get_db().execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
+        clients = db.execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
 
-        views = get_db().execute(
+        views = db.execute(
             """
             SELECT v.alert_id, v.client_id, v.acknowledged_at, v.viewed_at, c.name as client_name
             FROM client_alert_views v
@@ -2999,6 +3097,24 @@ def create_app(config=None):
             ORDER BY lower(c.name)
             """
         ).fetchall()
+
+        # Batch-fetch all active clients' non-zero holdings in ONE query to avoid N+1 queries per SELL alert
+        all_holdings = db.execute(
+            """
+            SELECT h.client_id, c.name as client_name, h.stock
+            FROM client_shares h
+            JOIN clients c ON c.id = h.client_id
+            WHERE c.active = 1 AND h.quantity > 0
+            ORDER BY lower(c.name)
+            """
+        ).fetchall()
+
+        alias_map = get_alias_mapping(db)
+        stock_holders_map = {}
+        for h in all_holdings:
+            sym = (h["stock"] or "").strip().upper()
+            canon = alias_map.get(sym, sym)
+            stock_holders_map.setdefault(canon, {})[h["client_id"]] = h["client_name"]
 
         ack_by_alert = {}
         for v in views:
@@ -3031,8 +3147,8 @@ def create_app(config=None):
                     pending_clients = [{"id": cid, "name": cname}]
             elif ad.get("action") == "SELL":
                 # Sell pop-up broadcast: only sent to clients who hold the given stock
-                holders = get_clients_holding_stock(ad["stock"], get_db())
-                holder_map = {c["id"]: c["name"] for c in holders}
+                canon_stk = alias_map.get((ad.get("stock") or "").strip().upper(), (ad.get("stock") or "").strip().upper())
+                holder_map = dict(stock_holders_map.get(canon_stk, {}))
                 for v in acks:
                     if v["client_id"] not in holder_map:
                         holder_map[v["client_id"]] = v["client_name"]

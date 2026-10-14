@@ -253,7 +253,13 @@
   }
   document.querySelectorAll("[data-select-all]").forEach((input) => {
     input.addEventListener("change", () => {
-      document.querySelectorAll(input.dataset.selectAll).forEach((row) => { row.checked = input.checked; });
+      document.querySelectorAll(input.dataset.selectAll).forEach((row) => {
+        if (!row.closest("tr")?.hidden) {
+          row.checked = input.checked;
+        } else if (!input.checked) {
+          row.checked = false;
+        }
+      });
       updateSelection();
     });
   });
@@ -263,13 +269,32 @@
   document.querySelectorAll("[data-table-search]").forEach((input) => {
     input.addEventListener("input", () => {
       const term = input.value.trim().toLocaleLowerCase();
+      const targetTable = document.querySelector(input.dataset.tableSearch);
+      const lazyControls = targetTable?.closest(".table-wrap")?.querySelector(".table-lazy-controls");
       let shown = 0;
-      document.querySelectorAll(`${input.dataset.tableSearch} tbody tr`).forEach((row) => {
-        row.hidden = !row.textContent.toLocaleLowerCase().includes(term);
-        if (!row.hidden) shown += 1;
-      });
+      if (term) {
+        if (lazyControls) lazyControls.style.display = "none";
+        targetTable?.querySelectorAll("tbody tr").forEach((row) => {
+          row.hidden = !row.textContent.toLocaleLowerCase().includes(term);
+          if (!row.hidden) shown += 1;
+        });
+      } else {
+        if (lazyControls) {
+          lazyControls.style.display = "";
+          initLazyTables();
+          shown = targetTable?.querySelectorAll("tbody tr:not([hidden])").length || 0;
+        } else {
+          targetTable?.querySelectorAll("tbody tr").forEach((row) => {
+            row.hidden = false;
+            shown += 1;
+          });
+        }
+      }
       const label = document.getElementById(input.dataset.searchCount);
-      if (label) label.textContent = `${shown} result${shown === 1 ? "" : "s"}`;
+      if (label) {
+        const totalRows = targetTable?.querySelectorAll("tbody tr").length || 0;
+        label.textContent = term ? `${shown} result${shown === 1 ? "" : "s"}` : `${totalRows} record${totalRows === 1 ? "" : "s"}`;
+      }
       const empty = document.getElementById(input.dataset.searchEmpty);
       if (empty) empty.hidden = shown !== 0;
     });
@@ -393,6 +418,10 @@
     targets.forEach((input) => {
       if (input.dataset.stockAutocompleteActive === "true") return;
       input.dataset.stockAutocompleteActive = "true";
+
+      input.addEventListener("focus", () => {
+        loadStockSuggestions();
+      }, { once: true });
 
       input.setAttribute("autocomplete", "off");
       input.setAttribute("autocorrect", "off");
@@ -566,13 +595,202 @@
     });
   }
 
+  // Dynamic Holding Modals Handler (eliminates repeated per-holding dialogs)
+  document.addEventListener("click", (event) => {
+    const editBtn = event.target.closest(".edit-holding-btn");
+    if (editBtn) {
+      const dialog = document.getElementById("dynamic-edit-holding-dialog");
+      if (dialog) {
+        dialog.querySelector("form").action = editBtn.dataset.action;
+        dialog.querySelector("#dynamic-edit-holding-title").textContent = `Edit ${editBtn.dataset.stock} holding`;
+        dialog.querySelector("#dynamic-edit-holding-stock").value = editBtn.dataset.stock;
+        dialog.querySelector("#dynamic-edit-holding-quantity").value = editBtn.dataset.qty;
+        dialog.querySelector("#dynamic-edit-holding-buy-price").value = editBtn.dataset.buyPrice;
+        dialog.showModal();
+      }
+      return;
+    }
+    const sellBtn = event.target.closest(".sell-holding-btn");
+    if (sellBtn) {
+      const dialog = document.getElementById("dynamic-sell-holding-dialog");
+      if (dialog) {
+        dialog.querySelector("form").action = sellBtn.dataset.action;
+        dialog.querySelector("#dynamic-sell-holding-title").textContent = `Sell ${sellBtn.dataset.stock}`;
+        const qtyInput = dialog.querySelector("#dynamic-sell-holding-quantity");
+        qtyInput.value = sellBtn.dataset.qty;
+        qtyInput.max = sellBtn.dataset.qty;
+        dialog.querySelector("#dynamic-sell-holding-price").value = "";
+        dialog.showModal();
+      }
+      return;
+    }
+  });
+
+  // Progressive Table Lazy Loading (chunks rows to prevent mobile DOM lag)
+  function initLazyTables() {
+    document.querySelectorAll("table[data-lazy-table]").forEach((table) => {
+      const tbody = table.querySelector("tbody");
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const limit = parseInt(table.dataset.lazyTable, 10) || 20;
+      if (rows.length <= limit) return;
+
+      let currentVisible = limit;
+      rows.forEach((row, idx) => {
+        if (idx >= limit) row.hidden = true;
+      });
+
+      let container = table.closest(".table-wrap");
+      if (!container) container = table.parentElement;
+
+      // Avoid duplicate controls if reinitialized
+      container.querySelector(".table-lazy-controls")?.remove();
+
+      const footer = document.createElement("div");
+      footer.className = "table-lazy-controls";
+
+      const infoSpan = document.createElement("span");
+      infoSpan.textContent = `Showing 1–${currentVisible} of ${rows.length} records`;
+
+      const btnWrap = document.createElement("div");
+      btnWrap.style.cssText = "display:flex; gap:8px;";
+
+      const loadMoreBtn = document.createElement("button");
+      loadMoreBtn.type = "button";
+      loadMoreBtn.className = "btn btn-ghost btn-xs";
+      loadMoreBtn.textContent = `Show next ${Math.min(limit, rows.length - currentVisible)}`;
+      loadMoreBtn.addEventListener("click", () => {
+        const nextTarget = Math.min(rows.length, currentVisible + limit);
+        for (let i = currentVisible; i < nextTarget; i++) {
+          rows[i].hidden = false;
+        }
+        currentVisible = nextTarget;
+        infoSpan.textContent = `Showing 1–${currentVisible} of ${rows.length} records`;
+        if (currentVisible >= rows.length) {
+          footer.remove();
+        } else {
+          loadMoreBtn.textContent = `Show next ${Math.min(limit, rows.length - currentVisible)}`;
+        }
+      });
+
+      const showAllBtn = document.createElement("button");
+      showAllBtn.type = "button";
+      showAllBtn.className = "btn btn-ghost btn-xs";
+      showAllBtn.textContent = "Show all";
+      showAllBtn.addEventListener("click", () => {
+        rows.forEach((r) => (r.hidden = false));
+        footer.remove();
+      });
+
+      btnWrap.appendChild(loadMoreBtn);
+      btnWrap.appendChild(showAllBtn);
+      footer.appendChild(infoSpan);
+      footer.appendChild(btnWrap);
+      container.appendChild(footer);
+    });
+
+    // 2. Generic Card Lists (e.g. mobile cards)
+    document.querySelectorAll("[data-lazy-list]").forEach((container) => {
+      const items = Array.from(container.children).filter((el) => !el.classList.contains("table-lazy-controls"));
+      const limit = parseInt(container.dataset.lazyList, 10) || 15;
+      if (items.length <= limit) return;
+
+      let currentVisible = limit;
+      items.forEach((item, idx) => {
+        if (idx >= limit) item.hidden = true;
+      });
+
+      container.querySelector(".table-lazy-controls")?.remove();
+
+      const footer = document.createElement("div");
+      footer.className = "table-lazy-controls";
+      footer.style.borderRadius = "8px";
+      footer.style.marginTop = "8px";
+
+      const infoSpan = document.createElement("span");
+      infoSpan.textContent = `Showing 1–${currentVisible} of ${items.length} items`;
+
+      const btnWrap = document.createElement("div");
+      btnWrap.style.cssText = "display:flex; gap:8px;";
+
+      const loadMoreBtn = document.createElement("button");
+      loadMoreBtn.type = "button";
+      loadMoreBtn.className = "btn btn-ghost btn-xs";
+      loadMoreBtn.textContent = `Show next ${Math.min(limit, items.length - currentVisible)}`;
+      loadMoreBtn.addEventListener("click", () => {
+        const nextTarget = Math.min(items.length, currentVisible + limit);
+        for (let i = currentVisible; i < nextTarget; i++) {
+          items[i].hidden = false;
+        }
+        currentVisible = nextTarget;
+        infoSpan.textContent = `Showing 1–${currentVisible} of ${items.length} items`;
+        if (currentVisible >= items.length) {
+          footer.remove();
+        } else {
+          loadMoreBtn.textContent = `Show next ${Math.min(limit, items.length - currentVisible)}`;
+        }
+      });
+
+      const showAllBtn = document.createElement("button");
+      showAllBtn.type = "button";
+      showAllBtn.className = "btn btn-ghost btn-xs";
+      showAllBtn.textContent = "Show all";
+      showAllBtn.addEventListener("click", () => {
+        items.forEach((r) => (r.hidden = false));
+        footer.remove();
+      });
+
+      btnWrap.appendChild(loadMoreBtn);
+      btnWrap.appendChild(showAllBtn);
+      footer.appendChild(infoSpan);
+      footer.appendChild(btnWrap);
+      container.appendChild(footer);
+    });
+  }
+
+  // Instant Top Navigation Progress Bar
+  const pBar = document.getElementById("app-progress-bar");
+  function startProgress() {
+    if (!pBar) return;
+    pBar.hidden = false;
+    pBar.classList.remove("done");
+    pBar.classList.add("loading");
+  }
+  function completeProgress() {
+    if (!pBar) return;
+    pBar.classList.remove("loading");
+    pBar.classList.add("done");
+    setTimeout(() => {
+      pBar.hidden = true;
+    }, 300);
+  }
+
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a[href]");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("javascript:") || link.target === "_blank") return;
+    startProgress();
+  });
+
+  document.addEventListener("submit", (e) => {
+    const form = e.target;
+    if (form && form.target !== "_blank") {
+      startProgress();
+    }
+  });
+
+  window.addEventListener("pageshow", completeProgress);
+
   const autoDialog = document.querySelector("[data-auto-open='true']");
   if (autoDialog) showDialog(autoDialog.id);
 
   initStockAutocomplete();
   initPhoneInputs();
+  initLazyTables();
   window.initStockAutocomplete = initStockAutocomplete;
   window.initPhoneInputs = initPhoneInputs;
+  window.initLazyTables = initLazyTables;
 })();
 
 // Cryptographically Strong Password Generator

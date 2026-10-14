@@ -80,7 +80,7 @@
 {% macro trade_table(trades, total=None, show_client=True, selectable=False) %}
 {% if trades %}
 <div class="table-wrap">
-<table class="data-table trade-table">
+<table class="data-table trade-table" data-lazy-table="20">
   <thead><tr>
     {% if selectable %}<th class="check-cell"><input type="checkbox" data-select-all=".rowchk" aria-label="Select all trades"></th>{% endif %}
     {% if show_client %}<th>Client</th>{% endif %}

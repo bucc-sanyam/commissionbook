@@ -13,7 +13,7 @@
 <section class="card">
   <div class="card-header"><div><h2>Client directory</h2><p id="client-search-count">{{ clients|length }} client{{ 's' if clients|length != 1 }}</p></div><label class="search-field">{{ icon('search', 15) }}<input type="search" placeholder="Find a client..." aria-label="Search clients" data-table-search="#clients-table" data-search-count="client-search-count" data-search-empty="client-search-empty"></label></div>
   {% if clients %}
-  <div class="table-wrap"><table class="data-table" id="clients-table">
+  <div class="table-wrap"><table class="data-table" id="clients-table" data-lazy-table="25">
     <thead><tr><th>Client</th><th>Portal Password</th><th>Commission rule</th><th class="r">Trades</th><th class="r">Client P&amp;L</th><th class="r">Earned</th><th class="r">Received</th><th class="r">Balance</th><th></th></tr></thead>
     <tbody>{% for c in clients %}
       <tr>

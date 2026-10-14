@@ -110,7 +110,7 @@
   <section class="card">
     <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
     {% if payments %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    <div class="table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for p in payments %}
       <tr><td class="date-cell">{{ p.paid_on }}</td><td>{{ p.mode or 'Not specified' }}{% if p.notes %}<span class="cell-secondary" title="{{ p.notes }}">{{ p.notes|truncate(32) }}</span>{% endif %}</td><td class="r pos tabular strong">{{ p.amount|money }}</td><td><form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment">{{ icon('trash', 15) }}</button></form></td></tr>
     {% endfor %}</tbody></table></div>
@@ -120,7 +120,7 @@
   <section class="card">
     <div class="card-header"><div><h2>Capital &amp; Funds Ledger</h2><p>Capital deposited or withdrawn by client and admin.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
     {% if funds %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    <div class="table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for f in funds %}
       <tr>
         <td class="date-cell">{{ f.added_on }}</td>
@@ -159,17 +159,62 @@
         <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
         <td>
           <div class="row-actions" style="justify-content: flex-end;">
-            <button class="icon-btn" type="button" data-dialog="edit-share-dialog-{{ sh.id }}" aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
-            <button class="icon-btn" type="button" data-dialog="sell-share-dialog-{{ sh.id }}" aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
+            <button class="icon-btn edit-holding-btn" type="button" 
+              data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+              data-stock="{{ sh.stock }}"
+              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+              data-buy-price="{{ sh.buy_price or '' }}"
+              aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
+            <button class="icon-btn sell-holding-btn" type="button" 
+              data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+              data-stock="{{ sh.stock }}"
+              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+              aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
             <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
           </div>
         </td>
       </tr>
     {% endfor %}</tbody></table></div>
-    {% for sh in shares %}
-      <dialog class="modal" id="edit-share-dialog-{{ sh.id }}"><form method="post" action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">UPDATE</span><h2>Edit {{ sh.stock }} holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" type="text" required value="{{ sh.stock }}"></label><label class="field">Quantity<input name="quantity" type="number" step="1" min="0" value="{{ (sh.quantity|int) if sh.quantity else '' }}" placeholder="0"></label><label class="field">Buy price<input name="buy_price" type="number" step="any" min="0" value="{{ sh.buy_price or '' }}"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
-      <dialog class="modal" id="sell-share-dialog-{{ sh.id }}"><form method="post" action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">RECORD SALE</span><h2>Sell {{ sh.stock }}</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p><div class="form-grid"><label class="field">Quantity to sell<input name="quantity" type="number" step="1" min="1" max="{{ (sh.quantity|int) if sh.quantity else '' }}" required value="{{ (sh.quantity|int) if sh.quantity else '' }}"></label><label class="field">Sell price<input name="sell_price" type="number" step="any" min="0" required></label><label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button></div></form></dialog>
-    {% endfor %}
+    <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
+    <dialog class="modal" id="dynamic-edit-holding-dialog">
+      <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">
+        {{ csrf() }}
+        <input type="hidden" name="back" value="1">
+        <div class="modal-heading">
+          <div><span class="eyebrow">UPDATE</span><h2 id="dynamic-edit-holding-title">Edit holding</h2></div>
+          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
+          <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
+          <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+          <button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="modal" id="dynamic-sell-holding-dialog">
+      <form method="post" id="dynamic-sell-holding-form" action="" class="modal-inner">
+        {{ csrf() }}
+        <input type="hidden" name="back" value="1">
+        <div class="modal-heading">
+          <div><span class="eyebrow">RECORD SALE</span><h2 id="dynamic-sell-holding-title">Sell holding</h2></div>
+          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+        </div>
+        <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
+        <div class="form-grid">
+          <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
+          <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
+          <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+          <button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button>
+        </div>
+      </form>
+    </dialog>
     {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
   </section>
   <div class="stack">

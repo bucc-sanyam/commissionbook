@@ -159,7 +159,7 @@
       {% if shares %}
       <!-- Desktop Holdings View -->
       <div class="portal-desktop-table-wrap table-wrap">
-        <table class="data-table" id="portal-holdings-table">
+        <table class="data-table" id="portal-holdings-table" data-lazy-table="20">
           <thead>
             <tr>
               <th>Stock</th>
@@ -212,7 +212,7 @@
       </div>
 
       <!-- Mobile Expandable Holdings View (Zero Horizontal Scrolling) -->
-      <div class="mobile-holdings-list">
+      <div class="mobile-holdings-list" data-lazy-list="15">
         {% for h in shares %}
         <details class="mobile-trade-card">
           <summary class="mobile-trade-summary">
@@ -292,7 +292,7 @@
       {% if trades %}
       <!-- Desktop Trades View -->
       <div class="portal-desktop-table-wrap table-wrap">
-        <table class="data-table">
+        <table class="data-table" data-lazy-table="20">
           <thead>
             <tr>
               <th>Stock</th>
@@ -337,7 +337,7 @@
       </div>
 
       <!-- Mobile Expandable Trades View (Zero Horizontal Scrolling) -->
-      <div class="mobile-trade-list">
+      <div class="mobile-trade-list" data-lazy-list="15">
         {% for t in trades %}
         <details class="mobile-trade-card">
           <summary class="mobile-trade-summary">
