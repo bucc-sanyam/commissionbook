@@ -1714,6 +1714,7 @@ def create_app(config=None):
             chg_pct = float(q["change_pct"]) if q.get("change_pct") is not None else 0.0
             serialized_quotes.append({
                 "stock": q.get("stock", ""),
+                "ticker": q.get("ticker", q.get("stock", "")),
                 "current_price": curr,
                 "current_price_formatted": f"₹{curr:,.2f}",
                 "previous_close": prev,
