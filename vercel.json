@@ -1,6 +1,12 @@
 {
   "version": 2,
   "regions": ["bom1"],
+  "crons": [
+    {
+      "path": "/api/cron/update-prices",
+      "schedule": "15 10 * * 1-5"
+    }
+  ],
   "builds": [
     {
       "src": "api/index.py",

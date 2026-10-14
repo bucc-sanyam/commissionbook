@@ -67,9 +67,9 @@
         {{ icon('trend', 14) }}<span>Stock Names &amp; Aliases</span>
       </button>
 
-      <form method="post" action="{{ url_for('admin_update_prices') }}" style="margin: 0;">
+      <form id="update-prices-form" method="post" action="{{ url_for('admin_update_prices') }}" style="margin: 0;">
         {{ csrf() }}
-        <button type="submit" class="btn btn-secondary btn-sm" title="Fetch live market prices for all held stocks now">
+        <button type="submit" id="update-prices-btn" class="btn btn-secondary btn-sm" title="Fetch live market prices for all held stocks now">
           {{ icon('repeat', 14) }}<span>Update Prices Now</span>
         </button>
       </form>
@@ -428,6 +428,50 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.alias-stock-checkbox').forEach(cb => {
     cb.addEventListener('change', updateSelectedCount);
   });
+
+  // AJAX Price Updater to prevent 302 redirects and provide inline loading feedback
+  const updatePricesForm = document.getElementById('update-prices-form');
+  const updatePricesBtn = document.getElementById('update-prices-btn');
+  if (updatePricesForm && updatePricesBtn) {
+    updatePricesForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const origHtml = updatePricesBtn.innerHTML;
+      updatePricesBtn.disabled = true;
+      updatePricesBtn.innerHTML = `
+        <span class="spinner-circle" style="margin-right:6px;"></span>
+        <span>Updating prices...</span>
+      `;
+
+      try {
+        const csrfToken = updatePricesForm.querySelector('input[name="_csrf_token"]')?.value || '';
+        const resp = await fetch('{{ url_for("admin_update_prices") }}?force=1', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': csrfToken
+          }
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          updatePricesBtn.innerHTML = `✓ <span>Updated (${data.updated_count || data.total || 0})</span>`;
+          updatePricesBtn.classList.remove('btn-secondary');
+          updatePricesBtn.classList.add('btn-primary');
+          setTimeout(() => {
+            window.location.reload();
+          }, 800);
+        } else {
+          alert(data.message || 'Error updating stock prices.');
+          updatePricesBtn.disabled = false;
+          updatePricesBtn.innerHTML = origHtml;
+        }
+      } catch (err) {
+        console.error('Update prices error:', err);
+        // Fallback to traditional form submission if network fetch fails
+        updatePricesForm.submit();
+      }
+    });
+  }
 });
 </script>
 {% endblock %}

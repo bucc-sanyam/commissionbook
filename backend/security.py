@@ -149,6 +149,11 @@ def require_csrf():
         return
     if request.path == "/login":
         return
+    if request.path.startswith("/api/cron/") or request.path in (
+        "/update-prices", "/update-price", "/admin/update-prices", "/admin/update-price",
+        "/api/update-prices", "/api/update-price",
+    ):
+        return
     provided = request.headers.get("X-CSRF-Token") or request.headers.get("X-CSRFToken")
     if not provided and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
         provided = request.form.get("csrf_token")

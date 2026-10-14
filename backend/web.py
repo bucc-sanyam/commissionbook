@@ -1643,24 +1643,159 @@ def create_app(config=None):
             client_entered_stocks=get_client_entered_stocks(get_db()),
         )
 
+    # Cache and throttling for price update endpoints
+    _price_update_state = {
+        "ts": 0.0,
+        "data": None,
+        "lock": threading.Lock(),
+    }
+
     @app.route("/admin/update-prices", methods=["GET", "POST"])
+    @app.route("/admin/update-price", methods=["GET", "POST"])
     @app.route("/update-prices", methods=["GET", "POST"])
-    @login_required
+    @app.route("/update-price", methods=["GET", "POST"])
+    @app.route("/api/update-prices", methods=["GET", "POST"])
+    @app.route("/api/update-price", methods=["GET", "POST"])
+    @app.route("/api/cron/update-prices", methods=["GET", "POST"])
+    @app.route("/api/cron/update-price", methods=["GET", "POST"])
     def admin_update_prices():
-        try:
-            res = update_all_stock_prices(get_db())
-            count = len(res.get("updated", []))
-            failed = len(res.get("failed", []))
-            if count:
-                flash(f"Updated market prices for {count} stock(s).", "success")
-            elif failed:
-                flash(f"Could not fetch prices for {failed} stock(s). Check symbols or internet connection.", "warning")
+        # Authenticate if admin session, valid bearer/query token, or cron
+        is_admin = bool(session.get("admin"))
+        is_cron = bool(
+            request.headers.get("x-vercel-cron")
+            or "vercel-cron" in request.headers.get("user-agent", "").lower()
+        )
+        auth_hdr = request.headers.get("Authorization", "")
+        token = request.args.get("token") or request.args.get("key") or (
+            auth_hdr[7:] if auth_hdr.startswith("Bearer ") else ""
+        )
+        cron_secret = os.getenv("CRON_SECRET", "")
+        app_secret = current_app.secret_key
+        has_secret_token = bool(token and (
+            (cron_secret and token == cron_secret) or (app_secret and token == app_secret)
+        ))
+
+        force = request.args.get("force") in ("1", "true", "yes") or request.form.get("force") in ("1", "true", "yes")
+        now_ts = time.time()
+
+        with _price_update_state["lock"]:
+            # If called recently (< 25s ago) and not forced, return cached results without hammering Yahoo Finance
+            if not force and (now_ts - _price_update_state["ts"] < 25.0) and _price_update_state["data"] is not None:
+                res = _price_update_state["data"]
+                status_note = "cached"
             else:
-                flash("No holdings currently recorded to update.", "info")
-        except Exception as e:
-            app.logger.exception("Error updating stock prices: %s", e)
-            flash(f"Could not update market prices: {e}", "warning")
-        return redirect(url_for("holdings_list"))
+                try:
+                    res = update_all_stock_prices(get_db())
+                    _price_update_state["ts"] = now_ts
+                    _price_update_state["data"] = res
+                    status_note = "fresh"
+                except Exception as e:
+                    app.logger.exception("Error updating stock prices: %s", e)
+                    res = {"total": 0, "updated": [], "failed": [str(e)]}
+                    status_note = "error"
+
+        updated = res.get("updated", [])
+        failed = res.get("failed", [])
+        count = len(updated)
+        failed_count = len(failed)
+
+        if count:
+            msg = f"Updated market prices for {count} stock(s)."
+        elif failed_count:
+            msg = f"Could not fetch prices for {failed_count} stock(s). Check symbols or internet connection."
+        else:
+            msg = "No holdings currently recorded to update."
+
+        serialized_quotes = []
+        for q in updated:
+            curr = float(q["current_price"]) if q.get("current_price") is not None else 0.0
+            prev = float(q["previous_close"]) if q.get("previous_close") is not None else 0.0
+            chg = float(q["change"]) if q.get("change") is not None else 0.0
+            chg_pct = float(q["change_pct"]) if q.get("change_pct") is not None else 0.0
+            serialized_quotes.append({
+                "stock": q.get("stock", ""),
+                "current_price": curr,
+                "current_price_formatted": f"₹{curr:,.2f}",
+                "previous_close": prev,
+                "change": chg,
+                "change_formatted": f"{'+' if chg >= 0 else ''}{chg:,.2f}",
+                "change_pct": chg_pct,
+                "change_pct_formatted": f"{'+' if chg_pct >= 0 else ''}{chg_pct:.2f}%",
+            })
+
+        # JSON response detection
+        accept_header = request.headers.get("Accept", "").lower()
+        ua = request.headers.get("User-Agent", "").lower()
+        is_json_req = (
+            request.path.startswith("/api/")
+            or "application/json" in accept_header
+            or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+            or request.args.get("json") in ("1", "true")
+            or "curl" in ua
+            or "httpie" in ua
+            or request.content_type == "application/json"
+        )
+
+        if is_json_req:
+            return jsonify({
+                "ok": True if status_note != "error" else False,
+                "status": status_note,
+                "total": res.get("total", count + failed_count),
+                "updated_count": count,
+                "updated": serialized_quotes,
+                "failed": failed,
+                "message": msg,
+            }), 200
+
+        # Also flash for admin if they navigate back
+        if is_admin:
+            flash(msg, "success" if count else ("warning" if failed_count else "info"))
+
+        # HTML response with HTTP 200 OK
+        quotes_summary = "".join([
+            f'<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">'
+            f'<strong style="color:#fff;font-size:15px;">{q["stock"]}</strong>'
+            f'<span style="font-family:monospace;font-weight:600;font-size:14px;color:{"#10b981" if q["change"] >= 0 else "#ef4444"};">'
+            f'{q["current_price_formatted"]} ({q["change_pct_formatted"]})</span></div>'
+            for q in serialized_quotes
+        ]) or '<p style="color:#94a3b8;font-size:13px;margin:12px 0;">No active stock positions found.</p>'
+
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Prices Updated · Commission Book</title>
+  <style>
+    :root {{ --bg: #0b0f19; --card: #151c2e; --border: #232d48; --text: #f0f4fc; --sub: #94a3b8; --green: #10b981; --accent: #3b82f6; }}
+    * {{ box-sizing: border-box; }}
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 80vh; margin: 0; }}
+    .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: center; }}
+    .badge-icon {{ width: 56px; height: 56px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: var(--green); font-size: 26px; }}
+    h1 {{ font-size: 20px; font-weight: 700; margin: 0 0 8px; color: #fff; }}
+    p {{ color: var(--sub); font-size: 14px; margin: 0 0 20px; line-height: 1.5; }}
+    .stocks-list {{ background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 6px 16px; text-align: left; margin-bottom: 24px; max-height: 260px; overflow-y: auto; }}
+    .actions {{ display: flex; gap: 10px; justify-content: center; }}
+    .btn {{ display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 22px; background: var(--accent); color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all 0.15s ease; }}
+    .btn:hover {{ background: #2563eb; transform: translateY(-1px); }}
+  </style>
+  <meta http-equiv="refresh" content="4; url=/holdings">
+</head>
+<body>
+  <div class="card">
+    <div class="badge-icon">✓</div>
+    <h1>Market Prices Updated</h1>
+    <p>{msg}</p>
+    <div class="stocks-list">
+      {quotes_summary}
+    </div>
+    <div class="actions">
+      <a href="/holdings" class="btn">← Back to Holdings</a>
+    </div>
+  </div>
+</body>
+</html>"""
+        return html_content, 200, {"Content-Type": "text/html; charset=utf-8"}
 
     @app.route("/admin/stocks/alias", methods=["POST"])
     @login_required
