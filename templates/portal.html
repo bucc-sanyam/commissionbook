@@ -325,7 +325,13 @@
               <td class="r date-cell">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}</td>
               <td class="r">
                 {% if t.upload_filename %}
-                <a class="icon-btn" href="{{ url_for('upload_file', name=t.upload_filename.split(',')[0]) }}" target="_blank" rel="noopener noreferrer" title="View proof screenshot" style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
+                <div style="display:inline-flex; align-items:center; gap:4px; justify-content:flex-end;">
+                  <a class="icon-btn" href="{{ url_for('upload_file', name=t.upload_filename.split(',')[0]) }}" target="_blank" rel="noopener noreferrer" title="View proof screenshot" style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
+                  <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+                    {{ csrf() }}
+                    <button class="icon-btn icon-btn-danger" type="submit" title="Delete screenshot proof" style="display:inline-flex; width:26px; height:26px; color:#c53030; cursor:pointer;" aria-label="Delete screenshot proof">{{ icon('trash', 13) }}</button>
+                  </form>
+                </div>
                 {% else %}
                 <span class="muted" style="font-size: 11px;">—</span>
                 {% endif %}
@@ -404,13 +410,21 @@
             </div>
 
             {% if t.upload_filename %}
-            <div class="mtd-proof">
-              <span class="muted" style="font-size:11px;">Proof:</span>
-              {% for fn in t.upload_filename.split(',') if fn %}
-                <a class="btn btn-ghost btn-sm" href="{{ url_for('upload_file', name=fn) }}" target="_blank" rel="noopener noreferrer" style="font-size:11px; padding: 2px 8px;">
-                  {{ icon('image', 12) }} Screenshot
-                </a>
-              {% endfor %}
+            <div class="mtd-proof" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span class="muted" style="font-size:11px;">Proof:</span>
+                {% for fn in t.upload_filename.split(',') if fn %}
+                  <a class="btn btn-ghost btn-sm" href="{{ url_for('upload_file', name=fn) }}" target="_blank" rel="noopener noreferrer" style="font-size:11px; padding: 2px 8px;">
+                    {{ icon('image', 12) }} Screenshot
+                  </a>
+                {% endfor %}
+              </div>
+              <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+                {{ csrf() }}
+                <button type="submit" class="btn btn-ghost btn-sm" style="color: #c53030; font-size:11px; padding: 2px 8px;" title="Delete proof screenshot">
+                  {{ icon('trash', 12) }} Remove Proof
+                </button>
+              </form>
             </div>
             {% endif %}
           </div>

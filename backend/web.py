@@ -1353,6 +1353,42 @@ def create_app(config=None):
         flash("Trade deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
 
+    @app.route("/trades/<int:tid>/delete-screenshot", methods=["POST"])
+    @login_required
+    def trade_delete_screenshot(tid):
+        db = get_db()
+        trade = db.execute("SELECT * FROM trades WHERE id=?", (tid,)).fetchone()
+        if not trade:
+            abort(404)
+        upload_id = trade["upload_id"]
+        if not upload_id:
+            flash("No screenshot attached to this trade.", "info")
+            return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
+
+        stock_name = trade["stock"]
+        db.execute("UPDATE trades SET upload_id=NULL WHERE id=?", (tid,))
+
+        other_trades = db.execute("SELECT COUNT(*) AS c FROM trades WHERE upload_id=?", (upload_id,)).fetchone()
+        count = other_trades["c"] if other_trades else 0
+        if count == 0:
+            try:
+                assets = db.execute("SELECT path FROM upload_assets WHERE upload_id=?", (upload_id,)).fetchall()
+                paths = [a["path"] for a in assets if a and a["path"]]
+                if paths:
+                    try:
+                        storage = get_storage()
+                        storage.remove(paths)
+                    except Exception as storage_exc:
+                        current_app.logger.warning("Failed to remove storage files for upload %s: %s", upload_id, storage_exc)
+                db.execute("DELETE FROM upload_assets WHERE upload_id=?", (upload_id,))
+                db.execute("DELETE FROM uploads WHERE id=?", (upload_id,))
+            except Exception as exc:
+                current_app.logger.warning("Error cleaning up orphaned upload record %s: %s", upload_id, exc)
+
+        db.commit()
+        flash(f"Proof screenshot removed from {stock_name}.", "success")
+        return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
+
     @app.route("/trades/<int:tid>/close", methods=["POST"])
     @login_required
     def trade_close(tid):
@@ -2969,6 +3005,45 @@ def create_app(config=None):
         invalidate_prices_cache()
         invalidate_stock_caches()
         db.commit()
+        return redirect(url_for("client_portal"))
+
+    @app.route("/portal/trades/<int:trade_id>/delete-screenshot", methods=["POST"])
+    @client_login_required
+    def portal_trade_delete_screenshot(trade_id):
+        cid = session["client_id"]
+        db = get_db()
+        trade = db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (trade_id, cid)).fetchone()
+        if not trade:
+            flash("Trade not found or unauthorized.", "error")
+            return redirect(url_for("client_portal"))
+
+        upload_id = trade["upload_id"]
+        if not upload_id:
+            flash("No screenshot attached to this trade.", "info")
+            return redirect(url_for("client_portal"))
+
+        stock_name = trade["stock"]
+        db.execute("UPDATE trades SET upload_id=NULL WHERE id=? AND client_id=?", (trade_id, cid))
+
+        other_trades = db.execute("SELECT COUNT(*) AS c FROM trades WHERE upload_id=?", (upload_id,)).fetchone()
+        count = other_trades["c"] if other_trades else 0
+        if count == 0:
+            try:
+                assets = db.execute("SELECT path FROM upload_assets WHERE upload_id=?", (upload_id,)).fetchall()
+                paths = [a["path"] for a in assets if a and a["path"]]
+                if paths:
+                    try:
+                        storage = get_storage()
+                        storage.remove(paths)
+                    except Exception as storage_exc:
+                        current_app.logger.warning("Failed to remove storage files for upload %s: %s", upload_id, storage_exc)
+                db.execute("DELETE FROM upload_assets WHERE upload_id=?", (upload_id,))
+                db.execute("DELETE FROM uploads WHERE id=?", (upload_id,))
+            except Exception as exc:
+                current_app.logger.warning("Error cleaning up orphaned upload record %s: %s", upload_id, exc)
+
+        db.commit()
+        flash(f"Proof screenshot removed from {stock_name}.", "success")
         return redirect(url_for("client_portal"))
 
     @app.route("/portal/funds/adjust", methods=["POST"])
