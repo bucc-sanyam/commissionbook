@@ -33,47 +33,46 @@ def fetch_stock_quote(raw_symbol: str) -> dict | None:
         variants = [clean]
 
     headers = {"User-Agent": USER_AGENTS[0], "Accept": "application/json"}
-    try:
-        with httpx.Client(timeout=3.5) as client:
-            for ticker in variants:
-                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
-                try:
-                    resp = client.get(url, headers=headers)
+    with httpx.Client(timeout=3.5) as client:
+        for ticker in variants:
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+            try:
+                resp = client.get(url, headers=headers)
+                if resp.status_code != 200:
+                    url2 = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+                    resp = client.get(url2, headers=headers)
                     if resp.status_code != 200:
-                        url2 = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
-                        resp = client.get(url2, headers=headers)
-                        if resp.status_code != 200:
-                            continue
-                    data = resp.json()
-                    result = data.get("chart", {}).get("result")
-                    if not result or len(result) == 0:
                         continue
-                    meta = result[0].get("meta", {})
-                    current_price = meta.get("regularMarketPrice")
-                    if current_price is None:
-                        indicators = result[0].get("indicators", {}).get("quote", [{}])[0]
-                        closes = [c for c in indicators.get("close", []) if c is not None]
-                        if closes:
-                            current_price = closes[-1]
-                    if current_price is None:
-                        continue
-
-                    prev_close = meta.get("chartPreviousClose") or current_price
-                    curr_dec = Decimal(str(current_price)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                    prev_dec = Decimal(str(prev_close)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                    change = curr_dec - prev_dec
-                    change_pct = (change / prev_dec * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if prev_dec else Decimal("0")
-
-                    return {
-                        "stock": clean.replace(".NS", "").replace(".BO", ""),
-                        "current_price": curr_dec,
-                        "previous_close": prev_dec,
-                        "change": change,
-                        "change_pct": change_pct,
-                    }
-                except Exception as exc:
-                    logger.debug("Failed to fetch price for %s: %s", ticker, exc)
+                data = resp.json()
+                result = data.get("chart", {}).get("result")
+                if not result or len(result) == 0:
                     continue
+                meta = result[0].get("meta", {})
+                current_price = meta.get("regularMarketPrice")
+                if current_price is None:
+                    indicators = result[0].get("indicators", {}).get("quote", [{}])[0]
+                    closes = [c for c in indicators.get("close", []) if c is not None]
+                    if closes:
+                        current_price = closes[-1]
+                if current_price is None:
+                    continue
+
+                prev_close = meta.get("chartPreviousClose") or current_price
+                curr_dec = Decimal(str(current_price)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                prev_dec = Decimal(str(prev_close)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                change = curr_dec - prev_dec
+                change_pct = (change / prev_dec * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if prev_dec else Decimal("0")
+
+                return {
+                    "stock": clean.replace(".NS", "").replace(".BO", ""),
+                    "current_price": curr_dec,
+                    "previous_close": prev_dec,
+                    "change": change,
+                    "change_pct": change_pct,
+                }
+            except Exception as exc:
+                logger.debug("Failed to fetch price for %s: %s", ticker, exc)
+                continue
 
     return None
 
