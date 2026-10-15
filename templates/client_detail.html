@@ -251,7 +251,7 @@
         <td><strong>{{ sh.stock }}</strong></td>
         <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
         <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
-        <td class="r tabular"><span class="solari-flap" data-cmp="{{ sh.stock }}" title="Airport Solari Split-Flap live price">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
+        <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
         <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
         <td>
           <div class="row-actions" style="justify-content: flex-end;">
@@ -290,7 +290,7 @@
           </div>
           <div class="mtd-item">
             <span class="mtd-label">CMP (Current)</span>
-            <strong class="mtd-val"><span class="solari-flap" data-cmp="{{ sh.stock }}" title="Airport Solari Split-Flap live price">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
+            <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
           </div>
           <div class="mtd-item">
             <span class="mtd-label">Valuation</span>

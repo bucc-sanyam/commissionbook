@@ -118,12 +118,12 @@
           <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
           <td class="r tabular">
             {% if h.cmp %}
-              <span class="solari-flap" data-cmp="{{ h.stock }}" title="Airport Solari Split-Flap live price">{{ h.cmp|money }}</span>
+              <span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</span>
               {% if h.price_updated_at %}
                 <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{ h.price_updated_at[11:16] }} IST</small>
               {% endif %}
             {% else %}
-              <span class="solari-flap muted" data-cmp="{{ h.stock }}">—</span>
+              <span class="live-price-val muted" data-cmp="{{ h.stock }}">—</span>
             {% endif %}
           </td>
           <td class="r tabular"><strong data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong></td>
@@ -183,7 +183,7 @@
           </div>
           <div class="mtd-item">
             <span class="mtd-label">CMP (Current)</span>
-            <strong class="mtd-val"><span class="solari-flap" data-cmp="{{ h.stock }}" title="Airport Solari Split-Flap live price">{{ h.cmp|money if h.cmp else '—' }}</span></strong>
+            <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp else '—' }}</span></strong>
           </div>
           <div class="mtd-item">
             <span class="mtd-label">Current Value</span>

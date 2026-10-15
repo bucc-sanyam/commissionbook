@@ -914,31 +914,31 @@ window.formatRupee = function(num) {
 };
 
 // ==========================================================================
-// Airport Solari Split-Flap Flip Engine (Mechanical Departure Board)
+// Live Price & Metrics Number Transition Engine (Native Website Aesthetic)
 // ==========================================================================
-window.flipSolariEl = function(el, isUp = null) {
+window.flipNumberEl = window.flipSolariEl = function(el, isUp = null) {
   if (!el) return;
-  el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down");
+  el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down", "price-flip-up", "price-flip-down", "price-flipping");
   void el.offsetWidth; // force CSS reflow
   if (isUp === true) {
-    el.classList.add("solari-flip-up");
+    el.classList.add("price-flip-up");
   } else if (isUp === false) {
-    el.classList.add("solari-flip-down");
+    el.classList.add("price-flip-down");
   } else {
-    el.classList.add("solari-flipping");
+    el.classList.add("price-flipping");
   }
   setTimeout(() => {
-    el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down");
-  }, 600);
+    el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down", "price-flip-up", "price-flip-down", "price-flipping");
+  }, 480);
 };
 
-window.triggerAirportSolariCascade = function() {
-  const flaps = document.querySelectorAll(".solari-flap");
-  if (!flaps.length) return;
-  flaps.forEach((flap, idx) => {
+window.triggerPriceCascade = window.triggerAirportSolariCascade = function() {
+  const elements = document.querySelectorAll("[data-cmp], .live-price-val, .solari-flap");
+  if (!elements.length) return;
+  elements.forEach((el, idx) => {
     setTimeout(() => {
-      window.flipSolariEl(flap);
-    }, Math.min(idx * 75, 1500));
+      window.flipNumberEl(el);
+    }, Math.min(idx * 40, 800));
   });
 };
 
@@ -1037,9 +1037,7 @@ window.initLiveMarketTicker = function(options = {}) {
         const isUp = q.change >= 0;
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
-          window.flipSolariEl(cmpEl, isUp);
-        } else {
-          window.flipSolariEl(cmpEl, null);
+          window.flipNumberEl(cmpEl, isUp);
         }
       }
 
@@ -1057,7 +1055,11 @@ window.initLiveMarketTicker = function(options = {}) {
 
       const curValEl = row.querySelector("[data-curval]");
       if (curValEl && qty > 0) {
-        curValEl.textContent = window.formatRupee(qty * cmp);
+        const nextVal = window.formatRupee(qty * cmp);
+        if (curValEl.textContent.trim() !== nextVal) {
+          curValEl.textContent = nextVal;
+          window.flipNumberEl(curValEl, q.change >= 0);
+        }
       }
 
       const pnlEl = row.querySelector("[data-pnl]");
@@ -1067,8 +1069,12 @@ window.initLiveMarketTicker = function(options = {}) {
         const pnl = curVal - cost;
         const pnlPct = cost > 0 ? (pnl / cost * 100) : 0;
         const isUp = pnl >= 0;
-        pnlEl.className = "tabular " + (isUp ? "pos" : "neg");
-        pnlEl.innerHTML = `${isUp ? "+" : ""}${window.formatRupee(pnl)} <small>(${isUp ? "+" : ""}${pnlPct.toFixed(2)}%)</small>`;
+        const nextHtml = `${isUp ? "+" : ""}${window.formatRupee(pnl)} <small>(${isUp ? "+" : ""}${pnlPct.toFixed(2)}%)</small>`;
+        if (pnlEl.innerHTML.trim() !== nextHtml.trim()) {
+          pnlEl.className = "tabular " + (isUp ? "pos" : "neg");
+          pnlEl.innerHTML = nextHtml;
+          window.flipNumberEl(pnlEl, isUp);
+        }
       }
     });
 
@@ -1089,9 +1095,7 @@ window.initLiveMarketTicker = function(options = {}) {
         const isUp = q.change >= 0;
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
-          window.flipSolariEl(cmpEl, isUp);
-        } else {
-          window.flipSolariEl(cmpEl, null);
+          window.flipNumberEl(cmpEl, isUp);
         }
       }
 
@@ -1104,7 +1108,11 @@ window.initLiveMarketTicker = function(options = {}) {
 
       const curValEl = card.querySelector("[data-curval]");
       if (curValEl && qty > 0) {
-        curValEl.textContent = window.formatRupee(qty * cmp);
+        const nextVal = window.formatRupee(qty * cmp);
+        if (curValEl.textContent.trim() !== nextVal) {
+          curValEl.textContent = nextVal;
+          window.flipNumberEl(curValEl, q.change >= 0);
+        }
       }
 
       const pnlSummaryEl = card.querySelector(".mts-pnl");
@@ -1120,8 +1128,12 @@ window.initLiveMarketTicker = function(options = {}) {
           pnlSummaryEl.innerHTML = `<strong>${isUp ? "+" : ""}${window.formatRupee(pnl)}</strong><small>${isUp ? "+" : ""}${pnlPct.toFixed(2)}%</small>`;
         }
         if (pnlDetailEl) {
-          pnlDetailEl.className = "mtd-val " + (isUp ? "pos" : "neg");
-          pnlDetailEl.textContent = `${isUp ? "+" : ""}${window.formatRupee(pnl)} (${pnlPct.toFixed(2)}%)`;
+          const nextDetail = `${isUp ? "+" : ""}${window.formatRupee(pnl)} (${pnlPct.toFixed(2)}%)`;
+          if (pnlDetailEl.textContent.trim() !== nextDetail) {
+            pnlDetailEl.className = "mtd-val " + (isUp ? "pos" : "neg");
+            pnlDetailEl.textContent = nextDetail;
+            window.flipNumberEl(pnlDetailEl, isUp);
+          }
         }
       }
     });
@@ -1223,32 +1235,12 @@ window.initLiveMarketTicker = function(options = {}) {
   };
 };
 
-// ==========================================================================
-// Airport Solari Split-Flap Window Initialization & Interactive Listeners
-// ==========================================================================
-// Staggered departure board sequence 650ms after page load
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(window.triggerAirportSolariCascade, 650);
-  });
-} else {
-  setTimeout(window.triggerAirportSolariCascade, 650);
-}
-
-// Global click delegation for interactive tap-to-flip on any Solari flap tile
-document.addEventListener("click", (e) => {
-  const flap = e.target.closest(".solari-flap");
-  if (flap) {
-    window.flipSolariEl(flap);
-  }
-});
-
-// Update Prices Now form triggers the Solari cascade immediately
+// Update Prices Now form triggers cascade flip
 document.addEventListener("DOMContentLoaded", () => {
   const updatePricesForm = document.getElementById("update-prices-form");
   if (updatePricesForm) {
     updatePricesForm.addEventListener("submit", () => {
-      window.triggerAirportSolariCascade();
+      window.triggerPriceCascade();
     });
   }
 });
