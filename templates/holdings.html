@@ -9,7 +9,7 @@
       <h2 class="kpi-label">Portfolio Valuation</h2>
       <span class="kpi-icon">{{ icon('trend', 17) }}</span>
     </div>
-    <div class="kpi-value">{{ total_current_value|money }}</div>
+    <div class="kpi-value" id="kpi-portfolio-val">{{ total_current_value|money }}</div>
     <div class="kpi-bottom">
       {{ icon('check-circle', 12) }}
       <span>Live market worth across clients</span>
@@ -21,7 +21,7 @@
       <h2 class="kpi-label">Total Invested</h2>
       <span class="kpi-icon">{{ icon('wallet', 17) }}</span>
     </div>
-    <div class="kpi-value">{{ total_invested|money }}</div>
+    <div class="kpi-value" id="kpi-invested-val">{{ total_invested|money }}</div>
     <div class="kpi-bottom">
       {{ icon('wallet', 12) }}
       <span>Net cost basis of holdings</span>
@@ -33,11 +33,11 @@
       <h2 class="kpi-label">Unrealized P&amp;L</h2>
       <span class="kpi-icon">{{ icon('pie', 17) }}</span>
     </div>
-    <div class="kpi-value {{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}">
+    <div class="kpi-value {{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}" id="kpi-unrealized-val">
       {{ '+' if total_unrealized_pnl >= 0 else '' }}{{ total_unrealized_pnl|money }}
     </div>
     <div class="kpi-bottom">
-      <span class="stat-pill {{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}">{{ '+' if total_unrealized_pnl >= 0 else '' }}{{ total_unrealized_pct|round(2) }}%</span>
+      <span class="stat-pill {{ 'pos' if total_unrealized_pnl >= 0 else 'neg' }}" id="kpi-unrealized-pct">{{ '+' if total_unrealized_pnl >= 0 else '' }}{{ total_unrealized_pct|round(2) }}%</span>
       <span>Unrealized return</span>
     </div>
   </section>
@@ -58,8 +58,14 @@
 <section class="card" id="main">
   <div class="card-header">
     <div>
-      <h2>Client Holdings &amp; Market Prices</h2>
-      <p id="holdings-search-count">{{ holdings|length }} position{{ 's' if holdings|length != 1 }} · Auto-updates daily at 3:45 PM IST</p>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <h2 style="margin: 0;">Client Holdings &amp; Market Prices</h2>
+        <span id="market-ticker-badge" class="ticker-badge ticker-live" title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
+          <span class="ticker-pulse"></span>
+          <span>Live 1m Ticker</span>
+        </span>
+      </div>
+      <p id="holdings-search-count">{{ holdings|length }} position{{ 's' if holdings|length != 1 }} · Auto-updates every 1 min during market hours (9:15 AM – 3:45 PM IST)</p>
     </div>
     
     <div class="card-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -99,35 +105,35 @@
       </thead>
       <tbody>
         {% for h in holdings %}
-        <tr>
+        <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
           <td>
             <strong>{{ h.stock }}</strong>
-            {% if h.price_change is defined and h.price_change != 0 %}
-              <span class="daily-change {{ 'pos' if h.price_change > 0 else 'neg' }}" style="display: block; font-size: 10px;">
-                {{ '+' if h.price_change > 0 else '' }}{{ h.price_change_pct|round(2) }}% today
-              </span>
-            {% endif %}
+            <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'block' if (h.price_change is defined and h.price_change != 0) else 'none' }}; font-size: 10px;">
+              {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
+            </span>
           </td>
           <td><a class="client-cell" href="{{ url_for('client_detail', cid=h.client_id) }}">{{ avatar(h.client_name, h.client_id) }}<span>{{ h.client_name }}</span></a></td>
           <td class="r tabular"><strong>{{ h.quantity|num if h.quantity else '—' }}</strong></td>
           <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
           <td class="r tabular">
             {% if h.cmp %}
-              <strong>{{ h.cmp|money }}</strong>
+              <strong data-cmp="{{ h.stock }}">{{ h.cmp|money }}</strong>
               {% if h.price_updated_at %}
-                <small class="muted" style="display:block; font-size:10px;">{{ h.price_updated_at[11:16] }}</small>
+                <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{ h.price_updated_at[11:16] }} IST</small>
               {% endif %}
             {% else %}
-              <span class="muted">—</span>
+              <span class="muted" data-cmp="{{ h.stock }}">—</span>
             {% endif %}
           </td>
-          <td class="r tabular"><strong>{{ h.current_value|money }}</strong></td>
+          <td class="r tabular"><strong data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong></td>
           <td class="r tabular">
-            {% if h.unrealized_pnl >= 0 %}
-              <span class="pos">+{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small></span>
-            {% else %}
-              <span class="neg">{{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small></span>
-            {% endif %}
+            <span class="tabular {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
+              {% if h.unrealized_pnl >= 0 %}
+                +{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small>
+              {% else %}
+                {{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small>
+              {% endif %}
+            </span>
           </td>
           <td class="r date-cell">{{ h.added_on[:10] if h.added_on else '—' }}</td>
           <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=h.client_id) }}" aria-label="View {{ h.client_name }}">{{ icon('arrow-up-right', 17) }}</a></td>
@@ -429,7 +435,13 @@ document.addEventListener('DOMContentLoaded', function() {
     cb.addEventListener('change', updateSelectedCount);
   });
 
-  // AJAX Price Updater to prevent 302 redirects and provide inline loading feedback
+  // Initialize Live 1-Minute Stock Ticker (Runs Mon-Fri 09:15 - 15:45 IST)
+  let liveTicker = null;
+  if (typeof window.initLiveMarketTicker === 'function') {
+    liveTicker = window.initLiveMarketTicker({ badgeId: 'market-ticker-badge' });
+  }
+
+  // Manual "Update Prices Now" AJAX handler
   const updatePricesForm = document.getElementById('update-prices-form');
   const updatePricesBtn = document.getElementById('update-prices-btn');
   if (updatePricesForm && updatePricesBtn) {
@@ -443,31 +455,41 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       try {
-        const csrfToken = updatePricesForm.querySelector('input[name="_csrf_token"]')?.value || '';
-        const resp = await fetch('{{ url_for("admin_update_prices") }}?force=1', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-Token': csrfToken
-          }
-        });
-        const data = await resp.json();
-        if (data.ok) {
-          updatePricesBtn.innerHTML = `✓ <span>Updated (${data.updated_count || data.total || 0})</span>`;
+        if (liveTicker && typeof liveTicker.pollNow === 'function') {
+          await liveTicker.pollNow();
+          updatePricesBtn.innerHTML = `✓ <span>Updated</span>`;
           updatePricesBtn.classList.remove('btn-secondary');
           updatePricesBtn.classList.add('btn-primary');
           setTimeout(() => {
-            window.location.reload();
-          }, 800);
+            updatePricesBtn.disabled = false;
+            updatePricesBtn.innerHTML = origHtml;
+            updatePricesBtn.classList.remove('btn-primary');
+            updatePricesBtn.classList.add('btn-secondary');
+          }, 1500);
         } else {
-          alert(data.message || 'Error updating stock prices.');
-          updatePricesBtn.disabled = false;
-          updatePricesBtn.innerHTML = origHtml;
+          const csrfToken = updatePricesForm.querySelector('input[name="_csrf_token"]')?.value || '';
+          const resp = await fetch('{{ url_for("admin_update_prices") }}?force=1', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-Token': csrfToken
+            }
+          });
+          const data = await resp.json();
+          if (data.ok) {
+            updatePricesBtn.innerHTML = `✓ <span>Updated (${data.updated_count || data.total || 0})</span>`;
+            updatePricesBtn.classList.remove('btn-secondary');
+            updatePricesBtn.classList.add('btn-primary');
+            setTimeout(() => { window.location.reload(); }, 600);
+          } else {
+            alert(data.message || 'Error updating stock prices.');
+            updatePricesBtn.disabled = false;
+            updatePricesBtn.innerHTML = origHtml;
+          }
         }
       } catch (err) {
         console.error('Update prices error:', err);
-        // Fallback to traditional form submission if network fetch fails
         updatePricesForm.submit();
       }
     });

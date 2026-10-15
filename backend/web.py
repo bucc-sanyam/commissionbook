@@ -11,7 +11,7 @@ import time
 import urllib.request
 import urllib.parse
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP, localcontext
 from functools import wraps
 from pathlib import Path
@@ -41,7 +41,8 @@ from trade_parser import parse_text
 from .database import get_db, install_database
 from .prices import (
     DailyPriceScheduler, fetch_stock_quote, get_all_held_stocks,
-    get_cached_prices, invalidate_prices_cache, update_all_stock_prices,
+    get_cached_prices, invalidate_prices_cache, is_market_hours,
+    update_all_stock_prices, IST,
 )
 from .security import (
     configure_app, credential_version, csrf_token, local_setup_allowed, require_csrf,
@@ -1679,8 +1680,8 @@ def create_app(config=None):
         now_ts = time.time()
 
         with _price_update_state["lock"]:
-            # If called recently (< 25s ago) and not forced, return cached results without hammering Yahoo Finance
-            if not force and (now_ts - _price_update_state["ts"] < 25.0) and _price_update_state["data"] is not None:
+            # If called recently (< 45s ago) and not forced, return cached results without hammering Yahoo Finance
+            if not force and (now_ts - _price_update_state["ts"] < 45.0) and _price_update_state["data"] is not None:
                 res = _price_update_state["data"]
                 status_note = "cached"
             else:
@@ -1706,6 +1707,11 @@ def create_app(config=None):
         else:
             msg = "No holdings currently recorded to update."
 
+        now_ist = datetime.now(IST)
+        market_open = is_market_hours(now_ist)
+        time_ist_str = now_ist.strftime("%H:%M IST")
+        date_time_ist_str = now_ist.strftime("%Y-%m-%d %H:%M:%S IST")
+
         serialized_quotes = []
         for q in updated:
             curr = float(q["current_price"]) if q.get("current_price") is not None else 0.0
@@ -1722,6 +1728,7 @@ def create_app(config=None):
                 "change_formatted": f"{'+' if chg >= 0 else ''}{chg:,.2f}",
                 "change_pct": chg_pct,
                 "change_pct_formatted": f"{'+' if chg_pct >= 0 else ''}{chg_pct:.2f}%",
+                "updated_at": time_ist_str,
             })
 
         # JSON response detection
@@ -1746,6 +1753,10 @@ def create_app(config=None):
                 "updated": serialized_quotes,
                 "failed": failed,
                 "message": msg,
+                "is_market_hours": market_open,
+                "market_status": "open" if market_open else "closed",
+                "updated_at_ist": time_ist_str,
+                "updated_at_full": date_time_ist_str,
             }), 200
 
         # Also flash for admin if they navigate back
@@ -3097,18 +3108,19 @@ def create_app(config=None):
         try:
             quote = fetch_stock_quote(stock)
             if quote:
+                now_ist_str = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
                 db.execute(
                     """
                     INSERT INTO stock_prices (stock, current_price, previous_close, change, change_pct, updated_at)
-                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     ON CONFLICT(stock) DO UPDATE SET
                         current_price=excluded.current_price,
                         previous_close=excluded.previous_close,
                         change=excluded.change,
                         change_pct=excluded.change_pct,
-                        updated_at=CURRENT_TIMESTAMP
+                        updated_at=excluded.updated_at
                     """,
-                    (stock, quote["current_price"], quote.get("previous_close"), quote.get("change"), quote.get("change_pct")),
+                    (stock, quote["current_price"], quote.get("previous_close"), quote.get("change"), quote.get("change_pct"), now_ist_str),
                 )
         except Exception:
             pass
@@ -3466,12 +3478,17 @@ def create_app(config=None):
                 }
             }
             try:
+                push_headers = {
+                    "Urgency": "high",
+                    "Topic": f"trade-{re.sub(r'[^a-zA-Z0-9_-]', '', stock or 'alert')[:30]}"
+                }
                 webpush(
                     subscription_info=sub_info,
                     data=payload,
                     vapid_private_key=vapid_priv,
                     vapid_claims=vapid_claims,
-                    ttl=86400
+                    ttl=86400,
+                    headers=push_headers,
                 )
                 sent_count += 1
             except WebPushException as ex:

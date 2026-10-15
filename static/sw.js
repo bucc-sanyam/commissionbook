@@ -18,17 +18,25 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || 'Commission Book Alert';
+  const targetUrl = data.url || (data.data && data.data.url) || '/portal';
+
   const options = {
     body: data.body || 'New trade recommendation or portfolio update.',
     icon: data.icon || '/static/icon-192.png',
     badge: data.badge || '/static/icon-192.png',
-    tag: data.tag || 'trade-alert',
+    tag: data.tag || ('trade-alert-' + Date.now()),
     renotify: true,
-    vibrate: [100, 50, 100],
+    requireInteraction: true,
+    silent: false,
+    vibrate: [300, 100, 300, 100, 300],
+    timestamp: Date.now(),
     data: {
-      url: data.url || '/portal',
+      url: targetUrl,
       timestamp: Date.now()
-    }
+    },
+    actions: [
+      { action: 'open', title: 'View Alert' }
+    ]
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

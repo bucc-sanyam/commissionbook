@@ -891,5 +891,293 @@ window.showToast = function(message, type = "info") {
   }, 3200);
 };
 
+// ==========================================================================
+// Live 1-Minute Stock Market Ticker for Indian Market (09:15 - 15:45 IST, Mon-Fri)
+// ==========================================================================
+window.formatRupee = function(num) {
+  if (num === null || num === undefined || isNaN(num)) return "—";
+  return "₹" + Number(num).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+window.initLiveMarketTicker = function(options = {}) {
+  const badgeId = options.badgeId || "market-ticker-badge";
+  const badgeEl = document.getElementById(badgeId);
+
+  function isMarketOpenIST() {
+    const now = new Date();
+    // UTC time in ms
+    const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+    // IST is UTC + 5.5 hours
+    const ist = new Date(utcMs + (3600000 * 5.5));
+    const day = ist.getDay(); // 0 is Sunday, 6 is Saturday
+    if (day === 0 || day === 6) return false;
+    const mins = ist.getHours() * 60 + ist.getMinutes();
+    return mins >= (9 * 60 + 15) && mins <= (15 * 60 + 45); // 09:15 to 15:45 IST
+  }
+
+  function updateBadgeUI(isOpen, timeText) {
+    if (!badgeEl) return;
+    if (isOpen) {
+      badgeEl.className = "ticker-badge ticker-live";
+      badgeEl.innerHTML = `
+        <span class="ticker-pulse"></span>
+        <span>Live 1m Ticker</span>
+      `;
+      badgeEl.title = "Live market: Auto-updates every 1 min (9:15 AM - 3:45 PM IST)" + (timeText ? ` · Last: ${timeText}` : "");
+    } else {
+      badgeEl.className = "ticker-badge ticker-closed";
+      badgeEl.innerHTML = `
+        <span class="ticker-dot-closed"></span>
+        <span>Market Closed (9:15 AM - 3:45 PM IST)</span>
+      `;
+      badgeEl.title = "Market trading hours: Mon-Fri 9:15 AM - 3:45 PM IST";
+    }
+  }
+
+  let timerId = null;
+  let isFetching = false;
+  let lastFetchTime = Date.now();
+
+  async function pollLiveQuotes(force = false) {
+    if (isFetching) return;
+    if (document.hidden && !force) return;
+
+    const marketOpen = isMarketOpenIST();
+    updateBadgeUI(marketOpen);
+
+    // If market closed and not manually forced, do not poll
+    if (!marketOpen && !force) return;
+
+    isFetching = true;
+    try {
+      const resp = await fetch("/api/update-prices" + (force ? "?force=1" : ""), {
+        headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      lastFetchTime = Date.now();
+      if (data && data.updated) {
+        applyLiveQuoteUpdates(data);
+        updateBadgeUI(data.is_market_hours ?? marketOpen, data.updated_at_ist);
+      }
+    } catch (err) {
+      console.warn("Live ticker update notice:", err);
+    } finally {
+      isFetching = false;
+    }
+  }
+
+  function applyLiveQuoteUpdates(data) {
+    if (!data || !Array.isArray(data.updated)) return;
+    const quotes = data.updated;
+    const quoteMap = {};
+    quotes.forEach(q => {
+      if (q.stock) quoteMap[q.stock.toUpperCase()] = q;
+      if (q.ticker) quoteMap[q.ticker.toUpperCase()] = q;
+    });
+
+    // 1. Update Holdings Page rows (desktop table)
+    document.querySelectorAll("#holdings-table tbody tr[data-stock], #portal-holdings-table tbody tr[data-stock]").forEach(row => {
+      const stockKey = (row.getAttribute("data-stock") || "").toUpperCase();
+      const q = quoteMap[stockKey];
+      if (!q) return;
+
+      const qty = parseFloat(row.getAttribute("data-qty") || "0");
+      const buyPrice = parseFloat(row.getAttribute("data-buy") || "0");
+      const cmp = parseFloat(q.current_price || "0");
+
+      const cmpEl = row.querySelector("[data-cmp]");
+      if (cmpEl) {
+        const prevText = cmpEl.textContent.trim();
+        const nextText = q.current_price_formatted || window.formatRupee(cmp);
+        if (prevText !== nextText) {
+          cmpEl.textContent = nextText;
+          const isUp = q.change >= 0;
+          cmpEl.classList.remove("price-flash-up", "price-flash-down");
+          void cmpEl.offsetWidth; // trigger reflow
+          cmpEl.classList.add(isUp ? "price-flash-up" : "price-flash-down");
+        }
+      }
+
+      const updatedEl = row.querySelector("[data-updated]");
+      if (updatedEl && data.updated_at_ist) {
+        updatedEl.textContent = data.updated_at_ist;
+      }
+
+      const changeEl = row.querySelector("[data-change]");
+      if (changeEl) {
+        const isUp = q.change >= 0;
+        changeEl.className = "daily-change " + (isUp ? "pos" : "neg");
+        changeEl.textContent = `${q.change_pct_formatted || (isUp ? "+" : "") + q.change_pct + "%"} today`;
+      }
+
+      const curValEl = row.querySelector("[data-curval]");
+      if (curValEl && qty > 0) {
+        curValEl.textContent = window.formatRupee(qty * cmp);
+      }
+
+      const pnlEl = row.querySelector("[data-pnl]");
+      if (pnlEl && qty > 0 && buyPrice > 0) {
+        const cost = qty * buyPrice;
+        const curVal = qty * cmp;
+        const pnl = curVal - cost;
+        const pnlPct = cost > 0 ? (pnl / cost * 100) : 0;
+        const isUp = pnl >= 0;
+        pnlEl.className = "tabular " + (isUp ? "pos" : "neg");
+        pnlEl.innerHTML = `${isUp ? "+" : ""}${window.formatRupee(pnl)} <small>(${isUp ? "+" : ""}${pnlPct.toFixed(2)}%)</small>`;
+      }
+    });
+
+    // 2. Update Mobile Cards (portal mobile holdings)
+    document.querySelectorAll(".mobile-trade-card[data-stock]").forEach(card => {
+      const stockKey = (card.getAttribute("data-stock") || "").toUpperCase();
+      const q = quoteMap[stockKey];
+      if (!q) return;
+
+      const qty = parseFloat(card.getAttribute("data-qty") || "0");
+      const buyPrice = parseFloat(card.getAttribute("data-buy") || "0");
+      const cmp = parseFloat(q.current_price || "0");
+
+      const cmpEl = card.querySelector("[data-cmp]");
+      if (cmpEl) {
+        const prevText = cmpEl.textContent.trim();
+        const nextText = q.current_price_formatted || window.formatRupee(cmp);
+        if (prevText !== nextText) {
+          cmpEl.textContent = nextText;
+          cmpEl.classList.remove("price-flash-up", "price-flash-down");
+          void cmpEl.offsetWidth;
+          cmpEl.classList.add(q.change >= 0 ? "price-flash-up" : "price-flash-down");
+        }
+      }
+
+      const changeEl = card.querySelector("[data-change]");
+      if (changeEl) {
+        const isUp = q.change >= 0;
+        changeEl.className = "daily-change " + (isUp ? "pos" : "neg");
+        changeEl.textContent = `${q.change_pct_formatted || (isUp ? "+" : "") + q.change_pct + "%"}`;
+      }
+
+      const curValEl = card.querySelector("[data-curval]");
+      if (curValEl && qty > 0) {
+        curValEl.textContent = window.formatRupee(qty * cmp);
+      }
+
+      const pnlSummaryEl = card.querySelector(".mts-pnl");
+      const pnlDetailEl = card.querySelector(".mtd-val[data-pnl]");
+      if (qty > 0 && buyPrice > 0) {
+        const cost = qty * buyPrice;
+        const curVal = qty * cmp;
+        const pnl = curVal - cost;
+        const pnlPct = cost > 0 ? (pnl / cost * 100) : 0;
+        const isUp = pnl >= 0;
+        if (pnlSummaryEl) {
+          pnlSummaryEl.className = "mts-pnl " + (isUp ? "pos" : "neg");
+          pnlSummaryEl.innerHTML = `<strong>${isUp ? "+" : ""}${window.formatRupee(pnl)}</strong><small>${isUp ? "+" : ""}${pnlPct.toFixed(2)}%</small>`;
+        }
+        if (pnlDetailEl) {
+          pnlDetailEl.className = "mtd-val " + (isUp ? "pos" : "neg");
+          pnlDetailEl.textContent = `${isUp ? "+" : ""}${window.formatRupee(pnl)} (${pnlPct.toFixed(2)}%)`;
+        }
+      }
+    });
+
+    // 3. Recalculate Portfolio Hero / KPI totals if elements exist
+    recalculateTotals();
+  }
+
+  function recalculateTotals() {
+    let totalInvested = 0;
+    let totalCurVal = 0;
+
+    const rows = document.querySelectorAll("#holdings-table tbody tr[data-stock], #portal-holdings-table tbody tr[data-stock]");
+    rows.forEach(r => {
+      const qty = parseFloat(r.getAttribute("data-qty") || "0");
+      const buy = parseFloat(r.getAttribute("data-buy") || "0");
+      const curValText = r.querySelector("[data-curval]")?.textContent.replace(/[^0-9.-]/g, "") || "0";
+      const curVal = parseFloat(curValText) || (qty * buy);
+      totalInvested += (qty * buy);
+      totalCurVal += curVal;
+    });
+
+    if (totalInvested > 0) {
+      const totalPnl = totalCurVal - totalInvested;
+      const totalPct = (totalPnl / totalInvested * 100);
+      const isUp = totalPnl >= 0;
+
+      // Holdings page KPIs
+      const kpiPortVal = document.getElementById("kpi-portfolio-val");
+      if (kpiPortVal) kpiPortVal.textContent = window.formatRupee(totalCurVal);
+
+      const kpiPnlVal = document.getElementById("kpi-unrealized-val");
+      if (kpiPnlVal) {
+        kpiPnlVal.className = "kpi-value " + (isUp ? "pos" : "neg");
+        kpiPnlVal.textContent = `${isUp ? "+" : ""}${window.formatRupee(totalPnl)}`;
+      }
+
+      const kpiPnlPct = document.getElementById("kpi-unrealized-pct");
+      if (kpiPnlPct) {
+        kpiPnlPct.className = "stat-pill " + (isUp ? "pos" : "neg");
+        kpiPnlPct.textContent = `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`;
+      }
+
+      // Portal page hero KPI
+      const portalPortVal = document.getElementById("portal-portfolio-val");
+      if (portalPortVal) portalPortVal.textContent = window.formatRupee(totalCurVal);
+
+      const portalPnlSub = document.getElementById("portal-unrealized-sub");
+      if (portalPnlSub) {
+        portalPnlSub.innerHTML = `
+          <span class="pill ${isUp ? 'pill-pos' : 'pill-neg'}">${isUp ? '+' : ''}${window.formatRupee(totalPnl)} (${isUp ? '+' : ''}${totalPct.toFixed(2)}%)</span>
+          <small class="muted">Total Unrealized P&amp;L</small>
+        `;
+      }
+    }
+  }
+
+  function startPolling() {
+    stopPolling();
+    if (isMarketOpenIST()) {
+      updateBadgeUI(true);
+      timerId = setInterval(() => {
+        pollLiveQuotes(false);
+      }, 60000); // 1 minute interval
+    } else {
+      updateBadgeUI(false);
+    }
+  }
+
+  function stopPolling() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopPolling();
+    } else {
+      if (isMarketOpenIST()) {
+        if (Date.now() - lastFetchTime >= 55000) {
+          pollLiveQuotes(false);
+        }
+        startPolling();
+      } else {
+        updateBadgeUI(false);
+      }
+    }
+  });
+
+  // Start ticker
+  startPolling();
+
+  return {
+    pollNow: () => pollLiveQuotes(true),
+    stop: stopPolling,
+    start: startPolling
+  };
+};
+
+
 
 

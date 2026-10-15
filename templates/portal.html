@@ -104,8 +104,8 @@
     <section class="portal-hero-metrics">
       <div class="metric-card primary">
         <span class="metric-label">CURRENT PORTFOLIO VALUE</span>
-        <div class="metric-value">{{ total_holdings_current_value|money }}</div>
-        <div class="metric-sub">
+        <div class="metric-value" id="portal-portfolio-val">{{ total_holdings_current_value|money }}</div>
+        <div class="metric-sub" id="portal-unrealized-sub">
           {% if total_unrealized_pnl >= 0 %}
             <span class="pill pill-pos">{{ icon('trend', 13) }} +{{ total_unrealized_pnl|money }} (+{{ total_unrealized_pct|round(2) }}%)</span>
           {% else %}
@@ -143,8 +143,14 @@
     <section class="card portal-card">
       <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2>Your Current Holdings</h2>
-          <p class="muted">Calculated automatically from your open trades and live market valuations.</p>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <h2 style="margin: 0;">Your Current Holdings</h2>
+            <span id="portal-ticker-badge" class="ticker-badge ticker-live" title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
+              <span class="ticker-pulse"></span>
+              <span>Live 1m Ticker</span>
+            </span>
+          </div>
+          <p class="muted">Calculated automatically from your open trades · Live ticker updates every 1 min (9:15 AM – 3:45 PM IST).</p>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
           <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
@@ -173,36 +179,36 @@
           </thead>
           <tbody>
             {% for h in shares %}
-            <tr>
+            <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
               <td>
                 <div class="stock-sym-wrap">
                   <strong>{{ h.stock }}</strong>
-                  {% if h.price_change is defined and h.price_change != 0 %}
-                    <span class="daily-change {{ 'pos' if h.price_change > 0 else 'neg' }}">
-                      {{ '+' if h.price_change > 0 else '' }}{{ h.price_change_pct|round(2) }}% today
-                    </span>
-                  {% endif %}
+                  <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
+                    {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
+                  </span>
                 </div>
               </td>
               <td class="r tabular"><strong>{{ (h.quantity|int) if h.quantity else '—' }}</strong></td>
               <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if h.cmp %}
-                  <strong class="cmp-price">{{ h.cmp|money }}</strong>
+                  <strong class="cmp-price" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</strong>
                   {% if h.price_updated_at %}
-                    <small class="muted" style="display:block; font-size:10px;">{{ h.price_updated_at[11:16] }} IST</small>
+                    <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{ h.price_updated_at[11:16] }} IST</small>
                   {% endif %}
                 {% else %}
-                  <span class="muted">—</span>
+                  <span class="muted" data-cmp="{{ h.stock }}">—</span>
                 {% endif %}
               </td>
-              <td class="r tabular"><strong>{{ h.current_value|money }}</strong></td>
+              <td class="r tabular"><strong data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong></td>
               <td class="r tabular">
-                {% if h.unrealized_pnl >= 0 %}
-                  <span class="pos">+{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small></span>
-                {% else %}
-                  <span class="neg">{{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small></span>
-                {% endif %}
+                <span class="tabular {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
+                  {% if h.unrealized_pnl >= 0 %}
+                    +{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small>
+                  {% else %}
+                    {{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small>
+                  {% endif %}
+                </span>
               </td>
               <td class="r date-cell muted">{{ h.added_on[:10] }}</td>
             </tr>
@@ -214,16 +220,14 @@
       <!-- Mobile Expandable Holdings View (Zero Horizontal Scrolling) -->
       <div class="mobile-holdings-list" data-lazy-list="15">
         {% for h in shares %}
-        <details class="mobile-trade-card">
+        <details class="mobile-trade-card" data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
           <summary class="mobile-trade-summary">
             <div class="mts-left">
               <div class="mts-stock">
                 <strong>{{ h.stock }}</strong>
-                {% if h.price_change is defined and h.price_change != 0 %}
-                  <span class="daily-change {{ 'pos' if h.price_change > 0 else 'neg' }}">
-                    {{ '+' if h.price_change > 0 else '' }}{{ h.price_change_pct|round(2) }}%
-                  </span>
-                {% endif %}
+                <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
+                  {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}%
+                </span>
               </div>
               <div class="mts-dates">
                 <span class="tabular">{{ (h.quantity|int) if h.quantity else '—' }} shares</span> &bull; Added {{ h.added_on[:10] }}
@@ -249,15 +253,15 @@
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">CMP (Current)</span>
-                <strong class="mtd-val cmp-price">{{ h.cmp|money if h.cmp else '—' }}</strong>
+                <strong class="mtd-val cmp-price" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp else '—' }}</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Current Value</span>
-                <strong class="mtd-val">{{ h.current_value|money }}</strong>
+                <strong class="mtd-val" data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Unrealized P&amp;L</span>
-                <strong class="mtd-val {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}">
+                <strong class="mtd-val {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
                   {{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }} ({{ h.unrealized_pct|round(2) }}%)
                 </strong>
               </div>
@@ -1048,6 +1052,11 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', checkPushSubscriptionStatus);
+  document.addEventListener('DOMContentLoaded', () => {
+    checkPushSubscriptionStatus();
+    if (typeof window.initLiveMarketTicker === 'function') {
+      window.initLiveMarketTicker({ badgeId: 'portal-ticker-badge', isPortal: true });
+    }
+  });
 </script>
 {% endblock %}

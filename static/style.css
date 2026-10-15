@@ -1780,5 +1780,82 @@ pre.ocr-text { color: #60734f; }
   border-radius: 6px;
 }
 
+/* ==========================================================================
+   Live 1-Minute Market Ticker Badge & Animations
+   ========================================================================== */
+.ticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.ticker-badge.ticker-live {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.ticker-badge.ticker-closed {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.ticker-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulseTicker 1.8s infinite;
+}
+
+@keyframes pulseTicker {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.ticker-badge.ticker-closed .ticker-dot-closed {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+@keyframes priceFlashUp {
+  0% { background-color: rgba(16, 185, 129, 0.35); }
+  100% { background-color: transparent; }
+}
+
+@keyframes priceFlashDown {
+  0% { background-color: rgba(239, 68, 68, 0.35); }
+  100% { background-color: transparent; }
+}
+
+.price-flash-up {
+  animation: priceFlashUp 1.2s ease-out;
+  border-radius: 4px;
+}
+
+.price-flash-down {
+  animation: priceFlashDown 1.2s ease-out;
+  border-radius: 4px;
+}
+
+
 
 

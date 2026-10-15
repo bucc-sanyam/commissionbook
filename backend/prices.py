@@ -236,6 +236,39 @@ def invalidate_prices_cache():
         _cached_prices_time = 0.0
 
 
+def is_market_hours(dt: datetime | None = None) -> bool:
+    """Check if current time is within Indian stock market trading hours (Mon-Fri 09:15 to 15:45 IST)."""
+    if dt is None:
+        dt = datetime.now(IST)
+    # Monday is 0, Friday is 4, Saturday is 5, Sunday is 6
+    if dt.weekday() > 4:
+        return False
+    market_open = dt.replace(hour=9, minute=15, second=0, microsecond=0)
+    market_close = dt.replace(hour=15, minute=45, second=0, microsecond=0)
+    return market_open <= dt <= market_close
+
+
+def format_ist_timestamp(val) -> str:
+    """Format any timestamp (string, datetime, or timestamptz) into 'YYYY-MM-DD HH:MM:SS' in IST."""
+    if not val:
+        return ""
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            val = val.replace(tzinfo=timezone.utc)
+        return val.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
+    s = str(val).strip()
+    if "T" in s or "Z" in s or "+00" in s:
+        try:
+            cleaned = s.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(cleaned)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            pass
+    return s[:19]
+
+
 def update_all_stock_prices(db) -> dict:
     """Fetch and update prices for all held stocks in parallel, saving aliases and tickers."""
     stocks = get_all_held_stocks(db)
@@ -253,6 +286,9 @@ def update_all_stock_prices(db) -> dict:
                 alias_map[a] = c
     except Exception:
         pass
+
+    now_ist = datetime.now(IST)
+    now_ist_str = now_ist.strftime("%Y-%m-%d %H:%M:%S")
 
     # Parallel fetch using thread pool for speed (< 1s for all stocks)
     updated = []
@@ -278,13 +314,13 @@ def update_all_stock_prices(db) -> dict:
                         db.execute(
                             """
                             INSERT INTO stock_prices (stock, current_price, previous_close, change, change_pct, updated_at)
-                            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                            VALUES (?, ?, ?, ?, ?, ?)
                             ON CONFLICT(stock) DO UPDATE SET
                                 current_price=excluded.current_price,
                                 previous_close=excluded.previous_close,
                                 change=excluded.change,
                                 change_pct=excluded.change_pct,
-                                updated_at=CURRENT_TIMESTAMP
+                                updated_at=excluded.updated_at
                             """,
                             (
                                 sym,
@@ -292,6 +328,7 @@ def update_all_stock_prices(db) -> dict:
                                 quote["previous_close"],
                                 quote["change"],
                                 quote["change_pct"],
+                                now_ist_str,
                             ),
                         )
                     updated.append(quote)
@@ -330,7 +367,7 @@ def get_cached_prices(db) -> dict[str, dict]:
                     "previous_close": Decimal(str(row["previous_close"])) if row.get("previous_close") is not None else None,
                     "change": Decimal(str(row["change"])) if row.get("change") is not None else Decimal("0"),
                     "change_pct": Decimal(str(row["change_pct"])) if row.get("change_pct") is not None else Decimal("0"),
-                    "updated_at": row.get("updated_at"),
+                    "updated_at": format_ist_timestamp(row.get("updated_at")),
                 }
             _cached_prices_data = result
             _cached_prices_time = now
@@ -341,20 +378,21 @@ def get_cached_prices(db) -> dict[str, dict]:
 
 
 class DailyPriceScheduler:
-    """Background scheduler that updates stock prices at 3:45 PM IST on market days (Mon-Fri)."""
+    """Background scheduler that updates stock prices every 1 minute during Indian market hours
+    (09:15 to 15:45 IST, Mon-Fri) and captures final settlement prices at 15:45 IST."""
 
     def __init__(self, app):
         self.app = app
         self._thread = None
         self._stop_event = threading.Event()
-        self.last_run_date = None
+        self.last_run_time = 0.0
 
     def start(self):
         if self._thread is not None and self._thread.is_alive():
             return
         self._thread = threading.Thread(target=self._run_loop, daemon=True, name="PriceScheduler")
         self._thread.start()
-        logger.info("Daily stock price scheduler started (target: 15:45 IST, Mon-Fri).")
+        logger.info("Stock price scheduler started (1-min live updates during 09:15-15:45 IST, Mon-Fri).")
 
     def stop(self):
         self._stop_event.set()
@@ -363,24 +401,22 @@ class DailyPriceScheduler:
         while not self._stop_event.is_set():
             try:
                 now_ist = datetime.now(IST)
-                weekday = now_ist.weekday()  # 0=Monday, 4=Friday
-                today_str = now_ist.strftime("%Y-%m-%d")
-
-                # Check if Monday-Friday and time is between 15:45 and 15:55 IST
-                if 0 <= weekday <= 4 and (now_ist.hour == 15 and 45 <= now_ist.minute <= 55):
-                    if self.last_run_date != today_str:
-                        logger.info("Scheduled 15:45 IST stock price update triggered.")
+                now_ts = time.time()
+                # Run every 60 seconds if within Indian market hours (09:15 - 15:45 IST, Mon-Fri)
+                if is_market_hours(now_ist):
+                    if now_ts - self.last_run_time >= 55.0:
                         with self.app.app_context():
                             from .database import get_db
                             res = update_all_stock_prices(get_db())
+                            self.last_run_time = now_ts
                             logger.info(
-                                "Scheduled price update completed: %d updated, %d failed.",
-                                len(res["updated"]),
-                                len(res["failed"]),
+                                "Live 1-min market price update: %d updated, %d failed at %s IST.",
+                                len(res.get("updated", [])),
+                                len(res.get("failed", [])),
+                                now_ist.strftime("%H:%M:%S"),
                             )
-                        self.last_run_date = today_str
             except Exception as exc:
                 logger.error("Error in price scheduler loop: %s", exc)
 
-            # Sleep for 60 seconds before checking again
-            self._stop_event.wait(60)
+            # Sleep 15 seconds before checking again
+            self._stop_event.wait(15)
