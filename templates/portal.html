@@ -21,7 +21,7 @@
               + Set @username
             </button>
           {% endif %}
-          <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
+          <button type="button" class="btn btn-ghost btn-xs desktop-only" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
             {{ icon('lock', 10) }} Password
           </button>
         </div>
@@ -41,10 +41,10 @@
         <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
       </button>
 
-      <form method="post" action="{{ url_for('logout') }}" style="margin: 0; flex-shrink: 0;">
+      <form method="post" action="{{ url_for('logout') }}" class="desktop-only" style="margin: 0; flex-shrink: 0;">
         {{ csrf() }}
         <button type="submit" class="btn btn-ghost btn-sm" aria-label="Sign out" style="padding: 6px 8px;">
-          {{ icon('logout', 15) }}<span class="desktop-only">Sign out</span>
+          {{ icon('logout', 15) }}<span>Sign out</span>
         </button>
       </form>
     </div>
@@ -440,8 +440,37 @@
       {% endif %}
     </section>
 
+    <!-- Mobile & App Footer Account & Session Controls -->
+    <div class="portal-mobile-account-card mobile-only">
+      <div class="pma-card-header">
+        <div class="pma-user-info">
+          <span class="portal-avatar" style="width: 36px; height: 36px; font-size: 15px; font-weight: 700;">{{ client.name[0]|upper }}</span>
+          <div>
+            <div class="pma-name">{{ client.name }}</div>
+            {% if client.username %}
+              <div class="pma-username">@{{ client.username }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <span class="badge" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; font-size: 11px; padding: 3px 8px; font-weight: 600;">Active Account</span>
+      </div>
+      <div class="pma-card-actions">
+        <button type="button" class="btn btn-secondary pma-btn" onclick="document.getElementById('update-password-dialog').showModal()">
+          {{ icon('lock', 15) }}
+          <span>Change Password</span>
+        </button>
+        <form method="post" action="{{ url_for('logout') }}" style="margin: 0; flex: 1;">
+          {{ csrf() }}
+          <button type="submit" class="btn btn-ghost pma-btn pma-btn-signout">
+            {{ icon('logout', 15) }}
+            <span>Sign out</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
     <!-- Client Profile Screen Disclaimer Footer with 'i' icon -->
-    <footer class="portal-disclaimer-footer" style="margin-top: 2.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
+    <footer class="portal-disclaimer-footer" style="margin-top: 1.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
       <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
       <div>
         <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading Advisory Disclaimer</strong>
@@ -678,14 +707,14 @@
       <label class="field full">
         New Password
         <div class="password-wrap">
-          <input id="new-client-pwd" name="new_password" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+          <input id="new-client-pwd" name="new_password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
           <button type="button" class="icon-btn" data-toggle-password="new-client-pwd" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
         </div>
       </label>
       <label class="field full">
         Confirm New Password
         <div class="password-wrap">
-          <input id="confirm-client-pwd" name="confirm_password" type="password" required minlength="6" autocomplete="new-password" placeholder="Confirm your new password">
+          <input id="confirm-client-pwd" name="confirm_password" type="password" required minlength="8" autocomplete="new-password" placeholder="Confirm your new password">
           <button type="button" class="icon-btn" data-toggle-password="confirm-client-pwd" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
         </div>
       </label>

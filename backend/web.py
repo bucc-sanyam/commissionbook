@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import io
 import json
+import math
 import os
 import re
 import secrets
@@ -720,6 +721,71 @@ def funds_by_client():
     return {row["client_id"]: dec(row["total"]) for row in rows}
 
 
+def aggregate_clients_sql(start=None, end=None):
+    """
+    Aggregate per-client performance and commission directly in SQL.
+    Replaces O(clients x trades) Python-side loop with a single grouped query.
+    """
+    db = get_db()
+    def_type = setting("default_commission_type", "profit_pct")
+    def_rate = float(setting("default_commission_rate", "10"))
+
+    date_join_conds = []
+    date_params = []
+    if start:
+        date_join_conds.append("COALESCE(t.sell_date, t.buy_date) >= ?")
+        date_params.append(start)
+    if end:
+        date_join_conds.append("COALESCE(t.sell_date, t.buy_date) <= ?")
+        date_params.append(end)
+
+    date_clause = (" AND " + " AND ".join(date_join_conds)) if date_join_conds else ""
+
+    sql = f"""
+    SELECT 
+        c.*,
+        COUNT(t.id) as count,
+        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN 1 ELSE 0 END) as closed,
+        SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN 1 ELSE 0 END) as open,
+        COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN t.quantity * (t.sell_price - t.buy_price) ELSE 0 END), 0) as pnl,
+        COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN t.quantity * t.buy_price ELSE 0 END), 0) as invested_open,
+        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price > t.buy_price THEN 1 ELSE 0 END) as wins,
+        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price < t.buy_price THEN 1 ELSE 0 END) as losses,
+        COALESCE(SUM(t.quantity * (COALESCE(t.buy_price, 0) + COALESCE(t.sell_price, 0))), 0) as turnover,
+        COALESCE(SUM(
+            CASE 
+                WHEN t.commission_override IS NOT NULL THEN t.commission_override
+                WHEN t.buy_price IS NULL OR t.sell_price IS NULL THEN 0
+                WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'turnover_pct' 
+                    THEN (t.buy_price + t.sell_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
+                WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'flat' 
+                    THEN COALESCE(t.commission_rate_snapshot, c.commission_rate, ?)
+                ELSE 
+                    CASE WHEN t.sell_price > t.buy_price 
+                    THEN (t.sell_price - t.buy_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
+                    ELSE 0 END
+            END
+        ), 0) as commission
+    FROM clients c
+    LEFT JOIN trades t ON t.client_id = c.id {date_clause}
+    GROUP BY c.id
+    ORDER BY lower(c.name), c.id
+    """
+    params = (def_type, def_rate, def_type, def_rate, def_rate, *date_params)
+    rows = db.execute(sql, params).fetchall()
+
+    result = []
+    for row in rows:
+        item = dict(row)
+        item["pnl"] = dec(item["pnl"])
+        item["commission"] = dec(item["commission"]).quantize(CENT, rounding=ROUND_HALF_UP)
+        item["invested_open"] = dec(item["invested_open"])
+        item["turnover"] = dec(item["turnover"])
+        item["rule"] = rule_label(item["commission_type"], item["commission_rate"])
+        result.append(item)
+    return result
+
+
 def sync_client_holdings_from_trades(cid=None, db=None):
     """Sync open buy trades into client_shares in batch so client_shares remains the single canonical store."""
     if db is None:
@@ -1263,25 +1329,44 @@ def create_app(config=None):
     @login_required
     def dashboard():
         args = {key: request.args.get(key, "") for key in ("from", "to")}
-        trades = query_trades(args)
-        total, paid = summarize(trades), payments_by_client()
-        clients = get_db().execute("SELECT * FROM clients ORDER BY lower(name),id").fetchall()
-        all_trades = query_trades({}) if any(args.values()) else trades
-        all_earned = {}
-        for trade in all_trades:
-            all_earned[trade["client_id"]] = all_earned.get(trade["client_id"], ZERO) + trade["commission"]
-        per_client = []
-        for client in clients:
-            summary = summarize([trade for trade in trades if trade["client_id"] == client["id"]])
-            summary.update(
-                id=client["id"], name=client["name"], paid=paid.get(client["id"], ZERO),
-                outstanding=all_earned.get(client["id"], ZERO) - paid.get(client["id"], ZERO),
-                rule=rule_label(client["commission_type"], client["commission_rate"]),
-            )
-            per_client.append(summary)
+        start = valid_date(args.get("from"), "From date")
+        end = valid_date(args.get("to"), "To date")
+        if start and end and start > end:
+            raise ValidationError("From date cannot be after to date.")
+
+        # 1. Per-client aggregation directly in SQL (O(1) query instead of O(clients * trades) loop)
+        per_client = aggregate_clients_sql(start=start, end=end)
+        paid = payments_by_client()
+
+        # All-time commission for calculating outstanding balance (all-time earned - all-time paid)
+        if any(args.values()):
+            all_time_clients = aggregate_clients_sql()
+            all_earned = {c["id"]: c["commission"] for c in all_time_clients}
+        else:
+            all_earned = {c["id"]: c["commission"] for c in per_client}
+
+        for c in per_client:
+            client_paid = paid.get(c["id"], ZERO)
+            c["paid"] = client_paid
+            c["outstanding"] = all_earned.get(c["id"], ZERO) - client_paid
+
         per_client.sort(key=lambda value: value["commission"], reverse=True)
-        total["paid"] = sum(paid.values(), ZERO)
-        total["outstanding"] = sum((client["outstanding"] for client in per_client), ZERO)
+
+        total = {
+            "count": sum((c["count"] for c in per_client), 0),
+            "closed": sum((c["closed"] for c in per_client), 0),
+            "open": sum((c["open"] for c in per_client), 0),
+            "pnl": sum((c["pnl"] for c in per_client), ZERO),
+            "commission": sum((c["commission"] for c in per_client), ZERO),
+            "invested_open": sum((c["invested_open"] for c in per_client), ZERO),
+            "wins": sum((c["wins"] for c in per_client), 0),
+            "losses": sum((c["losses"] for c in per_client), 0),
+            "turnover": sum((c["turnover"] for c in per_client), ZERO),
+            "paid": sum(paid.values(), ZERO),
+            "outstanding": sum((c["outstanding"] for c in per_client), ZERO),
+        }
+
+        trades = query_trades(args)
         monthly, stocks = {}, {}
         for trade in trades:
             if trade["status"] == "Closed":
@@ -1313,9 +1398,34 @@ def create_app(config=None):
     @login_required
     def trades_list():
         args = {key: request.args.get(key, "") for key in ("client_id", "stock", "from", "to", "status")}
-        trades = query_trades(args)
+        all_trades = query_trades(args)
+        total = summarize(all_trades)
+
+        page = request.args.get("page", 1)
+        try:
+            page = max(1, int(page))
+        except (ValueError, TypeError):
+            page = 1
+        per_page = 25
+        total_trades = len(all_trades)
+        total_pages = max(1, math.ceil(total_trades / per_page)) if total_trades else 1
+        if page > total_pages:
+            page = total_pages
+        start_idx = (page - 1) * per_page
+        trades_page = all_trades[start_idx : start_idx + per_page]
+
         clients = get_db().execute("SELECT id,name FROM clients ORDER BY lower(name)").fetchall()
-        return render_template("trades.html", trades=trades, total=summarize(trades), clients=clients, args=args)
+        return render_template(
+            "trades.html",
+            trades=trades_page,
+            total=total,
+            clients=clients,
+            page=page,
+            total_pages=total_pages,
+            total_count=total_trades,
+            per_page=per_page,
+            args=args,
+        )
 
     @app.route("/trades/new", methods=["GET", "POST"])
     @app.route("/trades/<int:tid>/edit", methods=["GET", "POST"])
@@ -1980,6 +2090,8 @@ def create_app(config=None):
                 if get_db().execute("SELECT id FROM clients WHERE lower(username)=lower(?)", (username,)).fetchone():
                     raise ValidationError("A client with that username already exists.")
             portal_pwd = (request.form.get("portal_password") or request.form.get("client_password") or "").strip()
+            if portal_pwd and len(portal_pwd) < 8:
+                raise ValidationError("Password must be at least 8 characters.")
             if not portal_pwd:
                 portal_pwd = "Client@1234"
             p_hash = generate_password_hash(portal_pwd)
@@ -1990,15 +2102,43 @@ def create_app(config=None):
             )
             flash(f"Added {name}." + (f" Username: @{username}." if username else "") + (f" Portal password set: {portal_pwd}" if portal_pwd else ""), "success")
             return redirect(url_for("clients_list"))
-        trades, paid, rows = query_trades({}), payments_by_client(), []
-        for client in get_db().execute("SELECT * FROM clients ORDER BY lower(name)").fetchall():
-            summary = summarize([trade for trade in trades if trade["client_id"] == client["id"]])
-            received = paid.get(client["id"], ZERO)
-            rows.append({
-                **client, **summary, "paid": received, "outstanding": summary["commission"] - received,
-                "rule": rule_label(client["commission_type"], client["commission_rate"]),
-            })
-        return render_template("clients.html", clients=rows)
+        rows = aggregate_clients_sql()
+        paid = payments_by_client()
+        for r in rows:
+            rec = paid.get(r["id"], ZERO)
+            r["paid"] = rec
+            r["outstanding"] = r["commission"] - rec
+
+        page = request.args.get("page", 1)
+        try:
+            page = max(1, int(page))
+        except (ValueError, TypeError):
+            page = 1
+        per_page = 25
+        total_clients = len(rows)
+        total_pages = max(1, math.ceil(total_clients / per_page)) if total_clients else 1
+        if page > total_pages:
+            page = total_pages
+        start_idx = (page - 1) * per_page
+        clients_page = rows[start_idx : start_idx + per_page]
+
+        kpi_totals = {
+            "count": total_clients,
+            "commission": sum((r["commission"] for r in rows), ZERO),
+            "paid": sum((r["paid"] for r in rows), ZERO),
+            "outstanding": sum((r["outstanding"] for r in rows), ZERO),
+        }
+
+        return render_template(
+            "clients.html",
+            clients=clients_page,
+            page=page,
+            total_pages=total_pages,
+            total_count=total_clients,
+            per_page=per_page,
+            kpi_totals=kpi_totals,
+            args=request.args,
+        )
 
     @app.route("/clients/<int:cid>", methods=["GET", "POST"])
     @login_required
@@ -2079,6 +2219,7 @@ def create_app(config=None):
             shares.append(item)
 
         summary["money_in_bank"] = total_funds - deducted_holdings_cost
+        summary["net_funds"] = total_funds
 
         try:
             raw_advisories = get_db().execute(
@@ -2145,8 +2286,8 @@ def create_app(config=None):
         pwd = request.form.get("client_password", "").strip()
         confirm = request.form.get("confirm_password", "").strip()
         back = request.form.get("back")
-        if not pwd or len(pwd) < 4:
-            flash("Password must be at least 4 characters.", "error")
+        if not pwd or len(pwd) < 8:
+            flash("Password must be at least 8 characters.", "error")
             return redirect(safe_redirect_target(back, url_for("client_detail", cid=cid)))
         if confirm and pwd != confirm:
             flash("Passwords do not match.", "error")
@@ -3331,8 +3472,8 @@ def create_app(config=None):
         new_pwd = request.form.get("new_password", "").strip()
         confirm_pwd = request.form.get("confirm_password", "").strip()
 
-        if len(new_pwd) < 6:
-            flash("New password must be at least 6 characters long.", "error")
+        if len(new_pwd) < 8:
+            flash("New password must be at least 8 characters long.", "error")
             return redirect(url_for("client_portal"))
 
         if new_pwd != confirm_pwd:

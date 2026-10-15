@@ -2501,6 +2501,160 @@ html, body {
   user-select: none;
 }
 
+/* Responsive visibility utilities */
+.desktop-only {
+  display: inline-flex !important;
+}
+span.desktop-only {
+  display: inline !important;
+}
+div.desktop-only {
+  display: block !important;
+}
+form.desktop-only {
+  display: inline-block !important;
+}
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: block !important;
+  }
+  .mobile-only-flex {
+    display: flex !important;
+  }
+
+  /* Client Portal Mobile Footer Account Card */
+  .portal-mobile-account-card {
+    background: #ffffff;
+    border: 1px solid #dce6da;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(20, 42, 38, 0.05);
+  }
+  .pma-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #edf4eb;
+  }
+  .pma-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pma-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #142a26;
+    line-height: 1.2;
+  }
+  .pma-username {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1b5e20;
+    margin-top: 2px;
+  }
+  .pma-card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .pma-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 9px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+  .pma-btn-signout {
+    width: 100%;
+    color: #b91c1c !important;
+    background: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+  }
+  .pma-btn-signout:hover,
+  .pma-btn-signout:active {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+  }
+}
+
+/* Pagination Bar Styles */
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line, #e1e9de);
+  background: var(--surface, #ffffff);
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+.pagination-info {
+  font-size: 13px;
+  color: var(--muted, #5c705c);
+  font-weight: 500;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagination-current {
+  font-size: 13px;
+  color: var(--ink, #142a26);
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .pagination-controls {
+    justify-content: center;
+    width: 100%;
+  }
+  .pagination-controls .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+
 
 
 

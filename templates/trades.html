@@ -28,7 +28,33 @@
     <div class="filter-actions"><button class="btn btn-primary btn-sm">{{ icon('filter', 13) }}Apply</button><a class="btn btn-ghost btn-sm" href="{{ url_for('trades_list') }}">Reset</a></div>
   </form>
   {{ trade_table(trades, total, selectable=True) }}
-  <div class="card-footer"><span>{{ total.count }} trade{{ 's' if total.count != 1 }} · dates use sell date, or buy date for open trades</span><form id="bulkForm" method="post" action="{{ url_for('trades_bulk_delete') }}" data-confirm="Delete the selected trades? These entries will be permanently removed from your ledger.">{{ csrf() }}<button class="btn btn-danger btn-sm" id="bulk-delete" disabled>{{ icon('trash', 13) }}Delete selected<span id="selected-count"></span></button></form></div>
+  {% if total_pages and total_pages > 1 %}
+  <nav class="pagination-bar" aria-label="Trades pagination">
+    <div class="pagination-info">
+      Showing <strong>{{ (page - 1) * per_page + 1 }}</strong>–<strong>{{ [page * per_page, total_count]|min }}</strong> of <strong>{{ total_count }}</strong> trades
+    </div>
+    <div class="pagination-controls">
+      {% if page > 1 %}
+        <a class="btn btn-secondary btn-sm pagination-btn" href="{{ url_for('trades_list', **dict(args, page=page-1)) }}">
+          {{ icon('chevron-left', 14) }} Previous
+        </a>
+      {% else %}
+        <button class="btn btn-secondary btn-sm pagination-btn" disabled>{{ icon('chevron-left', 14) }} Previous</button>
+      {% endif %}
+      
+      <span class="pagination-current">Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong></span>
+      
+      {% if page < total_pages %}
+        <a class="btn btn-secondary btn-sm pagination-btn" href="{{ url_for('trades_list', **dict(args, page=page+1)) }}">
+          Next {{ icon('chevron-right', 14) }}
+        </a>
+      {% else %}
+        <button class="btn btn-secondary btn-sm pagination-btn" disabled>Next {{ icon('chevron-right', 14) }}</button>
+      {% endif %}
+    </div>
+  </nav>
+  {% endif %}
+  <div class="card-footer"><span>{{ total_count if total_count is defined else total.count }} trade{{ 's' if (total_count if total_count is defined else total.count) != 1 }} · dates use sell date, or buy date for open trades</span><form id="bulkForm" method="post" action="{{ url_for('trades_bulk_delete') }}" data-confirm="Delete the selected trades? These entries will be permanently removed from your ledger.">{{ csrf() }}<button class="btn btn-danger btn-sm" id="bulk-delete" disabled>{{ icon('trash', 13) }}Delete selected<span id="selected-count"></span></button></form></div>
 </section>
 <dialog class="modal modal-sm" id="import-dialog">
   <form class="modal-inner" method="post" action="{{ url_for('import_trades') }}" enctype="multipart/form-data">

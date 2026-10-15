@@ -5,13 +5,13 @@
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">THE PEOPLE BEHIND THE NUMBERS</p><h1>Your clients<span class="accent-period">.</span></h1><p>Clear statements. Personal commission rules. Better relationships.</p></div><button class="btn btn-primary" type="button" data-dialog="client-dialog">{{ icon('plus', 16) }}Add client</button></div>
 <div class="kpi-grid">
-  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Your client book</h2><span class="kpi-icon">{{ icon('users', 17) }}</span></div><div class="kpi-value">{{ clients|length }}</div><div class="kpi-bottom">All clients in your workspace</div></section>
-  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='commission')|money }}</div><div class="kpi-bottom">Across your entire client book</div></section>
-  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='paid')|money }}</div><div class="kpi-bottom">All-time collected commission</div></section>
-  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">Net balance</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ clients|sum(attribute='outstanding')|money }}</div><div class="kpi-bottom">Negative balances are client credit</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Your client book</h2><span class="kpi-icon">{{ icon('users', 17) }}</span></div><div class="kpi-value">{{ kpi_totals.count if kpi_totals else clients|length }}</div><div class="kpi-bottom">All clients in your workspace</div></section>
+  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ (kpi_totals.commission if kpi_totals else clients|sum(attribute='commission'))|money }}</div><div class="kpi-bottom">Across your entire client book</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ (kpi_totals.paid if kpi_totals else clients|sum(attribute='paid'))|money }}</div><div class="kpi-bottom">All-time collected commission</div></section>
+  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">Net balance</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ (kpi_totals.outstanding if kpi_totals else clients|sum(attribute='outstanding'))|money }}</div><div class="kpi-bottom">Negative balances are client credit</div></section>
 </div>
 <section class="card">
-  <div class="card-header"><div><h2>Client directory</h2><p id="client-search-count">{{ clients|length }} client{{ 's' if clients|length != 1 }}</p></div><label class="search-field">{{ icon('search', 15) }}<input type="search" placeholder="Find a client..." aria-label="Search clients" data-table-search="#clients-table" data-search-count="client-search-count" data-search-empty="client-search-empty"></label></div>
+  <div class="card-header"><div><h2>Client directory</h2><p id="client-search-count">{{ total_count if total_count is defined else clients|length }} client{{ 's' if (total_count if total_count is defined else clients|length) != 1 }}</p></div><label class="search-field">{{ icon('search', 15) }}<input type="search" placeholder="Find a client..." aria-label="Search clients" data-table-search="#clients-table" data-search-count="client-search-count" data-search-empty="client-search-empty"></label></div>
   {% if clients %}
   <!-- Desktop Clients Table (Hidden on Mobile) -->
   <div class="desktop-clients-table table-wrap"><table class="data-table" id="clients-table" data-lazy-table="25">
@@ -168,6 +168,32 @@
     {% endfor %}
   </div>
   <div id="client-search-empty" hidden>{{ empty_state('No clients found', 'Try a different name or clear your search.', 'search', compact=True) }}</div>
+  {% if total_pages and total_pages > 1 %}
+  <nav class="pagination-bar" aria-label="Clients pagination">
+    <div class="pagination-info">
+      Showing <strong>{{ (page - 1) * per_page + 1 }}</strong>–<strong>{{ [page * per_page, total_count]|min }}</strong> of <strong>{{ total_count }}</strong> clients
+    </div>
+    <div class="pagination-controls">
+      {% if page > 1 %}
+        <a class="btn btn-secondary btn-sm pagination-btn" href="{{ url_for('clients_list', page=page-1) }}">
+          {{ icon('chevron-left', 14) }} Previous
+        </a>
+      {% else %}
+        <button class="btn btn-secondary btn-sm pagination-btn" disabled>{{ icon('chevron-left', 14) }} Previous</button>
+      {% endif %}
+      
+      <span class="pagination-current">Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong></span>
+      
+      {% if page < total_pages %}
+        <a class="btn btn-secondary btn-sm pagination-btn" href="{{ url_for('clients_list', page=page+1) }}">
+          Next {{ icon('chevron-right', 14) }}
+        </a>
+      {% else %}
+        <button class="btn btn-secondary btn-sm pagination-btn" disabled>Next {{ icon('chevron-right', 14) }}</button>
+      {% endif %}
+    </div>
+  </nav>
+  {% endif %}
   <div class="card-footer"><span>All balances are calculated across the full ledger.</span><span>{{ icon('shield', 12) }}Private to you</span></div>
   {% else %}
   {{ empty_state('Good bookkeeping starts with people', 'Add your first client to set a commission rule and keep all their trades together.', 'users') }}
@@ -188,7 +214,7 @@
       <label class="field">Rate<input id="new-client-rate" name="commission_rate" type="number" min="0" step="any" placeholder="Uses workspace default"></label>
       <label class="field full">Portal Password <span class="optional">Auto-generated or custom</span>
         <div style="display:flex; gap:6px;">
-          <input name="client_password" id="new-client-pwd" placeholder="Leave empty or generate strong password" autocomplete="new-password" style="font-family:monospace; font-weight:600;">
+          <input name="client_password" id="new-client-pwd" minlength="8" placeholder="Leave empty for default or min. 8 chars" autocomplete="new-password" style="font-family:monospace; font-weight:600;">
           <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('new-client-pwd')">{{ icon('repeat', 12) }} Generate Strong</button>
         </div>
       </label>
@@ -226,7 +252,7 @@
         {{ icon('repeat', 12) }} Generate Strong
       </button>
     </div>
-    <input type="text" id="reset-pwd-input" name="client_password" required minlength="4" placeholder="Enter or generate strong password" autocomplete="off" style="width:100%; margin-bottom:1.25rem; font-family:monospace; font-weight:600;">
+    <input type="text" id="reset-pwd-input" name="client_password" required minlength="8" placeholder="Min. 8 characters or generate strong password" autocomplete="off" style="width:100%; margin-bottom:1.25rem; font-family:monospace; font-weight:600;">
 
     <div class="modal-actions">
       <button class="btn btn-ghost" type="button" data-dialog-close>Cancel</button>
