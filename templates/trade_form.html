@@ -23,6 +23,17 @@
       <label class="field">Buy date<input name="buy_date" type="date" value="{{ (trade.buy_date or '') if trade else '' }}"></label>
       <label class="field">Sell price <span class="optional">Leave blank for an open position</span><input name="sell_price" type="number" step="any" min="0" value="{{ trade.sell_price if trade and trade.sell_price is not none else '' }}" placeholder="0.00" inputmode="decimal"></label>
       <label class="field">Sell date <span class="optional">Required when a sell price is entered</span><input name="sell_date" type="date" value="{{ (trade.sell_date or '') if trade else '' }}"></label>
+      <div class="field full" style="margin-top: 4px;">
+        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <input type="checkbox" name="deduct_from_funds" value="1" {{ 'checked' if trade and trade.deduct_from_funds else '' }} style="width: 18px; height: 18px; margin-top: 2px; accent-color: #0f172a; cursor: pointer;">
+          <div>
+            <div style="font-size: 14px; font-weight: 600; color: #1e293b;">Deduct from funds (Available Cash)</div>
+            <div style="font-size: 12px; color: #64748b; line-height: 1.4; margin-top: 2px;">
+              When ticked, the purchase cost will be subtracted from the client's available cash. Leave unticked to keep available cash intact and prevent it from going negative.
+            </div>
+          </div>
+        </label>
+      </div>
     </div>
   </section>
   <section class="form-section">

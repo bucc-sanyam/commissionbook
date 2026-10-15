@@ -607,16 +607,18 @@ def insert_trades(cid, trades, source="manual", upload_id=None):
         if b_date and s_date and s_date < b_date:
             s_date = b_date
 
+        deduct_from_funds = 1 if trade.get("deduct_from_funds") in (1, "1", "true", "True", "on", True) else 0
         parameters.extend((
             cid, stock, trade["quantity"], bp, sp,
             b_date, s_date, trade.get("commission_override"),
             ctype, rate, source, upload_id, trade.get("notes"),
+            deduct_from_funds,
         ))
     rows = db.execute(
         """INSERT INTO trades(
             client_id,stock,quantity,buy_price,sell_price,buy_date,sell_date,commission_override,
-            commission_type_snapshot,commission_rate_snapshot,source,upload_id,notes
-        ) VALUES """ + ",".join("(?,?,?,?,?,?,?,?,?,?,?,?,?)" for _ in trades) + " RETURNING id",
+            commission_type_snapshot,commission_rate_snapshot,source,upload_id,notes,deduct_from_funds
+        ) VALUES """ + ",".join("(?,?,?,?,?,?,?,?,?,?,?,?,?,?)" for _ in trades) + " RETURNING id",
         parameters,
     ).fetchall()
     return [row["id"] for row in rows]
@@ -728,7 +730,8 @@ def sync_client_holdings_from_trades(cid=None, db=None):
 
     try:
         open_trades = db.execute(
-            f"""SELECT id, client_id, stock, quantity, buy_price, COALESCE(buy_date, created_at) as added_on
+            f"""SELECT id, client_id, stock, quantity, buy_price, COALESCE(buy_date, created_at) as added_on,
+                       COALESCE(deduct_from_funds, 0) as deduct_from_funds
                 FROM trades
                 {where_sql} {"AND" if where_sql else "WHERE"} buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
                 ORDER BY id ASC""",
@@ -761,12 +764,13 @@ def sync_client_holdings_from_trades(cid=None, db=None):
                     added_on = added_on.isoformat()
                 elif len(str(added_on)) > 10:
                     added_on = str(added_on)[:10]
-                to_insert.append((c_id, stk, qty, bp, added_on))
+                deduct_val = 1 if ot.get("deduct_from_funds") else 0
+                to_insert.append((c_id, stk, qty, bp, added_on, deduct_val))
                 existing_set.add((c_id, stk))
 
         for item in to_insert:
             db.execute(
-                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds) VALUES (?, ?, ?, ?, ?, ?)",
                 item
             )
         if to_insert:
@@ -784,11 +788,17 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=False):
 
     try:
         raw_shares = db.execute(
-            "SELECT id, stock, quantity, buy_price, added_on FROM client_shares WHERE client_id=? ORDER BY stock ASC",
+            "SELECT id, stock, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares WHERE client_id=? ORDER BY stock ASC",
             (cid,)
         ).fetchall()
     except Exception:
-        raw_shares = []
+        try:
+            raw_shares = db.execute(
+                "SELECT id, stock, quantity, buy_price, added_on FROM client_shares WHERE client_id=? ORDER BY stock ASC",
+                (cid,)
+            ).fetchall()
+        except Exception:
+            raw_shares = []
 
     alias_map = get_alias_mapping(db)
     results = []
@@ -802,6 +812,7 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=False):
         if qty <= ZERO:
             continue
         tot_invested = (qty * bp).quantize(CENT, rounding=ROUND_HALF_UP)
+        deduct_val = 1 if r.get("deduct_from_funds") else 0
         results.append({
             "id": r["id"],
             "stock": stk,
@@ -809,6 +820,7 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=False):
             "buy_price": bp.quantize(CENT, rounding=ROUND_HALF_UP),
             "total_invested": tot_invested,
             "added_on": str(r["added_on"]) if r.get("added_on") else "",
+            "deduct_from_funds": deduct_val,
         })
 
     results.sort(key=lambda x: x["stock"])
@@ -1319,9 +1331,10 @@ def create_app(config=None):
             if tid:
                 get_db().execute(
                     """UPDATE trades SET client_id=?,stock=?,quantity=?,buy_price=?,sell_price=?,
-                    buy_date=?,sell_date=?,commission_override=?,notes=? WHERE id=?""",
+                    buy_date=?,sell_date=?,commission_override=?,notes=?,deduct_from_funds=? WHERE id=?""",
                     (cid, values["stock"], values["quantity"], values["buy_price"], values["sell_price"],
-                     values["buy_date"], values["sell_date"], values["commission_override"], values["notes"], tid),
+                     values["buy_date"], values["sell_date"], values["commission_override"], values["notes"],
+                     values.get("deduct_from_funds", 0), tid),
                 )
                 sync_trade_profits_to_funds(get_db(), cid)
                 sync_client_holdings_from_trades(cid, get_db())
@@ -2031,12 +2044,15 @@ def create_app(config=None):
         prices = get_cached_prices(get_db())
         shares = []
         total_holdings_invested = ZERO
+        deducted_holdings_cost = ZERO
         for s in raw_shares:
             item = dict(s)
             qty = dec(item.get("quantity"))
             buy_p = dec(item.get("buy_price"))
             cost = qty * buy_p
             total_holdings_invested += cost
+            if item.get("deduct_from_funds"):
+                deducted_holdings_cost += cost
             quote = prices.get((item.get("stock") or "").strip().upper())
             if quote:
                 cmp = quote["current_price"]
@@ -2062,7 +2078,7 @@ def create_app(config=None):
                 )
             shares.append(item)
 
-        summary["money_in_bank"] = total_funds - total_holdings_invested
+        summary["money_in_bank"] = total_funds - deducted_holdings_cost
 
         try:
             raw_advisories = get_db().execute(
@@ -2148,6 +2164,8 @@ def create_app(config=None):
         stock = resolve_canonical_stock(db, request.form.get("stock", ""))
         quantity = number(request.form.get("quantity"), "Quantity") if request.form.get("quantity") else None
         buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+        raw_deduct = request.form.get("deduct_from_funds")
+        deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
         if not stock:
             abort(400)
         qty_int = int(round(quantity)) if quantity is not None else None
@@ -2167,13 +2185,13 @@ def create_app(config=None):
             else:
                 new_avg = add_bp
             db.execute(
-                "UPDATE client_shares SET quantity=?, buy_price=? WHERE id=?",
-                (new_qty, new_avg, existing["id"])
+                "UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?",
+                (new_qty, new_avg, deduct_from_funds, existing["id"])
             )
         else:
             db.execute(
-                "INSERT INTO client_shares (client_id, stock, quantity, buy_price) VALUES (?, ?, ?, ?)",
-                (cid, stock.upper(), qty_int, buy_price)
+                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, deduct_from_funds) VALUES (?, ?, ?, ?, ?)",
+                (cid, stock.upper(), qty_int, buy_price, deduct_from_funds)
             )
         db.commit()
         flash("Holding added.", "success")
@@ -2210,14 +2228,16 @@ def create_app(config=None):
         stock = resolve_canonical_stock(db, request.form.get("stock", ""))
         quantity = number(request.form.get("quantity"), "Quantity") if request.form.get("quantity") else None
         buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+        raw_deduct = request.form.get("deduct_from_funds")
+        deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
         if not stock:
             abort(400)
         qty_int = int(round(quantity)) if quantity is not None else None
 
         # 1. Update client_shares with id=sid
         res = db.execute(
-            "UPDATE client_shares SET stock=?, quantity=?, buy_price=? WHERE id=? AND client_id=?",
-            (stock.upper(), qty_int, buy_price, sid, cid)
+            "UPDATE client_shares SET stock=?, quantity=?, buy_price=?, deduct_from_funds=? WHERE id=? AND client_id=?",
+            (stock.upper(), qty_int, buy_price, deduct_from_funds, sid, cid)
         )
 
         # 2. If no rows updated (e.g. sid was a trade ID or missing from client_shares)
@@ -2225,8 +2245,8 @@ def create_app(config=None):
             trade_row = db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (sid, cid)).fetchone()
             if trade_row:
                 db.execute(
-                    "UPDATE trades SET stock=?, quantity=?, buy_price=? WHERE id=? AND client_id=?",
-                    (stock.upper(), qty_int, buy_price, sid, cid)
+                    "UPDATE trades SET stock=?, quantity=?, buy_price=?, deduct_from_funds=? WHERE id=? AND client_id=?",
+                    (stock.upper(), qty_int, buy_price, deduct_from_funds, sid, cid)
                 )
 
             existing_cs = db.execute(
@@ -2235,13 +2255,13 @@ def create_app(config=None):
             ).fetchone()
             if existing_cs:
                 db.execute(
-                    "UPDATE client_shares SET quantity=?, buy_price=? WHERE id=?",
-                    (qty_int, buy_price, existing_cs["id"])
+                    "UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?",
+                    (qty_int, buy_price, deduct_from_funds, existing_cs["id"])
                 )
             else:
                 db.execute(
-                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price) VALUES (?, ?, ?, ?)",
-                    (cid, stock.upper(), qty_int, buy_price)
+                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, deduct_from_funds) VALUES (?, ?, ?, ?, ?)",
+                    (cid, stock.upper(), qty_int, buy_price, deduct_from_funds)
                 )
         else:
             # Also keep any open trade for this stock in sync
@@ -2800,6 +2820,7 @@ def create_app(config=None):
         enriched_shares = []
         total_holdings_invested = ZERO
         total_holdings_current_value = ZERO
+        deducted_holdings_cost = ZERO
 
         for share in shares:
             s_dict = dict(share)
@@ -2807,6 +2828,8 @@ def create_app(config=None):
             buy_p = dec(s_dict.get("buy_price"))
             cost = qty * buy_p
             total_holdings_invested += cost
+            if s_dict.get("deduct_from_funds"):
+                deducted_holdings_cost += cost
 
             stock_key = (s_dict.get("stock") or "").strip().upper()
             quote = prices.get(stock_key)
@@ -2847,7 +2870,7 @@ def create_app(config=None):
         except Exception:
             funds = []
         total_funds = sum((dec(f["amount"]) for f in funds), ZERO)
-        money_in_bank = total_funds - total_holdings_invested
+        money_in_bank = total_funds - deducted_holdings_cost
 
         raw_undismissed_alerts = get_db().execute(
             """
@@ -2908,6 +2931,8 @@ def create_app(config=None):
         try:
             quantity = int(round(number(request.form.get("quantity"), "Quantity", positive=True))) if request.form.get("quantity") else 1
             buy_price = number(request.form.get("buy_price"), "Buy Price") if request.form.get("buy_price") else None
+            raw_deduct = request.form.get("deduct_from_funds")
+            deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
             insert_trades(cid, [{
                 "stock": stock,
                 "quantity": quantity,
@@ -2915,6 +2940,7 @@ def create_app(config=None):
                 "sell_price": None,
                 "buy_date": date.today().isoformat() if buy_price is not None else None,
                 "notes": "Added from Client Portal",
+                "deduct_from_funds": deduct_from_funds,
             }], source="portal")
 
             # Update client_shares with weighted average price
@@ -2932,11 +2958,11 @@ def create_app(config=None):
                     new_avg = ((old_qty * old_bp + add_qty * add_bp) / dec(new_qty)).quantize(CENT, rounding=ROUND_HALF_UP)
                 else:
                     new_avg = add_bp
-                db.execute("UPDATE client_shares SET quantity=?, buy_price=? WHERE id=?", (new_qty, new_avg, existing["id"]))
+                db.execute("UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?", (new_qty, new_avg, deduct_from_funds, existing["id"]))
             else:
                 db.execute(
-                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on) VALUES (?, ?, ?, ?, ?)",
-                    (cid, stock, quantity, buy_price, date.today().isoformat())
+                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds) VALUES (?, ?, ?, ?, ?, ?)",
+                    (cid, stock, quantity, buy_price, date.today().isoformat(), deduct_from_funds)
                 )
 
             flash(f"Trade for {stock} recorded. Your holdings have been updated.", "success")
@@ -2981,6 +3007,9 @@ def create_app(config=None):
             except Exception as exc:
                 flash(f"Invalid sell price: {exc}", "error")
                 return redirect(url_for("client_portal"))
+
+        raw_deduct = request.form.get("deduct_from_funds")
+        deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
 
         # Both buy and sell cannot be empty
         if buy_price is None and sell_price is None:
@@ -3108,13 +3137,13 @@ def create_app(config=None):
                 else:
                     new_avg = add_bp
                 db.execute(
-                    "UPDATE client_shares SET quantity=?, buy_price=? WHERE id=?",
-                    (new_qty, new_avg, existing_holding["id"])
+                    "UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?",
+                    (new_qty, new_avg, deduct_from_funds, existing_holding["id"])
                 )
             else:
                 db.execute(
-                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on) VALUES (?, ?, ?, ?, ?)",
-                    (cid, stock, quantity, buy_price, buy_date or date.today().isoformat())
+                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds) VALUES (?, ?, ?, ?, ?, ?)",
+                    (cid, stock, quantity, buy_price, buy_date or date.today().isoformat(), deduct_from_funds)
                 )
 
         # Pair constraints for DB:
@@ -3136,6 +3165,7 @@ def create_app(config=None):
                 "buy_date": buy_date,
                 "sell_date": sell_date,
                 "notes": user_notes or "Added via Client Portal",
+                "deduct_from_funds": deduct_from_funds,
             }], source="portal", upload_id=upload_id)
             trade_id = trade_ids[0] if trade_ids else None
         except Exception as exc:

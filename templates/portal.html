@@ -192,12 +192,12 @@
               <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if h.cmp %}
-                  <strong class="cmp-price" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</strong>
+                  <span class="solari-flap" data-cmp="{{ h.stock }}" title="Airport Solari Split-Flap live price">{{ h.cmp|money }}</span>
                   {% if h.price_updated_at %}
                     <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{ h.price_updated_at[11:16] }} IST</small>
                   {% endif %}
                 {% else %}
-                  <span class="muted" data-cmp="{{ h.stock }}">—</span>
+                  <span class="solari-flap muted" data-cmp="{{ h.stock }}">—</span>
                 {% endif %}
               </td>
               <td class="r tabular"><strong data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong></td>
@@ -253,7 +253,7 @@
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">CMP (Current)</span>
-                <strong class="mtd-val cmp-price" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp else '—' }}</strong>
+                <strong class="mtd-val"><span class="solari-flap" data-cmp="{{ h.stock }}" title="Airport Solari Split-Flap live price">{{ h.cmp|money if h.cmp else '—' }}</span></strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Current Value</span>
@@ -532,6 +532,19 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Deduct from Funds Checkbox/Button -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
+        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+          <input type="checkbox" name="deduct_from_funds" value="1" id="portal-deduct-funds-checkbox" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #0f172a; cursor: pointer;">
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Deduct from funds (Available Cash)</div>
+            <div style="font-size: 11px; color: #64748b; line-height: 1.35; margin-top: 1px;">
+              Tick only if you want the purchase cost deducted from your Available Cash. Leave unticked to keep Available Cash intact and prevent it from going negative.
+            </div>
+          </div>
+        </label>
       </div>
     </div>
 

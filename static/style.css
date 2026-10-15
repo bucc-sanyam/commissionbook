@@ -1885,45 +1885,112 @@ pre.ocr-text { color: #60734f; }
 }
 
 /* ==========================================================================
-   Airport Split-Flap Display Flip Animation (Solari Board Effect)
+   Airport Solari Split-Flap Display (Mechanical Departure Board Effect)
    ========================================================================== */
-@keyframes airportFlap {
+.solari-flap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a; /* Deep departure board matte black */
+  color: #34d399; /* Crisp emerald phosphor digits */
+  font-family: ui-monospace, SFMono-Regular, "Roboto Mono", "Cascadia Code", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  min-width: 68px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.7);
+  user-select: none;
+  cursor: pointer;
+  perspective: 500px;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
+  overflow: hidden;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.45);
+  vertical-align: middle;
+}
+
+.solari-flap:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-color: #38bdf8;
+}
+
+/* Authentic Solari Center Split Seam */
+.solari-flap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.95);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle Left & Right Hinge Rivets */
+.solari-flap::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 1px;
+  box-shadow: calc(100% - 6px) 0 0 rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Mechanical Solari Split-Flap Roll Animation */
+@keyframes solariSplitFlap {
   0% {
-    transform: perspective(350px) rotateX(0deg);
+    transform: perspective(500px) rotateX(0deg);
     filter: brightness(1);
   }
-  48% {
-    transform: perspective(350px) rotateX(-85deg);
-    filter: brightness(0.7);
-    background-color: rgba(17, 24, 39, 0.35);
+  30% {
+    transform: perspective(500px) rotateX(-85deg);
+    filter: brightness(0.6);
+    background: #020617;
   }
-  52% {
-    transform: perspective(350px) rotateX(85deg);
-    filter: brightness(1.25);
-    background-color: rgba(17, 24, 39, 0.35);
+  50% {
+    transform: perspective(500px) rotateX(85deg);
+    filter: brightness(1.3);
+    background: #1e293b;
+  }
+  75% {
+    transform: perspective(500px) rotateX(-15deg);
+    filter: brightness(0.9);
   }
   100% {
-    transform: perspective(350px) rotateX(0deg);
+    transform: perspective(500px) rotateX(0deg);
     filter: brightness(1);
   }
 }
 
-.airport-flip-up {
-  display: inline-block;
-  animation: airportFlap 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center;
-  color: #10b981 !important;
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-  border-radius: 4px;
+.solari-flipping {
+  animation: solariSplitFlap 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 }
 
-.airport-flip-down {
-  display: inline-block;
-  animation: airportFlap 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center;
+.solari-flip-up {
+  animation: solariSplitFlap 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+  color: #10b981 !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.65) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+.solari-flip-down {
+  animation: solariSplitFlap 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
   color: #ef4444 !important;
-  text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-  border-radius: 4px;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.65) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
 }
 
 /* ==========================================================================

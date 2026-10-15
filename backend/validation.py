@@ -160,6 +160,9 @@ def trade_values(values, *, public=False):
     if b_date and s_date and s_date < b_date:
         raise ValidationError("Sell date cannot be before buy date.")
 
+    raw_deduct = values.get("deduct_from_funds")
+    deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
+
     result = {
         "stock": text(values.get("stock"), "Stock", limit=120, required=True).upper(),
         "quantity": number(values.get("quantity"), "Quantity", required=True, positive=True),
@@ -171,6 +174,7 @@ def trade_values(values, *, public=False):
             values.get("commission_override"), "Commission", places=2
         ),
         "notes": text(values.get("notes"), "Notes", multiline=True) or None,
+        "deduct_from_funds": deduct_from_funds,
     }
     return result
 

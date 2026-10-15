@@ -913,6 +913,35 @@ window.formatRupee = function(num) {
   return "₹" + Number(num).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+// ==========================================================================
+// Airport Solari Split-Flap Flip Engine (Mechanical Departure Board)
+// ==========================================================================
+window.flipSolariEl = function(el, isUp = null) {
+  if (!el) return;
+  el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down");
+  void el.offsetWidth; // force CSS reflow
+  if (isUp === true) {
+    el.classList.add("solari-flip-up");
+  } else if (isUp === false) {
+    el.classList.add("solari-flip-down");
+  } else {
+    el.classList.add("solari-flipping");
+  }
+  setTimeout(() => {
+    el.classList.remove("solari-flipping", "solari-flip-up", "solari-flip-down");
+  }, 600);
+};
+
+window.triggerAirportSolariCascade = function() {
+  const flaps = document.querySelectorAll(".solari-flap");
+  if (!flaps.length) return;
+  flaps.forEach((flap, idx) => {
+    setTimeout(() => {
+      window.flipSolariEl(flap);
+    }, Math.min(idx * 75, 1500));
+  });
+};
+
 window.initLiveMarketTicker = function(options = {}) {
   const badgeId = options.badgeId || "market-ticker-badge";
   const badgeEl = document.getElementById(badgeId);
@@ -1005,12 +1034,12 @@ window.initLiveMarketTicker = function(options = {}) {
       if (cmpEl) {
         const prevText = cmpEl.textContent.trim();
         const nextText = q.current_price_formatted || window.formatRupee(cmp);
+        const isUp = q.change >= 0;
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
-          const isUp = q.change >= 0;
-          cmpEl.classList.remove("price-flash-up", "price-flash-down", "airport-flip-up", "airport-flip-down");
-          void cmpEl.offsetWidth; // trigger reflow
-          cmpEl.classList.add(isUp ? "airport-flip-up" : "airport-flip-down");
+          window.flipSolariEl(cmpEl, isUp);
+        } else {
+          window.flipSolariEl(cmpEl, null);
         }
       }
 
@@ -1057,12 +1086,12 @@ window.initLiveMarketTicker = function(options = {}) {
       if (cmpEl) {
         const prevText = cmpEl.textContent.trim();
         const nextText = q.current_price_formatted || window.formatRupee(cmp);
+        const isUp = q.change >= 0;
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
-          const isUp = q.change >= 0;
-          cmpEl.classList.remove("price-flash-up", "price-flash-down", "airport-flip-up", "airport-flip-down");
-          void cmpEl.offsetWidth;
-          cmpEl.classList.add(isUp ? "airport-flip-up" : "airport-flip-down");
+          window.flipSolariEl(cmpEl, isUp);
+        } else {
+          window.flipSolariEl(cmpEl, null);
         }
       }
 
@@ -1193,6 +1222,36 @@ window.initLiveMarketTicker = function(options = {}) {
     start: startPolling
   };
 };
+
+// ==========================================================================
+// Airport Solari Split-Flap Window Initialization & Interactive Listeners
+// ==========================================================================
+// Staggered departure board sequence 650ms after page load
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(window.triggerAirportSolariCascade, 650);
+  });
+} else {
+  setTimeout(window.triggerAirportSolariCascade, 650);
+}
+
+// Global click delegation for interactive tap-to-flip on any Solari flap tile
+document.addEventListener("click", (e) => {
+  const flap = e.target.closest(".solari-flap");
+  if (flap) {
+    window.flipSolariEl(flap);
+  }
+});
+
+// Update Prices Now form triggers the Solari cascade immediately
+document.addEventListener("DOMContentLoaded", () => {
+  const updatePricesForm = document.getElementById("update-prices-form");
+  if (updatePricesForm) {
+    updatePricesForm.addEventListener("submit", () => {
+      window.triggerAirportSolariCascade();
+    });
+  }
+});
 
 
 

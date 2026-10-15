@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS trades (
     commission_type_snapshot TEXT, commission_rate_snapshot NUMERIC,
     source TEXT NOT NULL DEFAULT 'manual',
     upload_id INTEGER REFERENCES uploads(id) ON DELETE SET NULL,
-    notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    notes TEXT, deduct_from_funds INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +71,7 @@ CREATE TABLE IF NOT EXISTS client_shares (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
     stock TEXT NOT NULL, quantity NUMERIC, buy_price NUMERIC,
+    deduct_from_funds INTEGER NOT NULL DEFAULT 0,
     added_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS client_alerts (
@@ -205,6 +207,10 @@ def init_local(connection):
         "trades": {
             "commission_type_snapshot": "TEXT",
             "commission_rate_snapshot": "NUMERIC",
+            "deduct_from_funds": "INTEGER DEFAULT 0",
+        },
+        "client_shares": {
+            "deduct_from_funds": "INTEGER DEFAULT 0",
         },
         "clients": {
             "portfolio_amount": "NUMERIC DEFAULT 0",
@@ -275,6 +281,13 @@ def get_db():
                         conn_kwargs["sslmode"] = "require"
                     connection = psycopg.connect(config["DATABASE_URL"], **conn_kwargs)
                     _cached_pg_conn = connection
+                    try:
+                        with connection.cursor() as cur:
+                            cur.execute("ALTER TABLE public.trades ADD COLUMN IF NOT EXISTS deduct_from_funds INTEGER NOT NULL DEFAULT 0;")
+                            cur.execute("ALTER TABLE public.client_shares ADD COLUMN IF NOT EXISTS deduct_from_funds INTEGER NOT NULL DEFAULT 0;")
+                        connection.commit()
+                    except Exception:
+                        connection.rollback()
             g.db = Database(connection, postgres=True)
         else:
             connection = sqlite3.connect(config["DATABASE"], timeout=15)
