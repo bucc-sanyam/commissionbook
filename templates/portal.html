@@ -21,7 +21,7 @@
               + Set @username
             </button>
           {% endif %}
-          <button type="button" class="btn btn-ghost btn-xs desktop-only" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
+          <button type="button" class="btn btn-ghost btn-xs desktop-only portal-top-pwd-btn" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
             {{ icon('lock', 10) }} Password
           </button>
         </div>
@@ -41,9 +41,9 @@
         <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
       </button>
 
-      <form method="post" action="{{ url_for('logout') }}" class="desktop-only" style="margin: 0; flex-shrink: 0;">
+      <form method="post" action="{{ url_for('logout') }}" class="desktop-only portal-top-signout-form" style="margin: 0; flex-shrink: 0;">
         {{ csrf() }}
-        <button type="submit" class="btn btn-ghost btn-sm" aria-label="Sign out" style="padding: 6px 8px;">
+        <button type="submit" class="btn btn-ghost btn-sm portal-top-signout-btn" aria-label="Sign out" style="padding: 6px 8px;">
           {{ icon('logout', 15) }}<span>Sign out</span>
         </button>
       </form>

@@ -2502,24 +2502,42 @@ html, body {
 }
 
 /* Responsive visibility utilities */
-.desktop-only {
-  display: inline-flex !important;
-}
-span.desktop-only {
-  display: inline !important;
-}
-div.desktop-only {
-  display: block !important;
-}
-form.desktop-only {
-  display: inline-block !important;
-}
-.mobile-only {
-  display: none !important;
+@media (min-width: 769px) {
+  .desktop-only {
+    display: inline-flex !important;
+  }
+  span.desktop-only {
+    display: inline !important;
+  }
+  div.desktop-only {
+    display: block !important;
+  }
+  form.desktop-only {
+    display: inline-block !important;
+  }
+  button.desktop-only {
+    display: inline-flex !important;
+  }
+  .mobile-only,
+  .mobile-only-flex {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
-  .desktop-only {
+  .desktop-only,
+  form.desktop-only,
+  button.desktop-only,
+  span.desktop-only,
+  div.desktop-only,
+  a.desktop-only,
+  .portal-top-signout-form,
+  .portal-top-pwd-btn,
+  .client-portal-topbar .portal-top-signout-form,
+  .client-portal-topbar .portal-top-pwd-btn,
+  .client-portal-topbar form[action*="logout"],
+  .client-portal-topbar form.desktop-only,
+  .client-portal-topbar button.desktop-only {
     display: none !important;
   }
   .mobile-only {
@@ -2528,73 +2546,95 @@ form.desktop-only {
   .mobile-only-flex {
     display: flex !important;
   }
+}
 
-  /* Client Portal Mobile Footer Account Card */
+/* Standalone PWA / Mobile App Support */
+@media (display-mode: standalone) and (max-width: 1024px) {
+  .desktop-only,
+  form.desktop-only,
+  button.desktop-only,
+  span.desktop-only,
+  div.desktop-only,
+  a.desktop-only,
+  .portal-top-signout-form,
+  .portal-top-pwd-btn,
+  .client-portal-topbar .portal-top-signout-form,
+  .client-portal-topbar .portal-top-pwd-btn,
+  .client-portal-topbar form[action*="logout"],
+  .client-portal-topbar form.desktop-only,
+  .client-portal-topbar button.desktop-only {
+    display: none !important;
+  }
   .portal-mobile-account-card {
-    background: #ffffff;
-    border: 1px solid #dce6da;
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 1.75rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 10px rgba(20, 42, 38, 0.05);
+    display: block !important;
   }
-  .pma-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 12px;
-    margin-bottom: 14px;
-    border-bottom: 1px solid #edf4eb;
-  }
-  .pma-user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .pma-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: #142a26;
-    line-height: 1.2;
-  }
-  .pma-username {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1b5e20;
-    margin-top: 2px;
-  }
-  .pma-card-actions {
-    display: flex;
-    gap: 10px;
-    align-items: stretch;
-  }
-  .pma-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 11px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 9px;
-    text-align: center;
-    cursor: pointer;
-    text-decoration: none;
-    box-sizing: border-box;
-  }
-  .pma-btn-signout {
-    width: 100%;
-    color: #b91c1c !important;
-    background: #fef2f2 !important;
-    border: 1px solid #fecaca !important;
-  }
-  .pma-btn-signout:hover,
-  .pma-btn-signout:active {
-    background: #fee2e2 !important;
-    color: #991b1b !important;
-  }
+}
+
+/* Client Portal Mobile Footer Account Card */
+.portal-mobile-account-card {
+  background: #ffffff;
+  border: 1px solid #dce6da;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 10px rgba(20, 42, 38, 0.05);
+}
+.pma-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #edf4eb;
+}
+.pma-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pma-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #142a26;
+  line-height: 1.2;
+}
+.pma-username {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1b5e20;
+  margin-top: 2px;
+}
+.pma-card-actions {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.pma-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.pma-btn-signout {
+  width: 100%;
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+}
+.pma-btn-signout:hover,
+.pma-btn-signout:active {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
 }
 
 /* Pagination Bar Styles */
