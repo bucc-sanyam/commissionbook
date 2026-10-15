@@ -3683,7 +3683,12 @@ def create_app(config=None):
         flash("Alert deleted.", "success")
         return redirect(url_for("alerts_list"))
 
-    if not (config and config.get("TESTING")):
+    is_serverless = bool(
+        os.environ.get("VERCEL")
+        or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+        or os.environ.get("LAMBDA_TASK_ROOT")
+    )
+    if not is_serverless and not (config and config.get("TESTING")):
         scheduler = DailyPriceScheduler(app)
         scheduler.start()
         app.extensions["price_scheduler"] = scheduler
