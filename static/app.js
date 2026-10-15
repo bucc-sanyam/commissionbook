@@ -921,9 +921,9 @@ window.initLiveMarketTicker = function(options = {}) {
       badgeEl.className = "ticker-badge ticker-live";
       badgeEl.innerHTML = `
         <span class="ticker-pulse"></span>
-        <span>Live 1m Ticker</span>
+        <span>Live 20s Ticker</span>
       `;
-      badgeEl.title = "Live market: Auto-updates every 1 min (9:15 AM - 3:45 PM IST)" + (timeText ? ` · Last: ${timeText}` : "");
+      badgeEl.title = "Live market: Auto-updates every 20s (9:15 AM - 3:45 PM IST)" + (timeText ? ` · Last: ${timeText}` : "");
     } else {
       badgeEl.className = "ticker-badge ticker-closed";
       badgeEl.innerHTML = `
@@ -1140,7 +1140,7 @@ window.initLiveMarketTicker = function(options = {}) {
       updateBadgeUI(true);
       timerId = setInterval(() => {
         pollLiveQuotes(false);
-      }, 60000); // 1 minute interval
+      }, 20000); // 20-second interval
     } else {
       updateBadgeUI(false);
     }
@@ -1158,7 +1158,7 @@ window.initLiveMarketTicker = function(options = {}) {
       stopPolling();
     } else {
       if (isMarketOpenIST()) {
-        if (Date.now() - lastFetchTime >= 55000) {
+        if (Date.now() - lastFetchTime >= 18000) {
           pollLiveQuotes(false);
         }
         startPolling();

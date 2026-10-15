@@ -1680,8 +1680,8 @@ def create_app(config=None):
         now_ts = time.time()
 
         with _price_update_state["lock"]:
-            # If called recently (< 45s ago) and not forced, return cached results without hammering Yahoo Finance
-            if not force and (now_ts - _price_update_state["ts"] < 45.0) and _price_update_state["data"] is not None:
+            # If called recently (< 15s ago) and not forced, return cached results without hammering Yahoo Finance
+            if not force and (now_ts - _price_update_state["ts"] < 15.0) and _price_update_state["data"] is not None:
                 res = _price_update_state["data"]
                 status_note = "cached"
             else:

@@ -392,7 +392,7 @@ class DailyPriceScheduler:
             return
         self._thread = threading.Thread(target=self._run_loop, daemon=True, name="PriceScheduler")
         self._thread.start()
-        logger.info("Stock price scheduler started (1-min live updates during 09:15-15:45 IST, Mon-Fri).")
+        logger.info("Stock price scheduler started (20-sec live updates during 09:15-15:45 IST, Mon-Fri).")
 
     def stop(self):
         self._stop_event.set()
@@ -402,15 +402,15 @@ class DailyPriceScheduler:
             try:
                 now_ist = datetime.now(IST)
                 now_ts = time.time()
-                # Run every 60 seconds if within Indian market hours (09:15 - 15:45 IST, Mon-Fri)
+                # Run every 20 seconds if within Indian market hours (09:15 - 15:45 IST, Mon-Fri)
                 if is_market_hours(now_ist):
-                    if now_ts - self.last_run_time >= 55.0:
+                    if now_ts - self.last_run_time >= 18.0:
                         with self.app.app_context():
                             from .database import get_db
                             res = update_all_stock_prices(get_db())
                             self.last_run_time = now_ts
                             logger.info(
-                                "Live 1-min market price update: %d updated, %d failed at %s IST.",
+                                "Live 20-sec market price update: %d updated, %d failed at %s IST.",
                                 len(res.get("updated", [])),
                                 len(res.get("failed", [])),
                                 now_ist.strftime("%H:%M:%S"),
@@ -418,5 +418,5 @@ class DailyPriceScheduler:
             except Exception as exc:
                 logger.error("Error in price scheduler loop: %s", exc)
 
-            # Sleep 15 seconds before checking again
-            self._stop_event.wait(15)
+            # Sleep 5 seconds before checking again
+            self._stop_event.wait(5)
