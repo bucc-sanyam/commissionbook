@@ -7,7 +7,8 @@
 <section class="card">
   <div class="card-header"><div><h2>Incoming trade records</h2><p>{{ uploads|length }} submission{{ 's' if uploads|length != 1 }} · reviewed by the submitter before saving</p></div><a class="btn btn-sm" href="{{ url_for('admin_scan') }}">{{ icon('scan', 14) }}Scan a screenshot</a></div>
   {% if uploads %}
-  <div class="table-wrap"><table class="data-table">
+  <!-- Desktop Submissions Table (Hidden on Mobile) -->
+  <div class="desktop-uploads-table table-wrap"><table class="data-table">
     <thead><tr><th>Submitted by</th><th>Received</th><th>Platform</th><th class="r">Trades</th><th>Source images</th><th>Extracted text</th></tr></thead>
     <tbody>{% for upload in uploads %}
       <tr>
@@ -20,6 +21,37 @@
       </tr>
     {% endfor %}</tbody>
   </table></div>
+
+  <!-- Mobile Submissions List (Zero Horizontal Scroll for Phones) -->
+  <div class="mobile-uploads-list">
+    {% for upload in uploads %}
+    <div class="mobile-dashboard-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="client-cell">
+          {{ avatar(upload.client_name, upload.id, True) }}
+          <span><strong>{{ upload.client_name }}</strong><small>Submission #{{ upload.id }}</small></span>
+        </div>
+        <span class="badge badge-green" style="font-size:11px;">{{ icon('check', 11) }} {{ upload.trade_count }} trades</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+        <span class="badge">{{ (upload.platform or 'Manual entry')|capitalize }}</span>
+        <span class="date-cell muted">{{ upload.created_at }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #edf4eb; padding-top:6px; margin-top:4px;">
+        <div class="image-links">
+          {% for filename in (upload.filename or '').split(',') if filename %}
+            <a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer">{{ icon('image', 13) }} View Image {{ loop.index }}</a>
+          {% else %}
+            <span class="muted" style="font-size:11px;">No images</span>
+          {% endfor %}
+        </div>
+        {% if upload.ocr_text %}
+          <button class="btn btn-xs btn-ghost" type="button" data-dialog="ocr-{{ upload.id }}">{{ icon('file', 13) }} Transcript</button>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   <div class="card-footer"><span>{{ icon('shield', 12) }}Original screenshots are private and visible only to you.</span><a class="text-link" href="{{ url_for('trades_list') }}">Open ledger{{ icon('arrow-right', 13) }}</a></div>
   {% else %}
   {{ empty_state('Your inbox is ready', 'Share the client submission link. Their screenshots and confirmed trade details will arrive right here.', 'inbox', url_for('settings_page') ~ '#client-portal', 'Get your upload link') }}

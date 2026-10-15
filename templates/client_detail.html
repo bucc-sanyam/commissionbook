@@ -54,7 +54,8 @@
   </div>
 
   {% if advisories %}
-  <div class="table-wrap">
+  <!-- Desktop Advisories Table (Hidden on Mobile) -->
+  <div class="desktop-detail-advisories-table table-wrap">
     <table class="data-table">
       <thead>
         <tr>
@@ -101,6 +102,55 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Mobile Advisories Cards (Zero Horizontal Scroll for Phones) -->
+  <div class="mobile-detail-advisories-list">
+    {% for a in advisories %}
+    <div class="mobile-audit-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
+            {{ a.action }}
+          </span>
+          <strong style="font-size: 15px;">{{ a.stock }}</strong>
+        </div>
+        <span class="date-cell muted" style="font-size:11px;">{{ a.created_at[:16] }}</span>
+      </div>
+
+      <div class="mac-price-grid">
+        <div class="mac-price-item">
+          <span class="mac-label">Entry</span>
+          <strong class="mac-val">{{ a.price|money if a.price else 'CMP' }}</strong>
+        </div>
+        <div class="mac-price-item">
+          <span class="mac-label">Target</span>
+          <strong class="mac-val pos">{{ a.target_price|money if a.target_price else '—' }}</strong>
+        </div>
+        <div class="mac-price-item">
+          <span class="mac-label">Stop Loss</span>
+          <strong class="mac-val neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</strong>
+        </div>
+      </div>
+
+      {% if a.message %}
+      <div class="mac-message">{{ a.message }}</div>
+      {% endif %}
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid #edf4eb;">
+        <span class="mac-label">Acknowledgment</span>
+        {% if a.acknowledged %}
+          <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+            {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at[11:16] }}){% endif %}
+          </span>
+        {% else %}
+          <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+            {{ icon('clock', 12) }} Pending
+          </span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   {% else %}
     {{ empty_state('No trade advisories sent yet', 'Click "Send New Pop-up Trade" to dispatch a mandatory pop-up recommendation directly to this client\'s screen.', 'send', compact=True) }}
   {% endif %}
@@ -110,17 +160,38 @@
   <section class="card">
     <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
     {% if payments %}
-    <div class="table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    <div class="desktop-detail-payments-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for p in payments %}
       <tr><td class="date-cell">{{ p.paid_on }}</td><td>{{ p.mode or 'Not specified' }}{% if p.notes %}<span class="cell-secondary" title="{{ p.notes }}">{{ p.notes|truncate(32) }}</span>{% endif %}</td><td class="r pos tabular strong">{{ p.amount|money }}</td><td><form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment">{{ icon('trash', 15) }}</button></form></td></tr>
     {% endfor %}</tbody></table></div>
+
+    <div class="mobile-detail-payments-list">
+      {% for p in payments %}
+      <div class="mobile-payment-card">
+        <div class="mpc-top">
+          <span class="date-cell muted">{{ p.paid_on }}</span>
+          <strong class="pos tabular" style="font-size: 15px;">+{{ p.amount|money }}</strong>
+        </div>
+        <div class="mpc-mid">
+          <span class="source-tag">{{ p.mode or 'Not specified' }}</span>
+          {% if p.notes %}<span class="muted" style="font-size:11px;">{{ p.notes|truncate(30) }}</span>{% endif %}
+        </div>
+        <div class="mpc-actions">
+          <form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">
+            {{ csrf() }}
+            <button class="btn btn-ghost btn-xs text-danger" aria-label="Delete payment">{{ icon('trash', 13) }} Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
     {% else %}{{ empty_state('Ready when they settle up', 'Record a payment to keep the outstanding balance up to date.', 'wallet', compact=True) }}{% endif %}
     <div class="card-footer"><span>Total received</span><strong class="pos tabular">{{ s.paid|money }}</strong></div>
   </section>
   <section class="card">
     <div class="card-header"><div><h2>Capital &amp; Funds Ledger</h2><p>Capital deposited or withdrawn by client and admin.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
     {% if funds %}
-    <div class="table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+    <div class="desktop-detail-funds-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
     {% for f in funds %}
       <tr>
         <td class="date-cell">{{ f.added_on }}</td>
@@ -138,18 +209,43 @@
         <td>
           <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
             {{ csrf() }}
-            <button class="icon-btn icon-btn-danger" aria-label="Delete fund">{{ icon('trash', 15) }}</button>
+            <button class="icon-btn icon-btn-danger" aria-label="Delete fund entry">{{ icon('trash', 15) }}</button>
           </form>
         </td>
       </tr>
     {% endfor %}</tbody></table></div>
-    {% else %}{{ empty_state('Awaiting capital', 'Record a deposit to track trading funds.', 'wallet', compact=True) }}{% endif %}
-    <div class="card-footer"><span>Net Trading Funds</span><strong class="{{ 'pos' if total_funds >= 0 else 'neg' }} tabular">{{ total_funds|money }}</strong></div>
+
+    <div class="mobile-detail-funds-list">
+      {% for f in funds %}
+      <div class="mobile-payment-card">
+        <div class="mpc-top">
+          <span class="date-cell muted">{{ f.added_on }}</span>
+          <strong class="{{ 'pos' if f.amount >= 0 else 'neg' }} tabular" style="font-size: 15px;">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</strong>
+        </div>
+        <div class="mpc-mid">
+          {% if f.notes and '[Client' in f.notes %}
+            <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
+          {% endif %}
+          <span class="cell-secondary">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() if f.notes else 'Fund entry' }}</span>
+        </div>
+        <div class="mpc-actions">
+          <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+            {{ csrf() }}
+            <button class="btn btn-ghost btn-xs text-danger">{{ icon('trash', 13) }} Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}{{ empty_state('Track client bank deposits', 'Record capital injected or withdrawn by client.', 'bank', compact=True) }}{% endif %}
+    <div class="card-footer"><span>Net capital on record</span><strong class="tabular {{ 'pos' if s.net_funds >= 0 else 'neg' }}">{{ '+' if s.net_funds > 0 else '' }}{{ s.net_funds|money }}</strong></div>
   </section>
+</div>
+
   <section class="card">
     <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
     {% if shares %}
-    <div class="table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
+    <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
     {% for sh in shares %}
       <tr>
         <td><strong>{{ sh.stock }}</strong></td>
@@ -175,6 +271,54 @@
         </td>
       </tr>
     {% endfor %}</tbody></table></div>
+
+    <div class="mobile-detail-holdings-list">
+      {% for sh in shares %}
+      <div class="mobile-trade-card" style="padding: 12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+          <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
+          <strong class="tabular" style="font-size: 14px;">{{ sh.current_value|money }}</strong>
+        </div>
+        <div class="mtd-grid" style="margin-bottom: 10px;">
+          <div class="mtd-item">
+            <span class="mtd-label">Quantity</span>
+            <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Buy Price</span>
+            <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">CMP (Current)</span>
+            <strong class="mtd-val">{{ sh.cmp|money if sh.cmp else '—' }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Valuation</span>
+            <strong class="mtd-val">{{ sh.current_value|money }}</strong>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:6px; border-top:1px solid #edf4eb; padding-top:8px;">
+          <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
+            data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+            data-stock="{{ sh.stock }}"
+            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+            data-buy-price="{{ sh.buy_price or '' }}">
+            {{ icon('edit', 12) }} Edit
+          </button>
+          <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
+            data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+            data-stock="{{ sh.stock }}"
+            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
+            {{ icon('trend', 12) }} Sell
+          </button>
+          <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
+            {{ csrf() }}
+            <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete holding">{{ icon('trash', 13) }}</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
     <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
     <dialog class="modal" id="dynamic-edit-holding-dialog">
       <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">

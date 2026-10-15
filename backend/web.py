@@ -1809,6 +1809,45 @@ def create_app(config=None):
 </html>"""
         return html_content, 200, {"Content-Type": "text/html; charset=utf-8"}
 
+    @app.route("/api/live-quotes", methods=["GET"])
+    def api_live_quotes():
+        """Ultra-fast (<5ms) non-blocking stock prices endpoint for live ticker. Never touches external APIs."""
+        db = get_db()
+        prices = get_cached_prices(db)
+        now_ist = datetime.now(IST)
+        market_open = is_market_hours(now_ist)
+        time_ist_str = now_ist.strftime("%H:%M IST")
+
+        serialized_quotes = []
+        for sym, q in prices.items():
+            curr = float(q["current_price"]) if q.get("current_price") is not None else 0.0
+            prev = float(q["previous_close"]) if q.get("previous_close") is not None else 0.0
+            chg = float(q["change"]) if q.get("change") is not None else 0.0
+            chg_pct = float(q["change_pct"]) if q.get("change_pct") is not None else 0.0
+            serialized_quotes.append({
+                "stock": sym,
+                "ticker": sym,
+                "current_price": curr,
+                "current_price_formatted": f"₹{curr:,.2f}",
+                "previous_close": prev,
+                "change": chg,
+                "change_formatted": f"{'+' if chg >= 0 else ''}{chg:,.2f}",
+                "change_pct": chg_pct,
+                "change_pct_formatted": f"{'+' if chg_pct >= 0 else ''}{chg_pct:.2f}%",
+                "updated_at": q.get("updated_at") or time_ist_str,
+            })
+
+        return jsonify({
+            "ok": True,
+            "status": "cached",
+            "total": len(serialized_quotes),
+            "updated_count": len(serialized_quotes),
+            "updated": serialized_quotes,
+            "is_market_hours": market_open,
+            "market_status": "open" if market_open else "closed",
+            "updated_at_ist": time_ist_str,
+        }), 200
+
     @app.route("/admin/stocks/alias", methods=["POST"])
     @login_required
     def admin_save_stock_alias():

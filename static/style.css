@@ -421,10 +421,38 @@ pre.ocr-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break
 .auth-form h2 { font-size: 28px; letter-spacing: -1.2px; margin: 4px 0 0; }
 .auth-form > p { font-size: 12px; color: #96a185; line-height: 1.8; margin-top: 8px; margin-bottom: 24px; }
 .auth-form .field { margin-bottom: 18px; }
-.auth-form input { background: #fff; min-height: 46px; }
-.password-wrap { position: relative; }
-.password-wrap input { padding-right: 43px; }
-.password-wrap .icon-btn { position: absolute; right: 8px; top: 8px; }
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.password-wrap input {
+  width: 100%;
+  padding-right: 44px;
+}
+.password-wrap .icon-btn {
+  position: absolute;
+  right: 10px;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  z-index: 5;
+}
+.password-wrap .icon-btn svg {
+  display: block;
+  margin: auto;
+}
 .auth-form .btn-primary { min-height: 46px; font-size: 13px; }
 .auth-form-footnote { margin-top: 24px; padding-top: 18px; border-top: 1px solid #e1e8d6; color: #8e9e7e; font-size: 11px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.7; }
 .auth-form-footnote .icon { margin-top: 2px; color: #6b8852; flex-shrink: 0; }
@@ -1855,6 +1883,557 @@ pre.ocr-text { color: #60734f; }
   animation: priceFlashDown 1.2s ease-out;
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   Airport Split-Flap Display Flip Animation (Solari Board Effect)
+   ========================================================================== */
+@keyframes airportFlap {
+  0% {
+    transform: perspective(350px) rotateX(0deg);
+    filter: brightness(1);
+  }
+  48% {
+    transform: perspective(350px) rotateX(-85deg);
+    filter: brightness(0.7);
+    background-color: rgba(17, 24, 39, 0.35);
+  }
+  52% {
+    transform: perspective(350px) rotateX(85deg);
+    filter: brightness(1.25);
+    background-color: rgba(17, 24, 39, 0.35);
+  }
+  100% {
+    transform: perspective(350px) rotateX(0deg);
+    filter: brightness(1);
+  }
+}
+
+.airport-flip-up {
+  display: inline-block;
+  animation: airportFlap 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  color: #10b981 !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  border-radius: 4px;
+}
+
+.airport-flip-down {
+  display: inline-block;
+  animation: airportFlap 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  color: #ef4444 !important;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   Mobile-Responsive Cards for Alerts & Holdings (Zero Horizontal Scroll)
+   ========================================================================== */
+.mobile-alerts-list,
+.mobile-admin-holdings-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+/* ==========================================================================
+   Comprehensive Mobile Responsive Transformations (Zero Horizontal Scrolling)
+   ========================================================================== */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.app-shell {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.mobile-alerts-list,
+.mobile-admin-holdings-list,
+.mobile-trade-list,
+.mobile-clients-list,
+.mobile-payments-list,
+.mobile-dashboard-clients-list,
+.mobile-dashboard-recent-list,
+.mobile-detail-advisories-list,
+.mobile-detail-payments-list,
+.mobile-detail-funds-list,
+.mobile-uploads-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+@media (max-width: 768px) {
+  .desktop-alerts-table,
+  .desktop-holdings-table,
+  .desktop-trade-table,
+  .desktop-clients-table,
+  .desktop-payments-table,
+  .desktop-dashboard-clients-table,
+  .desktop-dashboard-recent-table,
+  .desktop-detail-advisories-table,
+  .desktop-detail-payments-table,
+  .desktop-detail-funds-table,
+  .desktop-uploads-table {
+    display: none !important;
+  }
+
+  .mobile-alerts-list,
+  .mobile-admin-holdings-list,
+  .mobile-trade-list,
+  .mobile-clients-list,
+  .mobile-payments-list,
+  .mobile-dashboard-clients-list,
+  .mobile-dashboard-recent-list,
+  .mobile-detail-advisories-list,
+  .mobile-detail-payments-list,
+  .mobile-detail-funds-list,
+  .mobile-uploads-list {
+    display: flex !important;
+  }
+
+  /* Prevent iOS automatic zoom on focus */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .card-header .header-actions,
+  .card-header .card-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .card-header .search-field {
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .heading-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-alerts-table,
+  .desktop-holdings-table,
+  .desktop-trade-table,
+  .desktop-clients-table,
+  .desktop-payments-table,
+  .desktop-dashboard-clients-table,
+  .desktop-dashboard-recent-table,
+  .desktop-detail-advisories-table,
+  .desktop-detail-payments-table,
+  .desktop-detail-funds-table,
+  .desktop-uploads-table {
+    display: block !important;
+  }
+
+  .mobile-alerts-list,
+  .mobile-admin-holdings-list,
+  .mobile-trade-list,
+  .mobile-clients-list,
+  .mobile-payments-list,
+  .mobile-dashboard-clients-list,
+  .mobile-dashboard-recent-list,
+  .mobile-detail-advisories-list,
+  .mobile-detail-payments-list,
+  .mobile-detail-funds-list,
+  .mobile-uploads-list {
+    display: none !important;
+  }
+}
+
+/* Modals & Dialogs responsiveness on phones */
+@media (max-width: 600px) {
+  .modal {
+    width: calc(100vw - 20px) !important;
+    max-width: 100vw !important;
+    margin: auto;
+    border-radius: 14px;
+    max-height: 92vh;
+  }
+
+  .modal-inner {
+    padding: 16px 14px !important;
+  }
+
+  .modal-inner div[style*="grid-template-columns"],
+  .modal-inner .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Mobile Alert Card */
+.mobile-alert-card {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--border, #e2e8df);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-alert-card.card-all-acknowledged {
+  background: #fbfdfb;
+  border-color: #bbf7d0;
+}
+
+.mac-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.mac-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mac-stock {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a3328;
+}
+
+.mac-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mac-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mac-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: #f6f9f5;
+  border: 1px solid #e1ebe3;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.mac-price-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.mac-label {
+  font-size: 10px;
+  color: #61796c;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.mac-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.mac-recipient-row {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mac-message {
+  font-size: 12px;
+  color: #3f5d4e;
+  background: #f8faf7;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #2e7d32;
+  line-height: 1.4;
+}
+
+.mac-ack-details {
+  border: 1px solid #dce8dd;
+  border-radius: 8px;
+  background: #fafcf9;
+  overflow: hidden;
+}
+
+.mac-ack-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.mac-ack-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mac-ack-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mac-ack-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mac-ack-dot.dot-green {
+  background: #10b981;
+}
+
+.mac-ack-dot.dot-amber {
+  background: #f59e0b;
+}
+
+.mac-ack-content {
+  padding: 10px 12px;
+  border-top: 1px solid #ebf2ec;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mac-ack-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mac-group-title {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mac-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mac-empty-text {
+  font-size: 11px;
+  color: #889e90;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Mobile Client Card */
+.mobile-client-card {
+  background: #ffffff;
+  border: 1px solid #e2e8df;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mcc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mcc-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mcc-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #173d34;
+  text-decoration: none;
+}
+
+.mcc-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.mcc-username-badge {
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #164237;
+  background: #eef3e8;
+  border: 1px solid #d4e2d4;
+  border-radius: 4px;
+}
+
+.mcc-set-username-badge {
+  padding: 1px 6px;
+  font-size: 10px;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+}
+
+.mcc-contact {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.mcc-password-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8faf7;
+  border: 1px solid #e7efe5;
+  border-radius: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.mcc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  padding: 10px;
+  background: #fbfdfb;
+  border: 1px solid #edf4eb;
+  border-radius: 8px;
+}
+
+.mcc-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcc-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #61796c;
+}
+
+.mcc-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  border-top: 1px solid #edf4eb;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* Mobile Payments & Generic Cards */
+.mobile-payment-card,
+.mobile-dashboard-card,
+.mobile-audit-card {
+  background: #ffffff;
+  border: 1px solid #e2e8df;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mpc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mpc-mid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.mpc-notes {
+  font-size: 12px;
+  color: #4b6354;
+  background: #f8faf7;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.mpc-actions {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #edf4eb;
+  padding-top: 6px;
+}
+
+/* Privacy Mode Additions for Mobile Elements */
+.privacy-mode .mac-val,
+.privacy-mode .mcc-grid strong,
+.privacy-mode .mpc-top strong,
+.privacy-mode .mobile-dashboard-card strong,
+.privacy-mode .mobile-audit-card strong {
+  filter: blur(8px) !important;
+  user-select: none;
+}
+
 
 
 

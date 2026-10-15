@@ -102,18 +102,19 @@ def sanitize_symbol(symbol: str) -> str:
 def resolve_ticker_candidates(raw_name: str, alias_map: dict | None = None) -> list[str]:
     """Resolve a company or position name into plausible NSE/BSE ticker symbols."""
     raw = raw_name.strip().upper()
-    candidates = []
 
-    # 1. Check in-database alias mapping (if configured by admin)
+    # 1. Direct match in known tickers (fast-path: zero ambiguity)
+    if raw in KNOWN_TICKERS:
+        return [KNOWN_TICKERS[raw]]
+
+    # 2. Check in-database alias mapping (if configured by admin)
     if alias_map and raw in alias_map:
         canonical = alias_map[raw]
-        candidates.append(canonical)
         if canonical in KNOWN_TICKERS:
-            candidates.append(KNOWN_TICKERS[canonical])
+            return [KNOWN_TICKERS[canonical]]
+        return [canonical]
 
-    # 2. Direct match in known tickers
-    if raw in KNOWN_TICKERS:
-        candidates.append(KNOWN_TICKERS[raw])
+    candidates = []
 
     # 3. Strip corporate suffixes (LIMITED, LTD, VENTURES, INDUSTRIES, etc.)
     stripped = re.sub(
@@ -123,7 +124,7 @@ def resolve_ticker_candidates(raw_name: str, alias_map: dict | None = None) -> l
     ).strip()
     if stripped:
         if stripped in KNOWN_TICKERS:
-            candidates.append(KNOWN_TICKERS[stripped])
+            return [KNOWN_TICKERS[stripped]]
         clean_stripped = sanitize_symbol(stripped)
         if clean_stripped:
             candidates.append(clean_stripped)
@@ -165,7 +166,7 @@ def fetch_stock_quote(raw_symbol: str, alias_map: dict | None = None) -> dict | 
             url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
             try:
                 req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=2.5) as resp:
+                with urllib.request.urlopen(req, timeout=1.8) as resp:
                     if resp.status != 200:
                         continue
                     data = json.loads(resp.read().decode("utf-8"))

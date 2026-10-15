@@ -77,7 +77,8 @@
     <a class="btn btn-sm" href="{{ url_for('export_trades', **{'from': args['from'] or '', 'to': args['to'] or ''}) }}">{{ icon('download', 14) }}Export report</a>
   </div>
   {% if per_client %}
-  <div class="table-wrap">
+  <!-- Desktop Clients Statement (Hidden on Mobile) -->
+  <div class="desktop-dashboard-clients-table table-wrap">
     <table class="data-table">
       <thead><tr><th>Client</th><th>Commission rule</th><th class="r">Trades</th><th class="r">Client P&amp;L</th><th class="r">Earned{{ ' (period)' if args['from'] or args['to'] }}</th><th class="r">Balance (all time)</th><th></th></tr></thead>
       <tbody>
@@ -93,6 +94,41 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Mobile Clients Statement Cards (Zero Horizontal Scroll for Phones) -->
+  <div class="mobile-dashboard-clients-list">
+    {% for c in per_client[:6] %}
+    <div class="mobile-dashboard-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <a class="client-cell" href="{{ url_for('client_detail', cid=c.id) }}">
+          {{ avatar(c.name, c.id, True) }}
+          <span><strong>{{ c.name }}</strong><small>{{ c.open }} open position{{ 's' if c.open != 1 }}</small></span>
+        </a>
+        <a class="icon-btn icon-btn-sm" href="{{ url_for('client_detail', cid=c.id) }}">{{ icon('arrow-up-right', 14) }}</a>
+      </div>
+      <div class="mtd-grid" style="margin-top:4px;">
+        <div class="mtd-item">
+          <span class="mtd-label">Balance</span>
+          <strong class="tabular {{ 'neg' if c.outstanding > 0.005 else 'pos' if c.outstanding < -0.005 else 'muted' }}">{{ c.outstanding|money }}</strong>
+          <small class="cell-secondary">{{ 'Credit' if c.outstanding < -0.005 else 'To collect' if c.outstanding > 0.005 else 'Settled' }}</small>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Commission Earned</span>
+          <strong class="tabular strong">{{ c.commission|money }}</strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Client P&amp;L</span>
+          <strong class="tabular">{{ pnl(c.pnl) }}</strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Rule / Count</span>
+          <span class="badge" style="font-size:10px;">{{ c.rule }}</span>
+          <small class="muted">{{ c.count }} trades</small>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   <div class="card-footer"><span>Showing {{ [per_client|length, 6]|min }} of {{ per_client|length }} clients · balances include all payments</span><a class="text-link" href="{{ url_for('clients_list') }}">All clients{{ icon('arrow-right', 13) }}</a></div>
   {% else %}
   {{ empty_state('Your people, all in one place', 'Add a client or share your submission link. Their trades and earnings will meet you here.', 'users', url_for('clients_list'), 'Add a client') }}
@@ -103,7 +139,8 @@
   <section class="card">
     <div class="card-header"><div><h2>The latest in your ledger</h2><p>Recent trades and the commissions behind them.</p></div><a class="text-link" href="{{ url_for('trades_list') }}">View all{{ icon('arrow-right', 13) }}</a></div>
     {% if recent %}
-    <div class="table-wrap"><table class="data-table table-tight">
+    <!-- Desktop Recent Trades Table -->
+    <div class="desktop-dashboard-recent-table table-wrap"><table class="data-table table-tight">
       <thead><tr><th>Stock / client</th><th>Status</th><th class="r">Commission</th><th class="r">Date</th></tr></thead>
       <tbody>{% for t in recent[:5] %}
         <tr><td><div class="client-cell"><span class="stock-tile">{{ t.stock[:2] }}</span><span>{{ t.stock }}<small>{{ t.client_name }}</small></span></div></td>
@@ -111,6 +148,25 @@
           <td class="r tabular strong">{{ t.commission|money }}</td><td class="r date-cell">{{ t.sell_date or t.buy_date or '—' }}</td></tr>
       {% endfor %}</tbody>
     </table></div>
+
+    <!-- Mobile Recent Trades List -->
+    <div class="mobile-dashboard-recent-list">
+      {% for t in recent[:5] %}
+      <div class="mobile-dashboard-card" style="padding: 10px 12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="client-cell">
+            <span class="stock-tile">{{ t.stock[:2] }}</span>
+            <span><strong>{{ t.stock }}</strong><small>{{ t.client_name }}</small></span>
+          </div>
+          <span class="badge {{ 'badge-green' if t.status == 'Closed' else 'badge-amber' }}" style="font-size:10px;">{{ t.status }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:12px;">
+          <span class="date-cell muted">{{ t.sell_date or t.buy_date or '—' }}</span>
+          <strong class="tabular strong">{{ t.commission|money }}</strong>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
     {% else %}{{ empty_state('A fresh page', 'Your recent trades will appear here.', 'book', compact=True) }}{% endif %}
     <div class="card-footer"><span>{{ total.count }} trades in view</span><span>{{ total.open }} open · <span class="tabular" data-privacy-value>{{ total.invested_open|money }}</span> invested</span></div>
   </section>

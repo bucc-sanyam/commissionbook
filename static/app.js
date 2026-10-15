@@ -312,9 +312,23 @@
           });
         }
       }
+
+      // Also filter mobile cards in same section
+      const section = targetTable?.closest("section") || document;
+      const mobileCards = section.querySelectorAll(".mobile-trade-card, .mobile-client-card, .mobile-alert-card, .mobile-payment-card");
+      if (mobileCards.length > 0) {
+        let mShown = 0;
+        mobileCards.forEach((card) => {
+          const match = !term || card.textContent.toLocaleLowerCase().includes(term);
+          card.hidden = !match;
+          if (match) mShown += 1;
+        });
+        if (shown === 0 && mShown > 0) shown = mShown;
+      }
+
       const label = document.getElementById(input.dataset.searchCount);
       if (label) {
-        const totalRows = targetTable?.querySelectorAll("tbody tr").length || 0;
+        const totalRows = targetTable?.querySelectorAll("tbody tr").length || mobileCards.length || 0;
         label.textContent = term ? `${shown} result${shown === 1 ? "" : "s"}` : `${totalRows} record${totalRows === 1 ? "" : "s"}`;
       }
       const empty = document.getElementById(input.dataset.searchEmpty);
@@ -950,7 +964,8 @@ window.initLiveMarketTicker = function(options = {}) {
 
     isFetching = true;
     try {
-      const resp = await fetch("/api/update-prices" + (force ? "?force=1" : ""), {
+      const url = force ? "/api/update-prices?force=1" : "/api/live-quotes";
+      const resp = await fetch(url, {
         headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }
       });
       if (!resp.ok) return;
@@ -993,9 +1008,9 @@ window.initLiveMarketTicker = function(options = {}) {
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
           const isUp = q.change >= 0;
-          cmpEl.classList.remove("price-flash-up", "price-flash-down");
+          cmpEl.classList.remove("price-flash-up", "price-flash-down", "airport-flip-up", "airport-flip-down");
           void cmpEl.offsetWidth; // trigger reflow
-          cmpEl.classList.add(isUp ? "price-flash-up" : "price-flash-down");
+          cmpEl.classList.add(isUp ? "airport-flip-up" : "airport-flip-down");
         }
       }
 
@@ -1044,9 +1059,10 @@ window.initLiveMarketTicker = function(options = {}) {
         const nextText = q.current_price_formatted || window.formatRupee(cmp);
         if (prevText !== nextText) {
           cmpEl.textContent = nextText;
-          cmpEl.classList.remove("price-flash-up", "price-flash-down");
+          const isUp = q.change >= 0;
+          cmpEl.classList.remove("price-flash-up", "price-flash-down", "airport-flip-up", "airport-flip-down");
           void cmpEl.offsetWidth;
-          cmpEl.classList.add(q.change >= 0 ? "price-flash-up" : "price-flash-down");
+          cmpEl.classList.add(isUp ? "airport-flip-up" : "airport-flip-down");
         }
       }
 

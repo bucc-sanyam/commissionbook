@@ -79,7 +79,7 @@
 
 {% macro trade_table(trades, total=None, show_client=True, selectable=False) %}
 {% if trades %}
-<div class="table-wrap">
+<div class="desktop-trade-table table-wrap">
 <table class="data-table trade-table" data-lazy-table="20">
   <thead><tr>
     {% if selectable %}<th class="check-cell"><input type="checkbox" data-select-all=".rowchk" aria-label="Select all trades"></th>{% endif %}
@@ -138,6 +138,131 @@
   </tr></tfoot>
   {% endif %}
 </table>
+</div>
+
+<!-- Mobile Trades List (Zero Horizontal Scroll for Phones) -->
+<div class="mobile-trade-list" data-lazy-list="20">
+  {% for t in trades %}
+  <details class="mobile-trade-card">
+    <summary class="mobile-trade-summary">
+      <div class="mts-left">
+        <div class="mts-stock">
+          <strong>{{ t.stock }}</strong>
+          <span class="mts-badge {{ 'badge-green' if t.status == 'Closed' else 'badge-amber' }}">
+            {{ t.status }}
+          </span>
+        </div>
+        <div class="mts-dates">
+          {% if show_client %}
+            <a class="client-cell" href="{{ url_for('client_detail', cid=t.client_id) }}" style="font-size: 11px; margin-bottom: 2px;">
+              {{ avatar(t.client_name, t.client_id, True) }}
+              <span>{{ t.client_name }}</span>
+            </a>
+          {% endif %}
+          <span>{{ t.buy_date or '—' }}{% if t.sell_date %} → {{ t.sell_date }}{% endif %}</span>
+        </div>
+      </div>
+      <div class="mts-right">
+        {% if t.status == 'Closed' %}
+          <div class="mts-pnl {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
+            <strong>{{ '+' if t.pnl > 0 else '' }}{{ t.pnl|money }}</strong>
+            <small>{{ '%+.2f'|format(t.pnl_pct) }}%</small>
+          </div>
+        {% else %}
+          <div class="mts-pnl muted">
+            <strong>Open</strong>
+            <small class="tabular">{{ t.quantity|num }} shares</small>
+          </div>
+        {% endif %}
+        <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+      </div>
+    </summary>
+    <div class="mobile-trade-details">
+      <div class="mtd-grid">
+        <div class="mtd-item">
+          <span class="mtd-label">Quantity</span>
+          <strong class="mtd-val">{{ t.quantity|num }} shares</strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Buy Price</span>
+          <strong class="mtd-val">{{ t.buy_price|money }}</strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Sell Price</span>
+          <strong class="mtd-val">
+            {% if t.sell_price %}
+              {{ t.sell_price|money }}
+            {% else %}
+              <span style="color: #b7791f; font-weight: 700;">Open Position</span>
+            {% endif %}
+          </strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Realised P&amp;L</span>
+          <strong class="mtd-val {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
+            {% if t.status == 'Closed' %}
+              {{ '+' if t.pnl > 0 else '' }}{{ t.pnl|money }} ({{ '%+.2f'|format(t.pnl_pct) }}%)
+            {% else %}
+              <span class="muted">Unrealised</span>
+            {% endif %}
+          </strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Commission</span>
+          <strong class="mtd-val strong">
+            {{ t.commission|money }}
+            {% if t.commission_override is not none %}<small style="display:block; font-size:10px; color:#856404;">(Custom fee)</small>{% endif %}
+          </strong>
+        </div>
+        <div class="mtd-item">
+          <span class="mtd-label">Source</span>
+          <span class="mtd-val" style="font-size: 11px;">
+            {% if t.source == 'upload' and t.upload_filename %}
+              <span class="source-tag" style="display:inline-flex; align-items:center; gap:4px;">
+                {{ icon('scan', 12) }} Screenshot
+                {% for filename in t.upload_filename.split(',') if filename %}
+                  <a class="icon-btn" style="width:20px; height:20px; padding:0" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" title="View screenshot">{{ icon('eye', 12) }}</a>
+                {% endfor %}
+              </span>
+            {% else %}
+              <span class="source-tag">{{ icon('scan' if t.source == 'upload' else 'download' if t.source == 'import' else 'edit', 12) }} {{ 'Screenshot' if t.source == 'upload' else t.source|capitalize }}</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      {% if t.notes %}
+      <div style="margin-top: 8px; font-size: 11.5px; color: #4b6354; background: #f2f7ef; padding: 6px 10px; border-radius: 6px;">
+        <strong>Note:</strong> {{ t.notes }}
+      </div>
+      {% endif %}
+      <div class="mtd-actions" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e7efe5; flex-wrap: wrap;">
+        {% if selectable %}
+        <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; margin-right:auto; cursor:pointer;">
+          <input type="checkbox" class="rowchk" name="ids" value="{{ t.id }}" form="bulkForm">
+          <span>Select</span>
+        </label>
+        {% endif %}
+        <button class="btn btn-secondary btn-xs" type="button" data-dialog="payment-dialog" onclick="document.getElementById('payment-dialog').querySelector('[name=client_id]').value='{{ t.client_id }}'">
+          {{ icon('wallet', 13) }} Payment
+        </button>
+        <a class="btn btn-ghost btn-xs" href="{{ url_for('trade_form', tid=t.id) }}">
+          {{ icon('edit', 13) }} Edit
+        </a>
+        {% if t.status == 'Open' and t.buy_price is not none %}
+        <button class="btn btn-primary btn-xs" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}">
+          {{ icon('check-circle', 13) }} Close
+        </button>
+        {% endif %}
+        <form method="post" action="{{ url_for('trade_delete', tid=t.id) }}" data-confirm="Delete this {{ t.stock }} trade? This cannot be undone." style="display:inline;">
+          {{ csrf() }}
+          <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete {{ t.stock }} trade" title="Delete trade">
+            {{ icon('trash', 14) }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </details>
+  {% endfor %}
 </div>
 {% else %}
 {{ empty_state('Your ledger starts here', 'Add a trade or scan a screenshot. Your commission is calculated automatically.', 'book', url_for('trade_form'), 'Add your first trade') }}

@@ -88,7 +88,8 @@
   </div>
 
   {% if holdings %}
-  <div class="table-wrap">
+  <!-- Desktop Holdings Table (Hidden on Mobile) -->
+  <div class="desktop-holdings-table table-wrap">
     <table class="data-table" id="holdings-table" data-lazy-table="25">
       <thead>
         <tr>
@@ -141,6 +142,75 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Mobile Holdings Cards (Zero Horizontal Scroll for Phones) -->
+  <div class="mobile-admin-holdings-list mobile-trade-list">
+    {% for h in holdings %}
+    <details class="mobile-trade-card" data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
+      <summary class="mobile-trade-summary">
+        <div class="mts-left">
+          <div class="mts-stock">
+            <strong>{{ h.stock }}</strong>
+            <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }}; font-size: 10px;">
+              {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}%
+            </span>
+          </div>
+          <div class="mts-dates" style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+            <a class="client-cell" href="{{ url_for('client_detail', cid=h.client_id) }}" style="font-size: 11px;">
+              {{ avatar(h.client_name, h.client_id, True) }}
+              <span>{{ h.client_name }}</span>
+            </a>
+          </div>
+        </div>
+        <div class="mts-right">
+          <div class="mts-pnl {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}">
+            <strong>{{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }}</strong>
+            <small>{{ '%+.2f'|format(h.unrealized_pct) }}%</small>
+          </div>
+          <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+        </div>
+      </summary>
+      <div class="mobile-trade-details">
+        <div class="mtd-grid">
+          <div class="mtd-item">
+            <span class="mtd-label">Quantity</span>
+            <strong class="mtd-val">{{ h.quantity|num if h.quantity else '—' }} shares</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Buy Price</span>
+            <strong class="mtd-val">{{ h.buy_price|money if h.buy_price else '—' }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">CMP (Current)</span>
+            <strong class="mtd-val cmp-price" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp else '—' }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Current Value</span>
+            <strong class="mtd-val" data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Unrealized P&amp;L</span>
+            <strong class="mtd-val {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
+              {{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }} ({{ h.unrealized_pct|round(2) }}%)
+            </strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Date Added</span>
+            <strong class="mtd-val">{{ h.added_on[:10] if h.added_on else '—' }}</strong>
+          </div>
+        </div>
+        <div class="mtd-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid #e7efe5;">
+          <span class="muted" style="font-size:11px;" data-updated="{{ h.stock }}">
+            {% if h.price_updated_at %}Updated {{ h.price_updated_at[11:16] }} IST{% endif %}
+          </span>
+          <a class="btn btn-secondary btn-xs" href="{{ url_for('client_detail', cid=h.client_id) }}" style="display:inline-flex; align-items:center; gap:4px;">
+            <span>View Client Profile</span>{{ icon('arrow-up-right', 13) }}
+          </a>
+        </div>
+      </div>
+    </details>
+    {% endfor %}
   </div>
   {% else %}
     {% if query %}
