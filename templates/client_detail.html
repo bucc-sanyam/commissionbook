@@ -85,11 +85,15 @@
           <td class="r tabular">{{ a.price|money if a.price else 'CMP' }}</td>
           <td class="r tabular pos">{{ a.target_price|money if a.target_price else '—' }}</td>
           <td class="r tabular neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</td>
-          <td class="date-cell muted">{{ a.created_at[:16] }}</td>
+          <td class="date-cell muted" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</td>
           <td>
             {% if a.acknowledged %}
-              <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;">
-                {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at[:16] }}){% endif %}
+              <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
+                {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('short') }}){% endif %}
+              </span>
+            {% elif a.is_expired %}
+              <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
+                {{ icon('clock', 12) }} Expired
               </span>
             {% else %}
               <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
@@ -114,7 +118,7 @@
           </span>
           <strong style="font-size: 15px;">{{ a.stock }}</strong>
         </div>
-        <span class="date-cell muted" style="font-size:11px;">{{ a.created_at[:16] }}</span>
+        <span class="date-cell muted" style="font-size:11px;" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</span>
       </div>
 
       <div class="mac-price-grid">
@@ -139,8 +143,12 @@
       <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid #edf4eb;">
         <span class="mac-label">Acknowledgment</span>
         {% if a.acknowledged %}
-          <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;">
-            {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at[11:16] }}){% endif %}
+          <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
+            {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('chip') }}){% endif %}
+          </span>
+        {% elif a.is_expired %}
+          <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
+            {{ icon('clock', 12) }} Expired
           </span>
         {% else %}
           <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">

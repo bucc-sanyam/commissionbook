@@ -12,7 +12,7 @@ import time
 import urllib.request
 import urllib.parse
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP, localcontext
 from functools import wraps
 from pathlib import Path
@@ -119,6 +119,77 @@ def set_setting(key, value):
             _settings_cache[key] = value
         _settings_cache_time = time.time()
     settings_values()[key] = value
+
+
+def parse_utc_datetime(val):
+    """Parse any datetime, string, or timestamp into a timezone-aware UTC datetime."""
+    if not val:
+        return None
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            return val.replace(tzinfo=timezone.utc)
+        return val.astimezone(timezone.utc)
+    s = str(val).strip()
+    if not s:
+        return None
+    try:
+        cleaned = s.replace("Z", "+00:00")
+        if "T" not in cleaned and " " in cleaned:
+            parts = cleaned.split(" ", 1)
+            cleaned = parts[0] + "T" + parts[1]
+        dt = datetime.fromisoformat(cleaned)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:
+        pass
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(s[:19], fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+    return None
+
+
+def format_ist(val, fmt="chip") -> str:
+    """Format UTC timestamp to IST in various formats:
+    - chip: '09:20 AM' if today, '15 Oct, 09:20 AM' if other day
+    - time: '09:20 AM'
+    - short: '15 Oct, 09:20 AM'
+    - date_time: '15 Oct 2026, 09:20 AM'
+    - full: '15 Oct 2026, 09:20:23 AM IST'
+    """
+    dt_utc = parse_utc_datetime(val)
+    if not dt_utc:
+        return "" if not val else str(val)[:16]
+    dt_ist = dt_utc.astimezone(IST)
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    if fmt == "time":
+        return dt_ist.strftime("%I:%M %p")
+    elif fmt == "chip":
+        if dt_ist.date() == now_ist.date():
+            return dt_ist.strftime("%I:%M %p")
+        return dt_ist.strftime("%d %b, %I:%M %p")
+    elif fmt == "date_time":
+        return dt_ist.strftime("%d %b %Y, %I:%M %p")
+    elif fmt == "short":
+        return dt_ist.strftime("%d %b, %I:%M %p")
+    elif fmt == "iso":
+        return dt_ist.strftime("%Y-%m-%d %H:%M")
+    return dt_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
+
+
+def expire_old_alerts(db):
+    """Mark alerts older than 24 hours as inactive (active=0)."""
+    try:
+        if getattr(db, "postgres", False):
+            db.execute("UPDATE client_alerts SET active=0 WHERE active=1 AND created_at < NOW() - INTERVAL '1 day'")
+        else:
+            db.execute("UPDATE client_alerts SET active=0 WHERE active=1 AND datetime(created_at) < datetime('now', '-1 day')")
+        db.commit()
+    except Exception as exc:
+        current_app.logger.warning("expire_old_alerts notice: %s", exc)
 
 
 def shorten_url(long_url):
@@ -1199,6 +1270,14 @@ def create_app(config=None):
         value = dec(value)
         return f"{value:,.0f}" if value == value.to_integral_value() else f"{value:,.6f}".rstrip("0").rstrip(".")
 
+    @app.template_filter("ist")
+    def ist_filter(value, fmt="chip"):
+        return format_ist(value, fmt)
+
+    @app.template_filter("format_ist")
+    def format_ist_filter(value, fmt="chip"):
+        return format_ist(value, fmt)
+
     @app.context_processor
     def inject_globals():
         error = g.get("error_response", False)
@@ -2222,6 +2301,7 @@ def create_app(config=None):
         summary["net_funds"] = total_funds
 
         try:
+            expire_old_alerts(get_db())
             raw_advisories = get_db().execute(
                 """
                 SELECT a.*, v.acknowledged, v.acknowledged_at
@@ -2238,13 +2318,23 @@ def create_app(config=None):
                 for sh in shares
                 if dec(sh.get("quantity") or 0) > ZERO
             }
+            now_utc = datetime.now(timezone.utc)
             advisories = []
             for adv in raw_advisories:
-                if adv["action"] == "SELL" and adv["client_id"] is None:
-                    adv_stock = alias_map.get((adv.get("stock") or "").strip().upper(), (adv.get("stock") or "").strip().upper())
-                    if adv_stock not in held_canonical_stocks and not adv.get("acknowledged"):
+                ad = dict(adv)
+                created_dt = parse_utc_datetime(ad.get("created_at"))
+                is_expired = False
+                if created_dt and (now_utc - created_dt).total_seconds() >= 86400:
+                    is_expired = True
+                ad["is_expired"] = is_expired
+                if is_expired:
+                    ad["active"] = 0
+
+                if ad["action"] == "SELL" and ad["client_id"] is None:
+                    adv_stock = alias_map.get((ad.get("stock") or "").strip().upper(), (ad.get("stock") or "").strip().upper())
+                    if adv_stock not in held_canonical_stocks and not ad.get("acknowledged"):
                         continue
-                advisories.append(adv)
+                advisories.append(ad)
         except Exception:
             advisories = []
 
@@ -3013,6 +3103,7 @@ def create_app(config=None):
         total_funds = sum((dec(f["amount"]) for f in funds), ZERO)
         money_in_bank = total_funds - deducted_holdings_cost
 
+        expire_old_alerts(get_db())
         raw_undismissed_alerts = get_db().execute(
             """
             SELECT a.* FROM client_alerts a
@@ -3033,8 +3124,13 @@ def create_app(config=None):
             for sh in shares
             if dec(sh.get("quantity") or 0) > ZERO
         }
+        now_utc = datetime.now(timezone.utc)
         undismissed_alerts = []
         for a in raw_undismissed_alerts:
+            created_dt = parse_utc_datetime(a.get("created_at"))
+            # Pop notifications expire after 1 day (24 hours) so clients never see old notifications
+            if created_dt and (now_utc - created_dt).total_seconds() >= 86400:
+                continue
             if a["action"] == "SELL" and a["client_id"] is None:
                 a_stock = alias_map.get((a.get("stock") or "").strip().upper(), (a.get("stock") or "").strip().upper())
                 if a_stock not in held_canonical_stocks:
@@ -3515,6 +3611,7 @@ def create_app(config=None):
     @login_required
     def alerts_list():
         db = get_db()
+        expire_old_alerts(db)
         alerts = db.execute(
             """
             SELECT a.*, c.name as client_name,
@@ -3561,9 +3658,22 @@ def create_app(config=None):
         active_clients_list = [dict(c) for c in clients]
         active_client_map = {c["id"]: c["name"] for c in clients}
 
+        now_utc = datetime.now(timezone.utc)
         enriched_alerts = []
         for a in alerts:
             ad = dict(a)
+            created_dt = parse_utc_datetime(ad.get("created_at"))
+            is_expired = False
+            if created_dt and (now_utc - created_dt).total_seconds() >= 86400:
+                is_expired = True
+
+            ad["is_expired"] = is_expired
+            if is_expired:
+                ad["active"] = 0
+
+            ad["created_at_ist"] = format_ist(ad.get("created_at"), "short")
+            ad["created_at_full_ist"] = format_ist(ad.get("created_at"), "full")
+
             acks = ack_by_alert.get(ad["id"], [])
             acked_client_ids = {v["client_id"] for v in acks}
             acked_clients = [
@@ -3571,6 +3681,10 @@ def create_app(config=None):
                     "id": v["client_id"],
                     "name": v["client_name"],
                     "acknowledged_at": v.get("acknowledged_at") or v.get("viewed_at"),
+                    "acknowledged_at_ist": format_ist(v.get("acknowledged_at") or v.get("viewed_at"), "short"),
+                    "acknowledged_at_time_ist": format_ist(v.get("acknowledged_at") or v.get("viewed_at"), "time"),
+                    "acknowledged_at_chip_ist": format_ist(v.get("acknowledged_at") or v.get("viewed_at"), "chip"),
+                    "acknowledged_at_full_ist": format_ist(v.get("acknowledged_at") or v.get("viewed_at"), "full"),
                 }
                 for v in acks
             ]
@@ -3881,6 +3995,11 @@ def create_app(config=None):
         alert = get_db().execute("SELECT * FROM client_alerts WHERE id=?", (aid,)).fetchone()
         if not alert:
             abort(404)
+        created_dt = parse_utc_datetime(alert.get("created_at"))
+        if created_dt and (datetime.now(timezone.utc) - created_dt).total_seconds() >= 86400:
+            get_db().execute("UPDATE client_alerts SET active=0 WHERE id=?", (aid,))
+            flash("This alert was sent more than 1 day ago and has expired. It cannot be reactivated.", "warning")
+            return redirect(url_for("alerts_list"))
         new_status = 0 if alert["active"] else 1
         get_db().execute("UPDATE client_alerts SET active=? WHERE id=?", (new_status, aid))
         flash("Alert status updated.", "success")

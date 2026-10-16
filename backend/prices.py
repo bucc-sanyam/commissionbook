@@ -258,12 +258,20 @@ def format_ist_timestamp(val) -> str:
             val = val.replace(tzinfo=timezone.utc)
         return val.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
     s = str(val).strip()
-    if "T" in s or "Z" in s or "+00" in s:
+    try:
+        cleaned = s.replace("Z", "+00:00")
+        if "T" not in cleaned and " " in cleaned:
+            parts = cleaned.split(" ", 1)
+            cleaned = parts[0] + "T" + parts[1]
+        dt = datetime.fromisoformat(cleaned)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        pass
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
         try:
-            cleaned = s.replace("Z", "+00:00")
-            dt = datetime.fromisoformat(cleaned)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+            dt = datetime.strptime(s[:19], fmt).replace(tzinfo=timezone.utc)
             return dt.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
             pass

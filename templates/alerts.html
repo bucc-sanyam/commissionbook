@@ -47,7 +47,10 @@
               {{ a.action }}
             </span>
           </td>
-          <td><strong>{{ a.stock }}</strong></td>
+          <td>
+            <strong>{{ a.stock }}</strong>
+            <small class="muted" style="display:block; font-size:10px;" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</small>
+          </td>
           <td>
             {% if a.client_id %}
               <span class="client-cell">{{ avatar(a.client_name, a.client_id) }}<span>{{ a.client_name }}</span></span>
@@ -86,7 +89,9 @@
             {% endif %}
           </td>
           <td>
-            {% if a.active %}
+            {% if a.is_expired %}
+              <span class="badge" style="background:#fff3e0; color:#b76e00; border:1px solid #ffe0b2; font-weight:700;">Expired</span>
+            {% elif a.active %}
               <span class="badge badge-pos">Active</span>
             {% else %}
               <span class="badge" style="background:#f0f0f0; color:#888;">Archived</span>
@@ -94,12 +99,14 @@
           </td>
           <td class="r">
             <div style="display: flex; gap: 6px; justify-content: flex-end;">
-              <form method="post" action="{{ url_for('alert_toggle', aid=a.id) }}" style="display:inline;">
-                {{ csrf() }}
-                <button type="submit" class="btn btn-ghost btn-sm" title="Toggle active status">
-                  {{ 'Archive' if a.active else 'Activate' }}
-                </button>
-              </form>
+              {% if not a.is_expired %}
+                <form method="post" action="{{ url_for('alert_toggle', aid=a.id) }}" style="display:inline;">
+                  {{ csrf() }}
+                  <button type="submit" class="btn btn-ghost btn-sm" title="Toggle active status">
+                    {{ 'Archive' if a.active else 'Activate' }}
+                  </button>
+                </form>
+              {% endif %}
               <form method="post" action="{{ url_for('alert_delete', aid=a.id) }}" style="display:inline;" onsubmit="return confirm('Delete this alert?');">
                 {{ csrf() }}
                 <button type="submit" class="icon-btn" aria-label="Delete alert" title="Delete">
@@ -141,11 +148,11 @@
                   {% if a.acknowledged_clients %}
                     <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                       {% for c in a.acknowledged_clients %}
-                        <span class="chip-acked" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; border-radius: 16px; padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                        <span class="chip-acked" title="{{ c.acknowledged_at|ist('full') }}" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; border-radius: 16px; padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
                           <span style="color: #2e7d32; font-weight: 900;">✓</span>
                           <span>{{ c.name }}</span>
                           {% if c.acknowledged_at %}
-                            <small style="color: #558b2f; font-size: 9px; opacity: 0.85;">{{ c.acknowledged_at[:16] }}</small>
+                            <small style="color: #558b2f; font-size: 9px; opacity: 0.85;">{{ c.acknowledged_at|ist('date_time') }}</small>
                           {% endif %}
                         </span>
                       {% endfor %}
@@ -158,7 +165,13 @@
                 <div class="ack-col-pending" style="background: #ffffff; padding: 10px 12px; border-radius: 6px; border: 1px solid #ffe082;">
                   <div style="font-size: 11px; font-weight: 700; color: #b76e00; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
                     <span style="display:flex; align-items:center; gap:5px;">{{ icon('clock', 13) }} Yet to Acknowledge ({{ a.pending_clients|length }})</span>
-                    <small style="color: #e65100; font-weight: 500;">Popup active</small>
+                    {% if a.is_expired %}
+                      <small style="color: #b76e00; font-weight: 600;">Expired</small>
+                    {% elif a.active %}
+                      <small style="color: #e65100; font-weight: 500;">Popup active</small>
+                    {% else %}
+                      <small style="color: #888; font-weight: 500;">Archived</small>
+                    {% endif %}
                   </div>
                   {% if a.pending_clients %}
                     <div style="display: flex; flex-wrap: wrap; gap: 6px;">
@@ -193,21 +206,28 @@
           <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}">
             {{ a.action }}
           </span>
-          <strong class="mac-stock">{{ a.stock }}</strong>
+          <div>
+            <strong class="mac-stock" style="display:block; line-height:1.2;">{{ a.stock }}</strong>
+            <small class="date-cell muted" style="font-size:10px; display:block; margin-top:2px;" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</small>
+          </div>
         </div>
         <div class="mac-header-right">
-          {% if a.active %}
+          {% if a.is_expired %}
+            <span class="badge" style="background:#fff3e0; color:#b76e00; border:1px solid #ffe0b2; font-weight:700;">Expired</span>
+          {% elif a.active %}
             <span class="badge badge-pos">Active</span>
           {% else %}
             <span class="badge" style="background:#f0f0f0; color:#888;">Archived</span>
           {% endif %}
           <div class="mac-actions">
-            <form method="post" action="{{ url_for('alert_toggle', aid=a.id) }}" style="display:inline;">
-              {{ csrf() }}
-              <button type="submit" class="btn btn-ghost btn-xs" title="Toggle active status">
-                {{ 'Archive' if a.active else 'Activate' }}
-              </button>
-            </form>
+            {% if not a.is_expired %}
+              <form method="post" action="{{ url_for('alert_toggle', aid=a.id) }}" style="display:inline;">
+                {{ csrf() }}
+                <button type="submit" class="btn btn-ghost btn-xs" title="Toggle active status">
+                  {{ 'Archive' if a.active else 'Activate' }}
+                </button>
+              </form>
+            {% endif %}
             <form method="post" action="{{ url_for('alert_delete', aid=a.id) }}" style="display:inline;" onsubmit="return confirm('Delete this alert?');">
               {{ csrf() }}
               <button type="submit" class="icon-btn icon-btn-sm" aria-label="Delete alert" title="Delete">
@@ -274,10 +294,10 @@
             {% if a.acknowledged_clients %}
               <div class="mac-chips">
                 {% for c in a.acknowledged_clients %}
-                  <span class="chip-acked" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; border-radius: 14px; padding: 2px 8px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="chip-acked" title="{{ c.acknowledged_at|ist('full') }}" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; border-radius: 14px; padding: 2px 8px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                     <span>✓</span>
                     <span>{{ c.name }}</span>
-                    {% if c.acknowledged_at %}<small style="font-size:9px; opacity:0.8;">{{ c.acknowledged_at[11:16] }}</small>{% endif %}
+                    {% if c.acknowledged_at %}<small style="font-size:9px; opacity:0.85;">{{ c.acknowledged_at|ist('chip') }}</small>{% endif %}
                   </span>
                 {% endfor %}
               </div>
