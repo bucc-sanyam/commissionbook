@@ -17,7 +17,7 @@
       </div>
       <div class="helper-box">{{ icon('file', 16) }}<span>New trades keep the commission rule captured at entry, even when a position is closed later. Changing rates does not change these existing fees. A client's personal rule takes priority over the workspace default.</span></div>
       {% if legacy_commission_count|default(0) > 0 %}<div class="helper-box amber">{{ icon('alert', 16) }}<span>{{ legacy_commission_count }} older trade{{ 's' if legacy_commission_count != 1 }} from the previous version {{ 'still use' if legacy_commission_count != 1 else 'still uses' }} current commission rules. Changing rates can affect those balances. Set a custom commission on each older trade to fix its fee permanently.</span></div>{% endif %}
-      <p class="field-hint">Profit-based commission applies only to positive realised profit. Turnover is the combined buy and sell value. Automatic fees apply to closed trades.</p>
+      <p class="field-hint">Commission applies only to profitable trades (losses always carry zero commission). Automatic fees apply to closed trades.</p>
     </section>
     <section class="card card-pad" id="client-portal">
       <div class="settings-heading"><span class="settings-glyph">{{ icon('link', 20) }}</span><div><h2>A separate door for your clients</h2><p>No admin login. No access to your private books.</p></div></div>

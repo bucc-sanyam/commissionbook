@@ -714,17 +714,17 @@ def enrich(trade):
     else:
         ctype, rate = effective_rule(result)
     result["eff_type"], result["eff_rate"] = ctype, rate
-    if result.get("commission_override") is not None:
-        commission = result["commission_override"]
-    elif not closed:
+    if not closed or result["pnl"] <= ZERO:
         commission = ZERO
+    elif result.get("commission_override") is not None:
+        commission = max(result["commission_override"], ZERO)
     elif ctype == "turnover_pct":
         commission = (result["buy_price"] + result["sell_price"]) * quantity * rate / 100
     elif ctype == "flat":
         commission = rate
     else:
-        commission = max(result["pnl"], ZERO) * rate / 100
-    result["commission"] = commission.quantize(CENT, rounding=ROUND_HALF_UP)
+        commission = result["pnl"] * rate / 100
+    result["commission"] = max(commission, ZERO).quantize(CENT, rounding=ROUND_HALF_UP)
     result["holding_days"] = None
     if result["buy_date"] and result["sell_date"]:
         try:
@@ -828,16 +828,16 @@ def aggregate_clients_sql(start=None, end=None):
             COALESCE(SUM(t.quantity * (COALESCE(t.buy_price, 0) + COALESCE(t.sell_price, 0))), 0) as turnover,
             COALESCE(SUM(
                 CASE 
-                    WHEN t.commission_override IS NOT NULL THEN t.commission_override
                     WHEN t.buy_price IS NULL OR t.sell_price IS NULL THEN 0
+                    WHEN t.sell_price <= t.buy_price THEN 0
+                    WHEN t.commission_override IS NOT NULL 
+                        THEN CASE WHEN t.commission_override > 0 THEN t.commission_override ELSE 0 END
                     WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'turnover_pct' 
                         THEN (t.buy_price + t.sell_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
                     WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'flat' 
                         THEN COALESCE(t.commission_rate_snapshot, c.commission_rate, ?)
                     ELSE 
-                        CASE WHEN t.sell_price > t.buy_price 
-                        THEN (t.sell_price - t.buy_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
-                        ELSE 0 END
+                        (t.sell_price - t.buy_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
                 END
             ), 0) as commission
         FROM clients c

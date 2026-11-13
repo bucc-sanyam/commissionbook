@@ -48,9 +48,9 @@
 <aside class="aside-card">
   {{ icon('sparkle', 25) }}<h3>A little help with the maths.</h3><p>Once you have a buy and sell price, your realised profit and commission are calculated for you.</p>
   <div class="aside-list">
-    <div><strong>Profit share</strong><span>A percentage of positive profit. Losing trades carry no commission under this rule.</span></div>
-    <div><strong>Turnover fee</strong><span>A percentage of the buy and sell values combined, multiplied by quantity.</span></div>
-    <div><strong>Flat fee</strong><span>A fixed commission for each closed trade, regardless of the result.</span></div>
+    <div><strong>Profit share</strong><span>A percentage of positive profit. Losing trades carry no commission.</span></div>
+    <div><strong>Turnover fee</strong><span>A percentage of the buy and sell values combined on profitable trades. Losing trades carry no commission.</span></div>
+    <div><strong>Flat fee</strong><span>A fixed commission for each profitable closed trade. Losing trades carry no commission.</span></div>
   </div>
   <div class="section-divider"></div><a class="text-link" href="{{ url_for('admin_scan') }}">{{ icon('scan', 16) }}Have a screenshot instead?</a>
 </aside>
