@@ -18,11 +18,11 @@ USER_AGENTS = [
 
 # Common Indian company names and abbreviations mapped to NSE/BSE ticker symbols
 KNOWN_TICKERS: dict[str, str] = {
-    "TECHNOCRAFT": "TECHNOCRAF",
-    "TECHNOCRAFT VENTURES": "TECHNOCRAF",
-    "TECHNOCRAFT VENTURES LIMITED": "TECHNOCRAF",
-    "TECHNOCRAFT VENTURES LTD": "TECHNOCRAF",
-    "TECHNOCRAF": "TECHNOCRAF",
+    "TECHNOCRAFT": "TIIL",
+    "TECHNOCRAFT VENTURES": "TIIL",
+    "TECHNOCRAFT VENTURES LIMITED": "TIIL",
+    "TECHNOCRAFT VENTURES LTD": "TIIL",
+    "TECHNOCRAF": "TIIL",
     "TECHNOCRAFT INDUSTRIES": "TIIL",
     "TECHNOCRAFT INDUSTRIES INDIA": "TIIL",
     "TECHNOCRAFT INDUSTRIES (INDIA)": "TIIL",
@@ -553,7 +553,7 @@ def fetch_stock_candles(raw_symbol: str, range_str: str = "1mo", interval: str =
                 closes = quote_block.get("close", [])
                 volumes = quote_block.get("volume", [0] * len(timestamps))
 
-                candles = []
+                raw_candles = []
                 for i, ts in enumerate(timestamps):
                     if i >= len(opens) or i >= len(closes):
                         break
@@ -561,7 +561,7 @@ def fetch_stock_candles(raw_symbol: str, range_str: str = "1mo", interval: str =
                     if o is None or h is None or l is None or c is None:
                         continue
                     v = volumes[i] if i < len(volumes) and volumes[i] is not None else 0
-                    candles.append({
+                    raw_candles.append({
                         "time": int(ts),
                         "open": float(round(Decimal(str(o)), 2)),
                         "high": float(round(Decimal(str(h)), 2)),
@@ -570,12 +570,21 @@ def fetch_stock_candles(raw_symbol: str, range_str: str = "1mo", interval: str =
                         "volume": int(v),
                     })
 
+                # Deduplicate and sort strictly ascending by timestamp for Lightweight Charts
+                seen_ts = set()
+                candles = []
+                for cd in sorted(raw_candles, key=lambda x: x["time"]):
+                    if cd["time"] not in seen_ts:
+                        seen_ts.add(cd["time"])
+                        candles.append(cd)
+
                 if candles:
+                    clean_ticker = candidate.replace(".NS", "").replace(".BO", "")
                     return {
                         "status": "ok",
                         "stock": raw_symbol,
-                        "ticker": candidate.replace(".NS", "").replace(".BO", ""),
-                        "exchange": "BSE" if ticker.endswith(".BO") else "NSE",
+                        "ticker": clean_ticker,
+                        "exchange": "BSE" if candidate.endswith(".BO") else "NSE",
                         "range": range_str,
                         "interval": interval,
                         "candles": candles,

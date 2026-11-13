@@ -100,12 +100,18 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <a href="https://in.tradingview.com/chart/?symbol={{ selected_info.exchange }}:{{ selected_info.ticker }}" 
+               target="_blank" rel="noopener noreferrer" 
+               class="btn btn-secondary btn-sm"
+               title="Open full chart on TradingView in a new tab">
+              {{ icon('external', 13) }} Open on TradingView
+            </a>
             <a href="{{ url_for('trade_form', stock=selected_info.symbol) }}" class="btn btn-primary btn-sm">
-              {{ icon('plus', 14) }} Add trade for {{ selected_info.symbol }}
+              {{ icon('plus', 14) }} Add trade
             </a>
             <a href="{{ url_for('alerts_list', stock=selected_info.symbol) }}" class="btn btn-secondary btn-sm">
-              {{ icon('send', 14) }} Trade Advisory
+              {{ icon('send', 14) }} Advisory
             </a>
           </div>
         </div>
@@ -141,47 +147,56 @@
         <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: #fafcf7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <!-- Left: View Mode Toggle -->
           <div style="display: flex; align-items: center; gap: 4px;">
-            <button type="button" class="btn btn-sm chart-mode-btn active" id="mode-tv-btn" data-mode="tv" style="padding: 4px 10px; font-size: 11px;">
-              TradingView Pro
+            <button type="button" class="btn btn-sm chart-mode-btn active" id="mode-lw-btn" data-mode="lw" style="padding: 4px 12px; font-size: 11px; font-weight: 600;">
+              Candlestick Chart
             </button>
-            <button type="button" class="btn btn-sm btn-ghost chart-mode-btn" id="mode-canvas-btn" data-mode="canvas" style="padding: 4px 10px; font-size: 11px;">
-              Native Candle Chart
+            <button type="button" class="btn btn-sm btn-ghost chart-mode-btn" id="mode-tv-btn" data-mode="tv" style="padding: 4px 10px; font-size: 11px;">
+              TradingView Widget
             </button>
           </div>
 
-          <!-- Center: Range selectors for native chart -->
-          <div class="native-ranges" id="native-range-controls" style="display: none; align-items: center; gap: 4px;">
-            <button type="button" class="range-btn" data-range="5d" data-interval="15m" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">5D</button>
-            <button type="button" class="range-btn active" data-range="1mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #3f7352; border-radius: 4px; background: #3f7352; color: #fff; cursor: pointer;">1M</button>
-            <button type="button" class="range-btn" data-range="3mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">3M</button>
-            <button type="button" class="range-btn" data-range="6mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">6M</button>
-            <button type="button" class="range-btn" data-range="1y" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">1Y</button>
+          <!-- Center: Timeframe Range Selectors -->
+          <div class="range-controls" id="chart-range-controls" style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" class="range-btn" data-range="5d" data-interval="15m" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">5D</button>
+            <button type="button" class="range-btn active" data-range="1mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #285933; border-radius: 4px; background: #285933; color: #fff; cursor: pointer;">1M</button>
+            <button type="button" class="range-btn" data-range="3mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">3M</button>
+            <button type="button" class="range-btn" data-range="6mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">6M</button>
+            <button type="button" class="range-btn" data-range="1y" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">1Y</button>
           </div>
 
-          <!-- Right: Fullscreen & Live Indicator -->
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="live-dot-wrap" style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #3f7352;">
+          <!-- Right: Status & Fullscreen -->
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="live-dot-wrap" style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #2e7d32; font-weight: 600;">
               <span class="live-pulse" style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2e7d32;"></span>
-              Candles active
+              Live Data
             </span>
-            <button type="button" class="icon-btn" id="btn-chart-fullscreen" title="Full screen" aria-label="Toggle Fullscreen" style="border: none; background: none; cursor: pointer; color: #555;">
+            <button type="button" class="icon-btn" id="btn-chart-fullscreen" title="Toggle Full Screen" aria-label="Toggle Fullscreen" style="border: none; background: none; cursor: pointer; color: #555; padding: 4px;">
               {{ icon('scan', 16) }}
             </button>
           </div>
         </div>
 
-        <!-- 1. TradingView Embed View -->
-        <div id="tv-chart-wrapper" style="height: 560px; width: 100%; position: relative; background: #ffffff;">
-          <div id="tradingview_widget_container" style="height: 100%; width: 100%;"></div>
+        <!-- 1. Interactive Lightweight Candlestick Chart Area (Primary) -->
+        <div id="lw-chart-outer" style="position: relative; width: 100%; background: #ffffff;">
+          <!-- Floating Crosshair HUD / Legend -->
+          <div id="lw-chart-legend" style="padding: 8px 18px; font-size: 12px; background: #fafcf8; border-bottom: 1px solid #edf2e8; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 20px;">
+            <span class="muted">Loading candle history...</span>
+          </div>
+
+          <div id="lw-chart-wrapper" style="height: 520px; width: 100%; position: relative;"></div>
+          
+          <div id="lw-chart-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #556b4f; background: rgba(255,255,255,0.92); padding: 10px 18px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <span>Loading candlestick data...</span>
+          </div>
         </div>
 
-        <!-- 2. Native HTML5 Canvas Candlestick Chart View -->
-        <div id="native-chart-wrapper" style="display: none; height: 560px; width: 100%; position: relative; background: #ffffff; padding: 12px; box-sizing: border-box;">
-          <canvas id="candleCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
-          <div id="canvas-tooltip" class="chart-tooltip" hidden style="position: absolute; pointer-events: none; z-index: 10; background: rgba(23, 61, 52, 0.95); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
-          <div id="canvas-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #777;">
-            Loading candlestick data...
+        <!-- 2. TradingView Widget (Secondary / Alternative) -->
+        <div id="tv-chart-wrapper" style="display: none; height: 560px; width: 100%; position: relative; background: #ffffff;">
+          <div style="padding: 8px 16px; background: #fdfaf2; border-bottom: 1px solid #f0e6ce; font-size: 11px; color: #876211; display: flex; justify-content: space-between; align-items: center;">
+            <span>If TradingView displays an exchange restriction notice for this symbol, switch back to the <strong>Candlestick Chart</strong> tab above or open directly on TradingView.</span>
+            <a href="https://in.tradingview.com/chart/?symbol={{ selected_info.exchange }}:{{ selected_info.ticker }}" target="_blank" rel="noopener noreferrer" style="color: #285933; font-weight: 600; text-decoration: underline;">Open TV ↗</a>
           </div>
+          <div id="tradingview_widget_container" style="height: calc(100% - 35px); width: 100%;"></div>
         </div>
       </section>
 
@@ -333,27 +348,35 @@
   100% { transform: scale(0.95); opacity: 0.8; }
 }
 </style>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script src="{{ url_for('static', filename='lightweight-charts.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
   const selectedSymbol = "{{ selected_info.symbol if selected_info else '' }}";
   const ticker = "{{ selected_info.ticker if selected_info else '' }}";
   const exchange = "{{ selected_info.exchange if selected_info else 'NSE' }}";
-  const tvContainer = document.getElementById("tradingview_widget_container");
+  
+  const lwOuter = document.getElementById("lw-chart-outer");
+  const lwWrapper = document.getElementById("lw-chart-wrapper");
+  const lwLoading = document.getElementById("lw-chart-loading");
+  const lwLegend = document.getElementById("lw-chart-legend");
+  
   const tvWrapper = document.getElementById("tv-chart-wrapper");
-  const nativeWrapper = document.getElementById("native-chart-wrapper");
-  const canvas = document.getElementById("candleCanvas");
-  const canvasTooltip = document.getElementById("canvas-tooltip");
-  const canvasLoading = document.getElementById("canvas-loading");
-  const nativeRangeControls = document.getElementById("native-range-controls");
+  const tvContainer = document.getElementById("tradingview_widget_container");
+  
+  const modeLwBtn = document.getElementById("mode-lw-btn");
   const modeTvBtn = document.getElementById("mode-tv-btn");
-  const modeCanvasBtn = document.getElementById("mode-canvas-btn");
+  const rangeControls = document.getElementById("chart-range-controls");
   const stockSearch = document.getElementById("stock-search-input");
+  
   let currentRange = "1mo";
   let currentInterval = "1d";
-  let nativeCandles = [];
+  let lwChart = null;
+  let candleSeries = null;
+  let volumeSeries = null;
+  let currentCandles = [];
+  let tvWidgetInitialized = false;
 
-  // 1. Stock Search Filter in sidebar
+  // 1. Stock Search Filter in Sidebar
   if (stockSearch) {
     stockSearch.addEventListener("input", function() {
       const q = this.value.trim().toLowerCase();
@@ -369,301 +392,207 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // 2. Initialize TradingView Widget
-  function initTradingView() {
-    if (!tvContainer || !ticker) return;
-    tvContainer.innerHTML = "";
-    
-    // TradingView symbol e.g. NSE:RELIANCE or BSE:500325
-    const fullTvSymbol = exchange + ":" + ticker;
-    try {
-      if (typeof TradingView !== "undefined") {
-        new TradingView.widget({
-          "autosize": true,
-          "symbol": fullTvSymbol,
-          "interval": "D",
-          "timezone": "Asia/Kolkata",
-          "theme": "light",
-          "style": "1", // 1 = Candlesticks
-          "locale": "en",
-          "toolbar_bg": "#fafcf7",
-          "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tradingview_widget_container",
-          "hide_side_toolbar": false,
-          "withdateranges": true,
-          "studies": [
-            "MASimple@tv-basicstudies",
-            "RSI@tv-basicstudies"
-          ]
-        });
-      } else {
-        // Fallback to native chart if TradingView JS failed to load
-        switchToCanvas();
+  // 2. Initialize Lightweight Candlestick Chart
+  function initLightweightChart() {
+    if (!lwWrapper || !window.LightweightCharts) return;
+    lwWrapper.innerHTML = "";
+
+    const rect = lwWrapper.getBoundingClientRect();
+    const chartWidth = rect.width > 0 ? rect.width : lwWrapper.clientWidth || 800;
+    const chartHeight = 520;
+
+    lwChart = window.LightweightCharts.createChart(lwWrapper, {
+      width: chartWidth,
+      height: chartHeight,
+      layout: {
+        background: { type: "solid", color: "#ffffff" },
+        textColor: "#435940",
+        fontSize: 11,
+        fontFamily: 'Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      },
+      grid: {
+        vertLines: { color: "#f0f4ec" },
+        horzLines: { color: "#f0f4ec" }
+      },
+      crosshair: {
+        mode: window.LightweightCharts.CrosshairMode.Normal,
+        vertLine: {
+          color: "#4e7054",
+          width: 1,
+          style: 1,
+          labelBackgroundColor: "#284a32"
+        },
+        horzLine: {
+          color: "#4e7054",
+          width: 1,
+          style: 1,
+          labelBackgroundColor: "#284a32"
+        }
+      },
+      rightPriceScale: {
+        borderColor: "#d8e2d4",
+        visible: true,
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.25
+        }
+      },
+      timeScale: {
+        borderColor: "#d8e2d4",
+        timeVisible: true,
+        secondsVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true
+      },
+      localization: {
+        priceFormatter: function(p) {
+          return "₹" + Number(p).toFixed(2);
+        }
       }
-    } catch(err) {
-      console.warn("TradingView widget init error:", err);
-      switchToCanvas();
-    }
+    });
+
+    candleSeries = lwChart.addCandlestickSeries({
+      upColor: "#1e9752",
+      downColor: "#d32f2f",
+      borderUpColor: "#1e9752",
+      borderDownColor: "#d32f2f",
+      wickUpColor: "#1e9752",
+      wickDownColor: "#d32f2f"
+    });
+
+    volumeSeries = lwChart.addHistogramSeries({
+      color: "#8bc34a",
+      priceFormat: {
+        type: "volume"
+      },
+      priceScaleId: "" // overlay volume on main panel
+    });
+
+    volumeSeries.priceScale().applyOptions({
+      scaleMargins: {
+        top: 0.80,
+        bottom: 0
+      }
+    });
+
+    // Crosshair hover legend
+    lwChart.subscribeCrosshairMove(function(param) {
+      if (!param || !param.time || !param.seriesData.get(candleSeries)) {
+        if (currentCandles && currentCandles.length) {
+          updateLegend(currentCandles[currentCandles.length - 1]);
+        }
+        return;
+      }
+      const c = param.seriesData.get(candleSeries);
+      const v = param.seriesData.get(volumeSeries);
+      updateLegend({
+        time: param.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        volume: v ? v.value : 0
+      });
+    });
+
+    // Handle Window / Container Resize
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries || !entries.length || !lwChart) return;
+      const { width } = entries[0].contentRect;
+      if (width > 0) {
+        lwChart.applyOptions({ width: width });
+      }
+    });
+    resizeObserver.observe(lwWrapper);
+
+    // Initial load
+    loadCandles(currentRange, currentInterval);
   }
 
-  // 3. Switch between TradingView and Native Canvas Chart
-  function switchToTv() {
-    if (tvWrapper) tvWrapper.style.display = "block";
-    if (nativeWrapper) nativeWrapper.style.display = "none";
-    if (nativeRangeControls) nativeRangeControls.style.display = "none";
-    if (modeTvBtn) {
-      modeTvBtn.classList.add("active");
-      modeTvBtn.classList.remove("btn-ghost");
+  // 3. Update Crosshair HUD / Legend
+  function updateLegend(c) {
+    if (!lwLegend) return;
+    if (!c) {
+      lwLegend.innerHTML = '<span class="muted">Hover over candles for details</span>';
+      return;
     }
-    if (modeCanvasBtn) {
-      modeCanvasBtn.classList.remove("active");
-      modeCanvasBtn.classList.add("btn-ghost");
+    let dateStr = "";
+    if (typeof c.time === "number") {
+      const d = new Date(c.time * 1000);
+      dateStr = d.toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    } else {
+      dateStr = String(c.time);
     }
+
+    const change = c.close - c.open;
+    const changePct = c.open > 0 ? (change / c.open) * 100 : 0;
+    const isPos = change >= 0;
+    const sign = isPos ? "+" : "";
+    const changeColor = isPos ? "#1e9752" : "#d32f2f";
+
+    lwLegend.innerHTML = `
+      <span style="font-weight:700; color:#173d34; margin-right:6px;">${dateStr}</span>
+      <span class="muted" style="margin-right:8px;">O <strong style="color:#222;">₹${Number(c.open).toFixed(2)}</strong></span>
+      <span class="muted" style="margin-right:8px;">H <strong style="color:#222;">₹${Number(c.high).toFixed(2)}</strong></span>
+      <span class="muted" style="margin-right:8px;">L <strong style="color:#222;">₹${Number(c.low).toFixed(2)}</strong></span>
+      <span class="muted" style="margin-right:8px;">C <strong style="color:#222;">₹${Number(c.close).toFixed(2)}</strong></span>
+      <span style="font-weight:700; color:${changeColor}; margin-right:8px;">${sign}₹${Number(change).toFixed(2)} (${sign}${Number(changePct).toFixed(2)}%)</span>
+      <span class="muted">Vol <strong style="color:#222;">${Number(c.volume || 0).toLocaleString("en-IN")}</strong></span>
+    `;
   }
 
-  function switchToCanvas() {
-    if (tvWrapper) tvWrapper.style.display = "none";
-    if (nativeWrapper) nativeWrapper.style.display = "block";
-    if (nativeRangeControls) nativeRangeControls.style.display = "flex";
-    if (modeCanvasBtn) {
-      modeCanvasBtn.classList.add("active");
-      modeCanvasBtn.classList.remove("btn-ghost");
-    }
-    if (modeTvBtn) {
-      modeTvBtn.classList.remove("active");
-      modeTvBtn.classList.add("btn-ghost");
-    }
-    loadNativeCandles(currentRange, currentInterval);
-  }
+  // 4. Fetch Candle Data from API
+  function loadCandles(range, interval) {
+    if (!selectedSymbol) return;
+    if (lwLoading) lwLoading.style.display = "flex";
 
-  if (modeTvBtn) modeTvBtn.addEventListener("click", switchToTv);
-  if (modeCanvasBtn) modeCanvasBtn.addEventListener("click", switchToCanvas);
-
-  // 4. Native Canvas Candlestick Chart Renderer
-  function loadNativeCandles(range, interval) {
-    if (!canvas || !selectedSymbol) return;
-    if (canvasLoading) canvasLoading.style.display = "block";
-    
     fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}/candles?range=${range}&interval=${interval}`)
       .then(res => res.json())
       .then(data => {
-        if (canvasLoading) canvasLoading.style.display = "none";
+        if (lwLoading) lwLoading.style.display = "none";
         if (data && data.candles && data.candles.length) {
-          nativeCandles = data.candles;
-          drawCanvasChart();
+          currentCandles = data.candles;
+          
+          const candleList = [];
+          const volumeList = [];
+
+          data.candles.forEach(c => {
+            candleList.push({
+              time: c.time,
+              open: c.open,
+              high: c.high,
+              low: c.low,
+              close: c.close
+            });
+            volumeList.push({
+              time: c.time,
+              value: c.volume || 0,
+              color: c.close >= c.open ? "rgba(30, 151, 82, 0.35)" : "rgba(211, 47, 47, 0.35)"
+            });
+          });
+
+          if (candleSeries) candleSeries.setData(candleList);
+          if (volumeSeries) volumeSeries.setData(volumeList);
+          if (lwChart) lwChart.timeScale().fitContent();
+
+          updateLegend(data.candles[data.candles.length - 1]);
         } else {
-          if (canvasLoading) {
-            canvasLoading.textContent = "No candle data available.";
-            canvasLoading.style.display = "block";
+          if (lwLoading) {
+            lwLoading.textContent = "No candle data available for this range.";
+            lwLoading.style.display = "flex";
           }
         }
       })
       .catch(err => {
         console.error("Candle fetch error:", err);
-        if (canvasLoading) {
-          canvasLoading.textContent = "Could not load candle data.";
-          canvasLoading.style.display = "block";
+        if (lwLoading) {
+          lwLoading.textContent = "Could not load candle data.";
+          lwLoading.style.display = "flex";
         }
       });
   }
 
-  function drawCanvasChart(hoverIndex = -1) {
-    if (!canvas || !nativeCandles.length) return;
-    const ctx = canvas.getContext("2d");
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width;
-    const h = rect.height;
-
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
-
-    ctx.clearRect(0, 0, w, h);
-
-    // Margins
-    const padTop = 25;
-    const padBottom = 45;
-    const padLeft = 15;
-    const padRight = 65;
-    const plotW = w - padLeft - padRight;
-    const plotH = h - padTop - padBottom;
-    const volH = plotH * 0.22; // lower 22% for volume bars
-    const priceH = plotH - volH - 15;
-
-    // Determine price min/max
-    let minPrice = Infinity;
-    let maxPrice = -Infinity;
-    let maxVol = 0;
-    nativeCandles.forEach(c => {
-      if (c.low < minPrice) minPrice = c.low;
-      if (c.high > maxPrice) maxPrice = c.high;
-      if (c.volume > maxVol) maxVol = c.volume;
-    });
-
-    const priceSpan = (maxPrice - minPrice) || 1;
-    const upper = maxPrice + priceSpan * 0.05;
-    const lower = Math.max(0, minPrice - priceSpan * 0.05);
-
-    const getY = (val) => padTop + (upper - val) / (upper - lower) * priceH;
-    const getX = (idx) => padLeft + (idx + 0.5) / nativeCandles.length * plotW;
-
-    // Horizontal Price Grid Lines
-    ctx.strokeStyle = "#edf1e8";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
-    ctx.font = "10px Manrope, sans-serif";
-    ctx.fillStyle = "#647950";
-    ctx.textAlign = "left";
-
-    const steps = 5;
-    for (let s = 0; s <= steps; s++) {
-      const pVal = lower + (upper - lower) * (s / steps);
-      const yPos = getY(pVal);
-      ctx.beginPath();
-      ctx.moveTo(padLeft, yPos);
-      ctx.lineTo(w - padRight, yPos);
-      ctx.stroke();
-
-      ctx.fillText("₹" + pVal.toFixed(2), w - padRight + 6, yPos + 3);
-    }
-    ctx.setLineDash([]);
-
-    // Volume Separator line
-    const volTopY = padTop + priceH + 15;
-    ctx.strokeStyle = "#e2e8dc";
-    ctx.beginPath();
-    ctx.moveTo(padLeft, volTopY);
-    ctx.lineTo(w - padRight, volTopY);
-    ctx.stroke();
-
-    // Draw Candlesticks & Volume
-    const candleWidth = Math.max(2, Math.min(22, (plotW / nativeCandles.length) * 0.72));
-
-    nativeCandles.forEach((c, i) => {
-      const cx = getX(i);
-      const isGreen = c.close >= c.open;
-      const color = isGreen ? "#1e9752" : "#d32f2f";
-
-      // 1. Volume Bar
-      if (maxVol > 0 && c.volume > 0) {
-        const vHeight = (c.volume / maxVol) * volH;
-        const vY = padTop + plotH - vHeight;
-        ctx.fillStyle = isGreen ? "rgba(30, 151, 82, 0.22)" : "rgba(211, 47, 47, 0.22)";
-        ctx.fillRect(cx - candleWidth / 2, vY, candleWidth, vHeight);
-      }
-
-      // 2. High-Low Wick
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(cx, getY(c.high));
-      ctx.lineTo(cx, getY(c.low));
-      ctx.stroke();
-
-      // 3. Open-Close Body
-      const topBody = getY(Math.max(c.open, c.close));
-      const bottomBody = getY(Math.min(c.open, c.close));
-      const bodyH = Math.max(1.5, bottomBody - topBody);
-
-      ctx.fillStyle = color;
-      ctx.fillRect(cx - candleWidth / 2, topBody, candleWidth, bodyH);
-    });
-
-    // Date X-axis labels
-    ctx.fillStyle = "#8a947f";
-    ctx.textAlign = "center";
-    const labelStep = Math.max(1, Math.ceil(nativeCandles.length / 6));
-    nativeCandles.forEach((c, i) => {
-      if (i % labelStep === 0) {
-        const cx = getX(i);
-        const d = new Date(c.time * 1000);
-        const dStr = d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
-        ctx.fillText(dStr, cx, h - padBottom + 18);
-      }
-    });
-
-    // Hover Crosshairs & Tooltip
-    if (hoverIndex >= 0 && hoverIndex < nativeCandles.length) {
-      const hc = nativeCandles[hoverIndex];
-      const hx = getX(hoverIndex);
-      const hy = getY(hc.close);
-
-      ctx.strokeStyle = "#496245";
-      ctx.lineWidth = 0.9;
-      ctx.setLineDash([4, 4]);
-
-      // Vertical line
-      ctx.beginPath();
-      ctx.moveTo(hx, padTop);
-      ctx.lineTo(hx, h - padBottom);
-      ctx.stroke();
-
-      // Horizontal line
-      ctx.beginPath();
-      ctx.moveTo(padLeft, hy);
-      ctx.lineTo(w - padRight, hy);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Position Tooltip
-      if (canvasTooltip) {
-        const d = new Date(hc.time * 1000);
-        const changeVal = hc.close - hc.open;
-        const changePct = (changeVal / hc.open) * 100;
-        const chgSign = changeVal >= 0 ? "+" : "";
-
-        canvasTooltip.innerHTML = `
-          <div style="font-weight:700; margin-bottom:4px;">${d.toLocaleDateString("en-IN", { weekday:'short', month:'short', day:'numeric', year:'numeric' })}</div>
-          <div>Open: <strong style="color:#d4ded2;">₹${hc.open.toFixed(2)}</strong></div>
-          <div>High: <strong style="color:#a8e6cf;">₹${hc.high.toFixed(2)}</strong></div>
-          <div>Low: <strong style="color:#ffaaa5;">₹${hc.low.toFixed(2)}</strong></div>
-          <div>Close: <strong>₹${hc.close.toFixed(2)}</strong></div>
-          <div>Vol: ${hc.volume.toLocaleString("en-IN")}</div>
-          <div style="margin-top:3px; color:${changeVal >= 0 ? '#4caf50' : '#ff5252'}; font-weight:600;">
-            ${chgSign}₹${changeVal.toFixed(2)} (${chgSign}${changePct.toFixed(2)}%)
-          </div>
-        `;
-        canvasTooltip.hidden = false;
-        const tipX = Math.min(w - 180, Math.max(10, hx + 15));
-        const tipY = Math.min(h - 140, Math.max(10, hy - 40));
-        canvasTooltip.style.left = tipX + "px";
-        canvasTooltip.style.top = tipY + "px";
-      }
-    } else {
-      if (canvasTooltip) canvasTooltip.hidden = true;
-    }
-  }
-
-  // Canvas Mouse Move Crosshair Interaction
-  if (canvas) {
-    canvas.addEventListener("mousemove", function(e) {
-      if (!nativeCandles.length) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const padLeft = 15;
-      const padRight = 65;
-      const plotW = rect.width - padLeft - padRight;
-      const relX = x - padLeft;
-      if (relX < 0 || relX > plotW) {
-        drawCanvasChart(-1);
-        return;
-      }
-      const idx = Math.min(nativeCandles.length - 1, Math.max(0, Math.floor((relX / plotW) * nativeCandles.length)));
-      drawCanvasChart(idx);
-    });
-
-    canvas.addEventListener("mouseleave", function() {
-      drawCanvasChart(-1);
-    });
-
-    window.addEventListener("resize", function() {
-      drawCanvasChart(-1);
-    });
-  }
-
-  // Native Range Buttons
+  // 5. Timeframe Button Handlers
   document.querySelectorAll(".range-btn").forEach(btn => {
     btn.addEventListener("click", function() {
       document.querySelectorAll(".range-btn").forEach(b => {
@@ -673,17 +602,97 @@ document.addEventListener("DOMContentLoaded", function() {
         b.style.borderColor = "#d4ded2";
       });
       this.classList.add("active");
-      this.style.background = "#3f7352";
+      this.style.background = "#285933";
       this.style.color = "#fff";
-      this.style.borderColor = "#3f7352";
+      this.style.borderColor = "#285933";
 
       currentRange = this.dataset.range;
       currentInterval = this.dataset.interval;
-      loadNativeCandles(currentRange, currentInterval);
+      loadCandles(currentRange, currentInterval);
     });
   });
 
-  // Fullscreen Toggle
+  // 6. View Mode Switchers
+  function switchToLw() {
+    if (lwOuter) lwOuter.style.display = "block";
+    if (tvWrapper) tvWrapper.style.display = "none";
+    if (rangeControls) rangeControls.style.display = "flex";
+    if (modeLwBtn) {
+      modeLwBtn.classList.add("active");
+      modeLwBtn.classList.remove("btn-ghost");
+    }
+    if (modeTvBtn) {
+      modeTvBtn.classList.remove("active");
+      modeTvBtn.classList.add("btn-ghost");
+    }
+    if (lwChart) {
+      lwChart.timeScale().fitContent();
+    }
+  }
+
+  function switchToTv() {
+    if (lwOuter) lwOuter.style.display = "none";
+    if (tvWrapper) tvWrapper.style.display = "block";
+    if (rangeControls) rangeControls.style.display = "none";
+    if (modeTvBtn) {
+      modeTvBtn.classList.add("active");
+      modeTvBtn.classList.remove("btn-ghost");
+    }
+    if (modeLwBtn) {
+      modeLwBtn.classList.remove("active");
+      modeLwBtn.classList.add("btn-ghost");
+    }
+    if (!tvWidgetInitialized) {
+      initTradingViewWidget();
+    }
+  }
+
+  if (modeLwBtn) modeLwBtn.addEventListener("click", switchToLw);
+  if (modeTvBtn) modeTvBtn.addEventListener("click", switchToTv);
+
+  // 7. TradingView Widget (Lazy loaded on tab switch)
+  function initTradingViewWidget() {
+    if (!tvContainer || !ticker) return;
+    tvWidgetInitialized = true;
+    
+    // Load tv.js dynamically if not present
+    function mountTv() {
+      const fullTvSymbol = exchange + ":" + ticker;
+      try {
+        if (typeof TradingView !== "undefined") {
+          new TradingView.widget({
+            "autosize": true,
+            "symbol": fullTvSymbol,
+            "interval": "D",
+            "timezone": "Asia/Kolkata",
+            "theme": "light",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#fafcf7",
+            "enable_publishing": false,
+            "allow_symbol_change": true,
+            "container_id": "tradingview_widget_container",
+            "hide_side_toolbar": false,
+            "withdateranges": true
+          });
+        }
+      } catch(err) {
+        console.warn("TradingView widget init error:", err);
+      }
+    }
+
+    if (typeof TradingView === "undefined") {
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/tv.js";
+      script.async = true;
+      script.onload = mountTv;
+      document.head.appendChild(script);
+    } else {
+      mountTv();
+    }
+  }
+
+  // 8. Fullscreen Toggle
   const fsBtn = document.getElementById("btn-chart-fullscreen");
   const chartCard = document.getElementById("chart-card-container");
   if (fsBtn && chartCard) {
@@ -696,8 +705,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Initialize TradingView on load
-  initTradingView();
+  // Launch Lightweight Chart on load
+  initLightweightChart();
 });
 </script>
 {% endblock %}
