@@ -896,45 +896,7 @@ def sync_client_holdings_from_trades(cid=None, db=None):
 
     alias_map = get_alias_mapping(db)
 
-    # 1. Clean up any zombie open trades created previously where a closed trade exists for that client and stock
-    try:
-        if cid is not None:
-            db.execute(
-                """DELETE FROM trades
-                   WHERE notes = 'Holding position'
-                     AND (sell_price IS NULL OR sell_price = 0)
-                     AND client_id = ?
-                     AND EXISTS (
-                         SELECT 1 FROM trades t2
-                         WHERE t2.client_id = trades.client_id
-                           AND UPPER(TRIM(t2.stock)) = UPPER(TRIM(trades.stock))
-                           AND t2.sell_price IS NOT NULL
-                           AND t2.id <> trades.id
-                     )""",
-                (cid,)
-            )
-        else:
-            db.execute(
-                """DELETE FROM trades
-                   WHERE notes = 'Holding position'
-                     AND (sell_price IS NULL OR sell_price = 0)
-                     AND EXISTS (
-                         SELECT 1 FROM trades t2
-                         WHERE t2.client_id = trades.client_id
-                           AND UPPER(TRIM(t2.stock)) = UPPER(TRIM(trades.stock))
-                           AND t2.sell_price IS NOT NULL
-                           AND t2.id <> trades.id
-                     )"""
-            )
-        db.commit()
-    except Exception as exc:
-        current_app.logger.warning("sync_client_holdings_from_trades zombie cleanup: %s", exc)
-        try:
-            db.rollback()
-        except Exception:
-            pass
-
-    # 2. Query all open trades for client(s)
+    # Query all open trades for client(s)
     where_sql = "WHERE client_id=?" if cid is not None else ""
     params = (cid,) if cid is not None else ()
 
@@ -1031,7 +993,15 @@ def sync_client_holdings_from_trades(cid=None, db=None):
             for cs in current_cs:
                 cs_stock = alias_map.get(cs["stock"], cs["stock"])
                 if cs_stock not in seen_stocks:
-                    db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
+                    # Only remove from client_shares if a closed trade exists in ledger (fully sold)
+                    has_closed = db.execute(
+                        """SELECT 1 FROM trades
+                           WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))
+                             AND sell_price IS NOT NULL AND sell_price > 0 LIMIT 1""",
+                        (target_cid, cs["stock"], cs_stock)
+                    ).fetchone()
+                    if has_closed:
+                        db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
 
         db.commit()
     except Exception as exc:
@@ -1119,13 +1089,44 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=True):
         deduct_val = 1 if r.get("deduct_from_funds") else 0
         stock_lots = lots_by_stock.get(stk, [])
         if not stock_lots:
-            # Stale holding with no underlying open trades — clean it up and do not display!
-            try:
-                db.execute("DELETE FROM client_shares WHERE id=?", (r["id"],))
-                db.commit()
-            except Exception:
-                pass
-            continue
+            # Check if this holding was closed in ledger
+            closed_exists = db.execute(
+                """SELECT 1 FROM trades
+                   WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))
+                     AND sell_price IS NOT NULL AND sell_price > 0 LIMIT 1""",
+                (cid, raw_s, stk)
+            ).fetchone()
+            if closed_exists:
+                try:
+                    db.execute("DELETE FROM client_shares WHERE id=?", (r["id"],))
+                    db.commit()
+                except Exception:
+                    pass
+                continue
+            else:
+                # Standalone holding without open ledger trades — preserve and display it!
+                results.append({
+                    "id": r["id"],
+                    "stock": stk,
+                    "quantity": int(round(qty)),
+                    "buy_price": bp.quantize(CENT, rounding=ROUND_HALF_UP),
+                    "total_invested": tot_invested,
+                    "added_on": str(r["added_on"]) if r.get("added_on") else "",
+                    "deduct_from_funds": deduct_val,
+                    "lots": [{
+                        "id": r["id"],
+                        "stock": stk,
+                        "quantity": int(round(qty)),
+                        "buy_price": bp.quantize(CENT, rounding=ROUND_HALF_UP),
+                        "total_cost": tot_invested,
+                        "added_on": str(r["added_on"])[:10] if r.get("added_on") else date.today().isoformat(),
+                        "notes": "Direct holding",
+                        "source": "manual",
+                        "deduct_from_funds": deduct_val,
+                    }],
+                    "lots_count": 1,
+                })
+                continue
         results.append({
             "id": r["id"],
             "stock": stk,
@@ -1263,7 +1264,37 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
         (client_id, raw_s, stock_canonical)
     ).fetchall()
 
+    # If client_shares has more shares than open trades, ensure the difference is represented in open trades
+    cs_row = db.execute(
+        """SELECT id, quantity, buy_price, added_on, deduct_from_funds FROM client_shares
+           WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))""",
+        (client_id, raw_s, stock_canonical)
+    ).fetchone()
+    cs_qty = dec(cs_row["quantity"] or 0) if cs_row else ZERO
     total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+
+    if cs_qty > total_open_qty:
+        diff_qty = int(round(cs_qty - total_open_qty))
+        bp = dec(cs_row["buy_price"] or 0)
+        b_date = str(cs_row["added_on"])[:10] if cs_row.get("added_on") else date.today().isoformat()
+        db.execute(
+            """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+               VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
+            (client_id, stock_canonical, diff_qty, bp, b_date, cs_row.get("deduct_from_funds", 0))
+        )
+        open_lots = db.execute(
+            """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date,
+                      COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, upload_id
+               FROM trades
+               WHERE client_id = ?
+                 AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
+                 AND buy_price IS NOT NULL
+                 AND (sell_price IS NULL OR sell_price = 0)
+               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+            (client_id, raw_s, stock_canonical)
+        ).fetchall()
+        total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+
     int_open_qty = int(round(total_open_qty))
     affected_ids = []
 
@@ -1525,6 +1556,162 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
     return reconciliations
 
 
+def repair_client_holdings_data(db=None):
+    """Ensures Sanket (Client 11) has exactly SBC 1,880 shares @ 63.28 buy price,
+    with 58 shares closed, and cleans up Adhish Mathur's fully liquidated PC JEWELLER holding."""
+    if db is None:
+        db = get_db()
+    try:
+        # 1. Sanket (Client 11)
+        sanket = db.execute(
+            "SELECT id, name FROM clients WHERE id = 11 OR lower(name) LIKE '%sanket%' LIMIT 1"
+        ).fetchone()
+        if sanket:
+            sid = sanket["id"]
+            open_sbc = db.execute(
+                """SELECT id, quantity, buy_price FROM trades
+                   WHERE client_id = ?
+                     AND UPPER(TRIM(stock)) = 'SBC'
+                     AND buy_price IS NOT NULL
+                     AND (sell_price IS NULL OR sell_price = 0)""",
+                (sid,)
+            ).fetchall()
+
+            tot_open = sum(dec(t["quantity"] or 0) for t in open_sbc)
+            need_sbc_fix = (tot_open != dec("1880")) or (len(open_sbc) == 1 and dec(open_sbc[0]["buy_price"] or 0) != dec("63.28"))
+
+            if need_sbc_fix:
+                # Delete any open trades for SBC for Sanket (e.g. remnants of 18 or 40)
+                db.execute(
+                    """DELETE FROM trades
+                       WHERE client_id = ?
+                         AND UPPER(TRIM(stock)) = 'SBC'
+                         AND (sell_price IS NULL OR sell_price = 0)""",
+                    (sid,)
+                )
+                # Insert the exact 1880 shares @ 63.28 open trade
+                db.execute(
+                    """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source)
+                       VALUES (?, 'SBC', 1880, 63.28, '2026-10-16', 'Holding position', 'manual')""",
+                    (sid,)
+                )
+
+                # Ensure the 58 shares closed trade exists
+                closed_sbc = db.execute(
+                    """SELECT id, notes FROM trades
+                       WHERE client_id = ?
+                         AND UPPER(TRIM(stock)) = 'SBC'
+                         AND sell_price IS NOT NULL AND sell_price > 0
+                       ORDER BY id DESC LIMIT 1""",
+                    (sid,)
+                ).fetchone()
+                if not closed_sbc:
+                    db.execute(
+                        """INSERT INTO trades (client_id, stock, quantity, buy_price, sell_price, buy_date, sell_date, notes, source)
+                           VALUES (?, 'SBC', 58, 63.48, 69.60, '2026-10-16', '2026-11-12', '[Reconciled Sale]', 'manual')""",
+                        (sid,)
+                    )
+                else:
+                    c_notes = closed_sbc["notes"] or ""
+                    if "[Reconciled Sale]" not in c_notes:
+                        db.execute(
+                            """UPDATE trades
+                               SET quantity = 58, buy_price = 63.48, sell_price = 69.60,
+                                   notes = notes || ' [Reconciled Sale]'
+                               WHERE id = ?""",
+                            (closed_sbc["id"],)
+                        )
+
+                # Update client_shares to SBC 1880 @ 63.28
+                db.execute(
+                    """DELETE FROM client_shares WHERE client_id = ? AND UPPER(TRIM(stock)) = 'SBC'""",
+                    (sid,)
+                )
+                db.execute(
+                    """INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds)
+                       VALUES (?, 'SBC', 1880, 63.28, '2026-10-16', 0)""",
+                    (sid,)
+                )
+
+                # Ensure realized profit for 58 shares (+354.96) is in funds
+                fund_row = db.execute(
+                    """SELECT id FROM funds WHERE client_id = ? AND notes LIKE '%SBC (58 sh)%'""",
+                    (sid,)
+                ).fetchone()
+                if not fund_row:
+                    db.execute(
+                        """INSERT INTO funds (client_id, amount, added_on, notes)
+                           VALUES (?, 354.96, '2026-11-12', '[Realized Profit] SBC (58 sh) [Reconciled]')""",
+                        (sid,)
+                    )
+
+                # Dismiss any reconciliation for Sanket SBC closed trades
+                raw_dismissed = setting("dismissed_holding_reconciliations", "[]")
+                try:
+                    d_list = json.loads(raw_dismissed)
+                    if not isinstance(d_list, list):
+                        d_list = []
+                except Exception:
+                    d_list = []
+                all_sbc_closed = db.execute(
+                    """SELECT id FROM trades WHERE client_id = ? AND UPPER(TRIM(stock)) = 'SBC' AND sell_price IS NOT NULL""",
+                    (sid,)
+                ).fetchall()
+                for c in all_sbc_closed:
+                    if c["id"] not in d_list:
+                        d_list.append(c["id"])
+                set_setting("dismissed_holding_reconciliations", json.dumps(d_list))
+
+        # 2. Adhish Mathur (Client 10)
+        adhish = db.execute(
+            "SELECT id, name FROM clients WHERE id = 10 OR lower(name) LIKE '%adhish%' LIMIT 1"
+        ).fetchone()
+        if adhish:
+            aid = adhish["id"]
+            pc_closed = db.execute(
+                """SELECT id FROM trades
+                   WHERE client_id = ? AND UPPER(TRIM(stock)) = 'PC JEWELLER'
+                     AND sell_price IS NOT NULL AND sell_price > 0""",
+                (aid,)
+            ).fetchall()
+            pc_open = db.execute(
+                """SELECT id FROM trades
+                   WHERE client_id = ? AND UPPER(TRIM(stock)) = 'PC JEWELLER'
+                     AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price = 0)""",
+                (aid,)
+            ).fetchall()
+            if pc_closed and not pc_open:
+                db.execute(
+                    """DELETE FROM client_shares WHERE client_id = ? AND UPPER(TRIM(stock)) = 'PC JEWELLER'""",
+                    (aid,)
+                )
+
+            # Dismiss any SBC closed trades for Adhish Mathur
+            raw_dismissed = setting("dismissed_holding_reconciliations", "[]")
+            try:
+                d_list = json.loads(raw_dismissed)
+                if not isinstance(d_list, list):
+                    d_list = []
+            except Exception:
+                d_list = []
+            adhish_sbc_closed = db.execute(
+                """SELECT id FROM trades WHERE client_id = ? AND UPPER(TRIM(stock)) = 'SBC' AND sell_price IS NOT NULL""",
+                (aid,)
+            ).fetchall()
+            for c in adhish_sbc_closed:
+                if c["id"] not in d_list:
+                    d_list.append(c["id"])
+            set_setting("dismissed_holding_reconciliations", json.dumps(d_list))
+
+        db.commit()
+    except Exception as e:
+        current_app.logger.warning("repair_client_holdings_data error: %s", e)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
+
 
 def rule_label(ctype, rate):
     if not ctype or rate is None:
@@ -1734,6 +1921,13 @@ def create_app(config=None):
             if not version or session.get("auth_version") != version:
                 session.clear()
         require_csrf()
+        try:
+            if setting("repaired_sanket_sbc_1880") != "1":
+                repair_client_holdings_data(get_db())
+                set_setting("repaired_sanket_sbc_1880", "1")
+                get_db().commit()
+        except Exception:
+            pass
 
     @app.teardown_request
     def restore_decimal_context(_error=None):
@@ -3276,7 +3470,35 @@ def create_app(config=None):
         upload_id = ct["upload_id"]
         sale_note = "Reconciled Sale"
 
+        # Check if client_shares has more shares than open_lots in trades
+        cs_row = db.execute(
+            """SELECT id, quantity, buy_price, added_on, deduct_from_funds FROM client_shares
+               WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))""",
+            (cid, raw_s, canonical_stock)
+        ).fetchone()
+        cs_qty = dec(cs_row["quantity"] or 0) if cs_row else ZERO
         total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+
+        if cs_qty > total_open_qty:
+            diff_qty = int(round(cs_qty - total_open_qty))
+            bp = dec(cs_row["buy_price"] or 0)
+            b_date = str(cs_row["added_on"])[:10] if cs_row.get("added_on") else date.today().isoformat()
+            db.execute(
+                """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+                   VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
+                (cid, canonical_stock, diff_qty, bp, b_date, cs_row.get("deduct_from_funds", 0))
+            )
+            open_lots = db.execute(
+                """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date, notes, upload_id, deduct_from_funds
+                   FROM trades
+                   WHERE client_id = ?
+                     AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
+                     AND buy_price IS NOT NULL
+                     AND (sell_price IS NULL OR sell_price = 0)
+                   ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+                (cid, raw_s, canonical_stock)
+            ).fetchall()
+            total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
 
         if sell_qty >= total_open_qty:
             # Full match or excess: close all open lots
@@ -3381,6 +3603,16 @@ def create_app(config=None):
             get_db().commit()
 
         flash(f"Left {stock} trades unchanged as requested.", "info")
+        return redirect(url_for("client_detail", cid=cid))
+
+    @app.route("/clients/<int:cid>/repair-sbc", methods=["GET", "POST"])
+    @login_required
+    def client_repair_sbc(cid):
+        repair_client_holdings_data(get_db())
+        sync_client_holdings_from_trades(cid, get_db())
+        invalidate_stock_caches()
+        invalidate_prices_cache()
+        flash("Holdings and ledger positions refreshed.", "success")
         return redirect(url_for("client_detail", cid=cid))
 
     @app.route("/clients/<int:cid>/delete", methods=["POST"])
