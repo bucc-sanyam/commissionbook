@@ -12,6 +12,21 @@
     <a class="btn btn-primary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
 </div>
+
+{% if pending_reconciliations %}
+<div class="alert-banner" style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <span style="color: #d97706; display: flex; align-items: center;">{{ icon('clock', 18) }}</span>
+    <span style="font-size: 13px; color: #92400e; font-weight: 500;">
+      <strong>Action needed:</strong> {{ pending_reconciliations|length }} holding reconciliation{{ 's' if pending_reconciliations|length != 1 }} pending admin confirmation (e.g. {{ pending_reconciliations[0].stock }} for {{ pending_reconciliations[0].client_name }}).
+    </span>
+  </div>
+  <a href="{{ url_for('client_detail', cid=pending_reconciliations[0].client_id) }}" class="btn btn-sm btn-primary" style="white-space: nowrap; background: #b45309; border-color: #b45309; color: #ffffff;">
+    Review {{ pending_reconciliations[0].stock }} &rarr;
+  </a>
+</div>
+{% endif %}
+
 <section class="card">
   <div class="ledger-summary">
     <div class="ledger-summary-item"><span>Trades in view</span><strong class="tabular" data-privacy-value>{{ total.count }}</strong></div>

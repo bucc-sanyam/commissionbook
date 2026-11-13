@@ -31,6 +31,71 @@
   <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">{{ 'Client credit' if s.outstanding < 0 else 'Still to collect' }}</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ (s.outstanding|abs)|money }}</div><div class="kpi-bottom">{{ 'Paid ahead of commissions earned' if s.outstanding < 0 else 'Commission less payments received' }}</div></section>
   <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Their realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div><div class="kpi-value {{ 'neg' if s.pnl < 0 else 'pos' }}">{{ s.pnl|money }}</div><div class="kpi-bottom">{{ s.wins }} profitable · {{ s.losses }} losing trades</div></section>
 </div>
+
+{% if pending_reconciliations %}
+<section class="card" style="border: 1px solid #fed7aa; background: #fffbf5; margin-bottom: 1.5rem; border-left: 4px solid #f97316;">
+  <div class="card-header" style="border-bottom: 1px solid #ffedd5; padding-bottom: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #ffedd5; color: #ea580c;">
+          {{ icon('clock', 15) }}
+        </span>
+        <h2 style="font-size: 16px; margin: 0; color: #9a3412;">Holding Reconciliation Pending Admin Confirmation</h2>
+      </div>
+      <p style="margin: 4px 0 0 34px; font-size: 13px; color: #7c2d12;">
+        We found completed trades matching open positions for {{ client.name }}. Review below and choose whether to apply FIFO deduction or let it be.
+      </p>
+    </div>
+  </div>
+  <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    {% for rec in pending_reconciliations %}
+    <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
+        <div style="flex: 1; min-width: 260px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <strong style="font-size: 15px; color: #1e293b;">{{ rec.stock }}</strong>
+            <span class="badge" style="background: #fef3c7; color: #92400e; font-size: 11px;">Historical Trade Match</span>
+          </div>
+          <div style="font-size: 13px; color: #334155; line-height: 1.55;">
+            <div><strong>Recorded Sale:</strong> {{ rec.closed_trade.quantity }} shares sold @ {{ rec.closed_trade.sell_price|money }} on {{ rec.closed_trade.sell_date or '—' }} (P&amp;L: <span class="{{ 'pos' if rec.closed_trade.pnl >= 0 else 'neg' }}">{{ '+' if rec.closed_trade.pnl > 0 else '' }}{{ rec.closed_trade.pnl|money }}</span>)</div>
+            <div><strong>Open Holdings in Ledger:</strong> {{ rec.total_open_qty }} shares across {{ rec.open_lots|length }} lot{{ 's' if rec.open_lots|length != 1 }} (Average Buy: {{ rec.avg_open_price|money }})</div>
+            <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 12px; color: #64748b;">
+              {% for lot in rec.open_lots %}
+              <li>Lot #{{ lot.id }}: {{ lot.quantity }} sh @ {{ lot.buy_price|money }} (bought {{ lot.buy_date or '—' }})</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div style="margin-top: 10px; font-size: 12px; color: #047857; font-weight: 500; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; border: 1px solid #dcfce7; display: inline-block;">
+            {% if rec.is_exact_qty_match %}
+              &bull; <strong>Accepting</strong> will close all {{ rec.total_open_qty }} open shares via FIFO and deduct {{ rec.stock }} completely from holdings (0 open shares remaining).
+            {% else %}
+              &bull; <strong>Accepting</strong> will deduct {{ rec.closed_trade.quantity }} shares via FIFO from earliest lots, leaving {{ rec.total_open_qty - rec.closed_trade.quantity }} shares open and updating holdings average buy price.
+            {% endif %}
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; padding-top: 4px;">
+          <form method="post" action="{{ url_for('client_holding_reconcile_accept', cid=client.id, stock=rec.stock) }}" style="margin: 0;">
+            {{ csrf() }}
+            <input type="hidden" name="closed_trade_id" value="{{ rec.closed_trade.id }}">
+            <button class="btn btn-sm btn-primary" type="submit" style="background: #166534; border-color: #166534; color: #ffffff;">
+              {{ icon('check', 14) }} Accept &amp; Deduct Holdings
+            </button>
+          </form>
+          <form method="post" action="{{ url_for('client_holding_reconcile_dismiss', cid=client.id, stock=rec.stock) }}" style="margin: 0;">
+            {{ csrf() }}
+            <input type="hidden" name="closed_trade_id" value="{{ rec.closed_trade.id }}">
+            <button class="btn btn-sm btn-ghost" type="submit" style="color: #64748b;" title="Keep trades as they are">
+              Let it be
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="card">
   <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · <span class="tabular" data-privacy-value>{{ s.invested_open|money }}</span> invested</p></div><span class="badge">{{ rule }}</span></div>
   {{ trade_table(trades, s, show_client=False) }}
