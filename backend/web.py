@@ -797,65 +797,95 @@ def aggregate_clients_sql(start=None, end=None):
     """
     Aggregate per-client performance and commission directly in SQL.
     Replaces O(clients x trades) Python-side loop with a single grouped query.
+    Falls back gracefully to Python summarize if SQL grouping encounters any database issue.
     """
     db = get_db()
     def_type = setting("default_commission_type", "profit_pct")
     def_rate = float(setting("default_commission_rate", "10"))
 
-    date_join_conds = []
-    date_params = []
-    if start:
-        date_join_conds.append("COALESCE(t.sell_date, t.buy_date) >= ?")
-        date_params.append(start)
-    if end:
-        date_join_conds.append("COALESCE(t.sell_date, t.buy_date) <= ?")
-        date_params.append(end)
+    try:
+        date_join_conds = []
+        date_params = []
+        if start:
+            date_join_conds.append("COALESCE(t.sell_date, t.buy_date) >= ?")
+            date_params.append(start)
+        if end:
+            date_join_conds.append("COALESCE(t.sell_date, t.buy_date) <= ?")
+            date_params.append(end)
 
-    date_clause = (" AND " + " AND ".join(date_join_conds)) if date_join_conds else ""
+        date_clause = (" AND " + " AND ".join(date_join_conds)) if date_join_conds else ""
 
-    sql = f"""
-    SELECT 
-        c.*,
-        COUNT(t.id) as count,
-        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN 1 ELSE 0 END) as closed,
-        SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN 1 ELSE 0 END) as open,
-        COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN t.quantity * (t.sell_price - t.buy_price) ELSE 0 END), 0) as pnl,
-        COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN t.quantity * t.buy_price ELSE 0 END), 0) as invested_open,
-        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price > t.buy_price THEN 1 ELSE 0 END) as wins,
-        SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price < t.buy_price THEN 1 ELSE 0 END) as losses,
-        COALESCE(SUM(t.quantity * (COALESCE(t.buy_price, 0) + COALESCE(t.sell_price, 0))), 0) as turnover,
-        COALESCE(SUM(
-            CASE 
-                WHEN t.commission_override IS NOT NULL THEN t.commission_override
-                WHEN t.buy_price IS NULL OR t.sell_price IS NULL THEN 0
-                WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'turnover_pct' 
-                    THEN (t.buy_price + t.sell_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
-                WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'flat' 
-                    THEN COALESCE(t.commission_rate_snapshot, c.commission_rate, ?)
-                ELSE 
-                    CASE WHEN t.sell_price > t.buy_price 
-                    THEN (t.sell_price - t.buy_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
-                    ELSE 0 END
-            END
-        ), 0) as commission
-    FROM clients c
-    LEFT JOIN trades t ON t.client_id = c.id {date_clause}
-    GROUP BY c.id
-    ORDER BY lower(c.name), c.id
-    """
-    params = (def_type, def_rate, def_type, def_rate, def_rate, *date_params)
-    rows = db.execute(sql, params).fetchall()
+        sql = f"""
+        SELECT 
+            c.*,
+            COUNT(t.id) as count,
+            SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN 1 ELSE 0 END) as closed,
+            SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN 1 ELSE 0 END) as open,
+            COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL THEN t.quantity * (t.sell_price - t.buy_price) ELSE 0 END), 0) as pnl,
+            COALESCE(SUM(CASE WHEN t.buy_price IS NOT NULL AND (t.sell_price IS NULL OR t.sell_price = 0) THEN t.quantity * t.buy_price ELSE 0 END), 0) as invested_open,
+            SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price > t.buy_price THEN 1 ELSE 0 END) as wins,
+            SUM(CASE WHEN t.buy_price IS NOT NULL AND t.sell_price IS NOT NULL AND t.sell_price < t.buy_price THEN 1 ELSE 0 END) as losses,
+            COALESCE(SUM(t.quantity * (COALESCE(t.buy_price, 0) + COALESCE(t.sell_price, 0))), 0) as turnover,
+            COALESCE(SUM(
+                CASE 
+                    WHEN t.commission_override IS NOT NULL THEN t.commission_override
+                    WHEN t.buy_price IS NULL OR t.sell_price IS NULL THEN 0
+                    WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'turnover_pct' 
+                        THEN (t.buy_price + t.sell_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
+                    WHEN COALESCE(t.commission_type_snapshot, c.commission_type, ?) = 'flat' 
+                        THEN COALESCE(t.commission_rate_snapshot, c.commission_rate, ?)
+                    ELSE 
+                        CASE WHEN t.sell_price > t.buy_price 
+                        THEN (t.sell_price - t.buy_price) * t.quantity * COALESCE(t.commission_rate_snapshot, c.commission_rate, ?) / 100.0
+                        ELSE 0 END
+                END
+            ), 0) as commission
+        FROM clients c
+        LEFT JOIN trades t ON t.client_id = c.id {date_clause}
+        GROUP BY c.id
+        ORDER BY lower(c.name), c.id
+        """
+        params = (def_type, def_rate, def_type, def_rate, def_rate, *date_params)
+        rows = db.execute(sql, params).fetchall()
 
-    result = []
-    for row in rows:
-        item = dict(row)
-        item["pnl"] = dec(item["pnl"])
-        item["commission"] = dec(item["commission"]).quantize(CENT, rounding=ROUND_HALF_UP)
-        item["invested_open"] = dec(item["invested_open"])
-        item["turnover"] = dec(item["turnover"])
-        item["rule"] = rule_label(item["commission_type"], item["commission_rate"])
-        result.append(item)
-    return result
+        result = []
+        for row in rows:
+            item = dict(row)
+            item["pnl"] = dec(item.get("pnl"))
+            item["commission"] = dec(item.get("commission")).quantize(CENT, rounding=ROUND_HALF_UP)
+            item["invested_open"] = dec(item.get("invested_open"))
+            item["turnover"] = dec(item.get("turnover"))
+            item["rule"] = rule_label(item.get("commission_type"), item.get("commission_rate"))
+            result.append(item)
+        return result
+    except Exception as exc:
+        current_app.logger.warning("aggregate_clients_sql failed, falling back to python summarize: %s", exc)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        # Fallback to python summarize
+        client_rows = db.execute("SELECT * FROM clients ORDER BY lower(name), id").fetchall()
+        args = {}
+        if start:
+            args["from"] = start
+        if end:
+            args["to"] = end
+        all_trades = query_trades(args)
+        trades_by_client = {}
+        for t in all_trades:
+            trades_by_client.setdefault(t["client_id"], []).append(t)
+        fallback_result = []
+        for c in client_rows:
+            client_dict = dict(c)
+            c_trades = trades_by_client.get(client_dict["id"], [])
+            summary = summarize(c_trades)
+            fallback_result.append({
+                **client_dict,
+                **summary,
+                "rule": rule_label(client_dict.get("commission_type"), client_dict.get("commission_rate")),
+            })
+        return fallback_result
 
 
 def sync_client_holdings_from_trades(cid=None, db=None):
@@ -900,14 +930,19 @@ def sync_client_holdings_from_trades(cid=None, db=None):
 
             if not existing_t:
                 b_date = str(cs["added_on"])[:10] if cs.get("added_on") else date.today().isoformat()
+                b_price = dec(cs.get("buy_price") or 0)
                 db.execute(
                     """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
-                       VALUES (?, ?, ?, ?, ?, 'Holding position', 'holdings', ?)""",
-                    (c_id, stk, qty, cs["buy_price"], b_date, cs.get("deduct_from_funds", 0))
+                       VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
+                    (c_id, stk, qty, b_price, b_date, cs.get("deduct_from_funds", 0))
                 )
         db.commit()
     except Exception as exc:
         current_app.logger.warning("sync_client_holdings_from_trades pre-sync: %s", exc)
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
     # 2. Query all open trades for client(s)
     where_sql = "WHERE client_id=?" if cid is not None else ""
@@ -1011,6 +1046,10 @@ def sync_client_holdings_from_trades(cid=None, db=None):
         db.commit()
     except Exception as exc:
         current_app.logger.warning("sync_client_holdings_from_trades: %s", exc)
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
 
 def get_client_calculated_holdings(cid, db=None, sync_trades=True):
@@ -1018,7 +1057,14 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=True):
         db = get_db()
 
     if sync_trades:
-        sync_client_holdings_from_trades(cid, db)
+        try:
+            sync_client_holdings_from_trades(cid, db)
+        except Exception as exc:
+            current_app.logger.warning("get_client_calculated_holdings sync error: %s", exc)
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
     alias_map = get_alias_mapping(db)
 
@@ -1203,7 +1249,8 @@ def rule_label(ctype, rate):
     r = f"{dec(rate):.1f}".rstrip('0').rstrip('.')
     if ctype == "flat":
         return f"{r} flat/trade"
-    return f"{r}{COMMISSION_TYPES[ctype]}"
+    unit = COMMISSION_TYPES.get(ctype, f" {ctype}" if ctype else "")
+    return f"{r}{unit}"
 
 
 def client_values(values, name):

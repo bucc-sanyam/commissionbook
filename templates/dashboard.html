@@ -87,7 +87,7 @@
           <td><a class="client-cell" href="{{ url_for('client_detail', cid=c.id) }}">{{ avatar(c.name, c.id, True) }}<span>{{ c.name }}<small>{{ c.open }} open position{{ 's' if c.open != 1 }}</small></span></a></td>
           <td><span class="badge">{{ c.rule }}</span></td><td class="r tabular muted">{{ c.count }}</td>
           <td class="r tabular">{{ pnl(c.pnl) }}</td><td class="r tabular strong">{{ c.commission|money }}</td>
-          <td class="r tabular"><span class="{{ 'neg' if c.outstanding > 0.005 else 'pos' if c.outstanding < -0.005 else 'muted' }}">{{ c.outstanding|money }}</span><span class="cell-secondary">{{ 'Credit' if c.outstanding < -0.005 else 'To collect' if c.outstanding > 0.005 else 'Settled' }}</span></td>
+          <td class="r tabular"><span class="{{ 'neg' if (c.outstanding or 0)|float > 0.005 else 'pos' if (c.outstanding or 0)|float < -0.005 else 'muted' }}">{{ c.outstanding|money }}</span><span class="cell-secondary">{{ 'Credit' if (c.outstanding or 0)|float < -0.005 else 'To collect' if (c.outstanding or 0)|float > 0.005 else 'Settled' }}</span></td>
           <td class="r"><a class="icon-btn" href="{{ url_for('client_detail', cid=c.id) }}" aria-label="View {{ c.name }}">{{ icon('arrow-up-right', 16) }}</a></td>
         </tr>
         {% endfor %}
@@ -109,8 +109,8 @@
       <div class="mtd-grid" style="margin-top:4px;">
         <div class="mtd-item">
           <span class="mtd-label">Balance</span>
-          <strong class="tabular {{ 'neg' if c.outstanding > 0.005 else 'pos' if c.outstanding < -0.005 else 'muted' }}">{{ c.outstanding|money }}</strong>
-          <small class="cell-secondary">{{ 'Credit' if c.outstanding < -0.005 else 'To collect' if c.outstanding > 0.005 else 'Settled' }}</small>
+          <strong class="tabular {{ 'neg' if (c.outstanding or 0)|float > 0.005 else 'pos' if (c.outstanding or 0)|float < -0.005 else 'muted' }}">{{ c.outstanding|money }}</strong>
+          <small class="cell-secondary">{{ 'Credit' if (c.outstanding or 0)|float < -0.005 else 'To collect' if (c.outstanding or 0)|float > 0.005 else 'Settled' }}</small>
         </div>
         <div class="mtd-item">
           <span class="mtd-label">Commission Earned</span>
