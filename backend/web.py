@@ -1452,6 +1452,9 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
         for ct in closed_trades:
             if ct["id"] in dismissed_ids:
                 continue
+            ct_notes = ct["notes"] or ""
+            if any(tag in ct_notes for tag in ("[Reconciled", "[Sold from Holdings]", "Reconciled Sale")):
+                continue
             raw_s = (ct["stock"] or "").strip().upper()
             stk = alias_map.get(raw_s, raw_s)
             if not stk:
@@ -1476,15 +1479,18 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
                 ct_bp = dec(ct["buy_price"] or 0)
                 ct_sp = dec(ct["sell_price"] or 0)
 
+                # Sold quantity cannot exceed current open holdings
+                if ct_qty > total_open_qty:
+                    continue
+
                 # Matching criteria:
                 # 1) Exact quantity match (e.g. 58 == 58, 2000 == 2000)
-                # 2) Buy price equals holding average buy price (within 10 paise)
-                # 3) Closed trade quantity is less than or equal to open holdings
+                # 2) Or buy price equals holding average buy price (within 10 paise) for a partial sale
                 is_exact_qty = (int(round(ct_qty)) == int(round(total_open_qty)))
                 is_bp_match = (abs(ct_bp - avg_open_price) <= dec("0.10"))
                 is_partial = (ct_qty < total_open_qty)
 
-                if is_exact_qty or is_bp_match or is_partial:
+                if is_exact_qty or (is_bp_match and is_partial):
                     pnl = ((ct_sp - ct_bp) * ct_qty).quantize(CENT, rounding=ROUND_HALF_UP)
                     reconciliations.append({
                         "client_id": cid,
@@ -3235,6 +3241,17 @@ def create_app(config=None):
             flash("Closed trade record not found.", "error")
             return redirect(url_for("client_detail", cid=cid))
 
+        # Always add closed_trade_id to dismissed/reconciled list so it can never be flagged again
+        raw_dismissed = setting("dismissed_holding_reconciliations", "[]")
+        try:
+            dismissed_ids = json.loads(raw_dismissed)
+            if not isinstance(dismissed_ids, list):
+                dismissed_ids = []
+        except Exception:
+            dismissed_ids = []
+        if closed_trade_id not in dismissed_ids:
+            dismissed_ids.append(closed_trade_id)
+
         # Query all open lots for this stock
         open_lots = db.execute(
             """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date, notes, upload_id, deduct_from_funds
@@ -3248,14 +3265,16 @@ def create_app(config=None):
         ).fetchall()
 
         if not open_lots:
-            flash(f"No open lots remain for {stock}. It is already settled.", "info")
+            set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
+            db.commit()
+            flash(f"Holdings for {stock} are already settled.", "info")
             return redirect(url_for("client_detail", cid=cid))
 
         sell_qty = dec(ct["quantity"] or 0)
         sell_price = dec(ct["sell_price"] or 0)
         sell_date = ct["sell_date"] or str(ct["created_at"])[:10] or date.today().isoformat()
         upload_id = ct["upload_id"]
-        sale_note = ct["notes"] or "Reconciled Sale"
+        sale_note = "Reconciled Sale"
 
         total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
 
@@ -3276,9 +3295,11 @@ def create_app(config=None):
                 db.execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (cid, f"%[Trade #{ct['id']}]%"))
                 db.execute("DELETE FROM trades WHERE id=?", (ct["id"],))
             else:
-                # Excess: reduce closed trade quantity
+                # Excess: reduce closed trade quantity and mark reconciled
                 new_ct_qty = int(round(sell_qty - total_open_qty))
-                db.execute("UPDATE trades SET quantity=? WHERE id=?", (new_ct_qty, ct["id"]))
+                existing_ct_notes = (ct["notes"] or "").strip()
+                ct_notes = f"{existing_ct_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_ct_notes) else (existing_ct_notes or sale_note)
+                db.execute("UPDATE trades SET quantity=?, notes=? WHERE id=?", (new_ct_qty, ct_notes, ct["id"]))
 
         else:
             # Partial match: FIFO deduction across lots, split lot where needed
@@ -3306,7 +3327,7 @@ def create_app(config=None):
                     db.execute("UPDATE trades SET quantity=? WHERE id=?", (rem_open, lot["id"]))
 
                     sold_notes = f"{existing_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_notes) else (existing_notes or sale_note)
-                    insert_trades(cid, [{
+                    new_trade_ids = insert_trades(cid, [{
                         "stock": canonical_stock,
                         "quantity": sold_portion,
                         "buy_price": dec(lot["buy_price"]),
@@ -3316,6 +3337,9 @@ def create_app(config=None):
                         "notes": sold_notes,
                         "deduct_from_funds": lot.get("deduct_from_funds", 0),
                     }], source=ct.get("source") or "portal", upload_id=upload_id or lot.get("upload_id"))
+                    for nid in (new_trade_ids or []):
+                        if nid not in dismissed_ids:
+                            dismissed_ids.append(nid)
                     rem_sell = ZERO
                     break
 
@@ -3323,6 +3347,7 @@ def create_app(config=None):
             db.execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (cid, f"%[Trade #{ct['id']}]%"))
             db.execute("DELETE FROM trades WHERE id=?", (ct["id"],))
 
+        set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
         # Re-sync profits and holdings
         sync_trade_profits_to_funds(db, cid)
         sync_client_holdings_from_trades(cid, db)

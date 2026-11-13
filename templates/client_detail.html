@@ -69,7 +69,7 @@
             {% if rec.is_exact_qty_match %}
               &bull; <strong>Accepting</strong> will close all {{ rec.total_open_qty }} open shares via FIFO and deduct {{ rec.stock }} completely from holdings (0 open shares remaining).
             {% else %}
-              &bull; <strong>Accepting</strong> will deduct {{ rec.closed_trade.quantity }} shares via FIFO from earliest lots, leaving {{ rec.total_open_qty - rec.closed_trade.quantity }} shares open and updating holdings average buy price.
+              &bull; <strong>Accepting</strong> will deduct {{ rec.closed_trade.quantity }} shares via FIFO from earliest lots, leaving {{ [rec.total_open_qty - rec.closed_trade.quantity, 0]|max }} shares open and updating holdings average buy price.
             {% endif %}
           </div>
         </div>
