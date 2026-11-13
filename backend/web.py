@@ -896,49 +896,39 @@ def sync_client_holdings_from_trades(cid=None, db=None):
 
     alias_map = get_alias_mapping(db)
 
-    # 1. First, check if there are any client_shares rows with no corresponding open trades in trades table.
-    #    If so, insert an open trade for each into trades, ensuring no pre-existing holdings are lost.
+    # 1. Clean up any zombie open trades created previously where a closed trade exists for that client and stock
     try:
-        where_cs = "WHERE client_id=?" if cid is not None else ""
-        cs_params = (cid,) if cid is not None else ()
-        raw_cs = db.execute(
-            f"SELECT id, client_id, stock, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares {where_cs}",
-            cs_params
-        ).fetchall()
-
-        for cs in raw_cs:
-            c_id = cs["client_id"]
-            raw_s = (cs["stock"] or "").strip().upper()
-            stk = alias_map.get(raw_s, raw_s)
-            qty = dec(cs["quantity"] or 0)
-            if not stk or qty <= ZERO:
-                continue
-            # Check if open trade exists in trades for this client and stock
-            existing_t = db.execute(
-                """SELECT id FROM trades
-                   WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
-                   LIMIT 1""",
-                (c_id, raw_s)
-            ).fetchone()
-            if not existing_t and stk != raw_s:
-                existing_t = db.execute(
-                    """SELECT id FROM trades
-                       WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
-                       LIMIT 1""",
-                    (c_id, stk)
-                ).fetchone()
-
-            if not existing_t:
-                b_date = str(cs["added_on"])[:10] if cs.get("added_on") else date.today().isoformat()
-                b_price = dec(cs.get("buy_price") or 0)
-                db.execute(
-                    """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
-                       VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
-                    (c_id, stk, qty, b_price, b_date, cs.get("deduct_from_funds", 0))
-                )
+        if cid is not None:
+            db.execute(
+                """DELETE FROM trades
+                   WHERE notes = 'Holding position'
+                     AND (sell_price IS NULL OR sell_price = 0)
+                     AND client_id = ?
+                     AND EXISTS (
+                         SELECT 1 FROM trades t2
+                         WHERE t2.client_id = trades.client_id
+                           AND UPPER(TRIM(t2.stock)) = UPPER(TRIM(trades.stock))
+                           AND t2.sell_price IS NOT NULL
+                           AND t2.id <> trades.id
+                     )""",
+                (cid,)
+            )
+        else:
+            db.execute(
+                """DELETE FROM trades
+                   WHERE notes = 'Holding position'
+                     AND (sell_price IS NULL OR sell_price = 0)
+                     AND EXISTS (
+                         SELECT 1 FROM trades t2
+                         WHERE t2.client_id = trades.client_id
+                           AND UPPER(TRIM(t2.stock)) = UPPER(TRIM(trades.stock))
+                           AND t2.sell_price IS NOT NULL
+                           AND t2.id <> trades.id
+                     )"""
+            )
         db.commit()
     except Exception as exc:
-        current_app.logger.warning("sync_client_holdings_from_trades pre-sync: %s", exc)
+        current_app.logger.warning("sync_client_holdings_from_trades zombie cleanup: %s", exc)
         try:
             db.rollback()
         except Exception:
@@ -1129,17 +1119,13 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=True):
         deduct_val = 1 if r.get("deduct_from_funds") else 0
         stock_lots = lots_by_stock.get(stk, [])
         if not stock_lots:
-            stock_lots = [{
-                "id": r["id"],
-                "stock": stk,
-                "quantity": int(round(qty)),
-                "buy_price": bp.quantize(CENT, rounding=ROUND_HALF_UP),
-                "total_cost": tot_invested,
-                "added_on": str(r["added_on"])[:10] if r.get("added_on") else "",
-                "notes": "",
-                "source": "holding",
-                "deduct_from_funds": deduct_val,
-            }]
+            # Stale holding with no underlying open trades — clean it up and do not display!
+            try:
+                db.execute("DELETE FROM client_shares WHERE id=?", (r["id"],))
+                db.commit()
+            except Exception:
+                pass
+            continue
         results.append({
             "id": r["id"],
             "stock": stk,
@@ -1763,10 +1749,20 @@ def create_app(config=None):
         trade = get_db().execute("SELECT * FROM trades WHERE id=?", (tid,)).fetchone()
         if not trade:
             abort(404)
+        client_id = trade["client_id"]
         get_db().execute("DELETE FROM trades WHERE id=?", (tid,))
-        get_db().execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (trade["client_id"], f"%[Trade #{tid}]%"))
+        get_db().execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (client_id, f"%[Trade #{tid}]%"))
+        sync_client_holdings_from_trades(client_id, get_db())
+        invalidate_stock_caches()
+        invalidate_prices_cache()
         flash("Trade deleted.", "success")
-        return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
+        back = request.form.get("back") or request.referrer
+        from_client = request.form.get("from_client")
+        if from_client or (back and f"/clients/{client_id}" in back):
+            default_target = url_for("client_detail", cid=client_id)
+        else:
+            default_target = url_for("trades_list")
+        return redirect(safe_redirect_target(back, default_target))
 
     @app.route("/trades/<int:tid>/delete-screenshot", methods=["POST"])
     @login_required
@@ -1819,6 +1815,7 @@ def create_app(config=None):
             sell_date=valid_date(request.form.get("sell_date"), "Sell date", required=True),
         )
         values = trade_values(trade)
+        client_id = trade["client_id"]
         get_db().execute(
             "UPDATE trades SET sell_price=?,sell_date=? WHERE id=?",
             (values["sell_price"], values["sell_date"], tid),
@@ -1829,16 +1826,25 @@ def create_app(config=None):
             tag = f"[Trade #{tid}]"
             existing = get_db().execute(
                 "SELECT id FROM funds WHERE client_id=? AND notes LIKE ?",
-                (trade["client_id"], f"%{tag}%")
+                (client_id, f"%{tag}%")
             ).fetchone()
             if not existing:
                 pnl_note = f"[Realized {'Profit' if pnl > 0 else 'Loss'}] {trade['stock']} ({trade['quantity']} sh) {tag}"
                 get_db().execute(
                     "INSERT INTO funds (client_id, amount, added_on, notes) VALUES (?, ?, ?, ?)",
-                    (trade["client_id"], pnl, values["sell_date"], pnl_note),
+                    (client_id, pnl, values["sell_date"], pnl_note),
                 )
+        sync_client_holdings_from_trades(client_id, get_db())
+        invalidate_stock_caches()
+        invalidate_prices_cache()
         flash("Position closed and profit added to bank funds.", "success")
-        return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
+        back = request.form.get("back") or request.referrer
+        from_client = request.form.get("from_client")
+        if from_client or (back and f"/clients/{client_id}" in back):
+            default_target = url_for("client_detail", cid=client_id)
+        else:
+            default_target = url_for("trades_list")
+        return redirect(safe_redirect_target(back, default_target))
 
     @app.route("/trades/bulk-delete", methods=["POST"])
     @login_required
@@ -1853,6 +1859,9 @@ def create_app(config=None):
         count = get_db().execute(
             f"DELETE FROM trades WHERE id IN ({','.join('?' for _ in ids)})", ids
         ).rowcount
+        sync_client_holdings_from_trades(None, get_db())
+        invalidate_stock_caches()
+        invalidate_prices_cache()
         flash(f"Deleted {count} trade(s).", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
 
@@ -2046,14 +2055,13 @@ def create_app(config=None):
             k = (item["client_id"], canon_sym)
             stock_lots = lots_map.get(k, [])
             if not stock_lots:
-                stock_lots = [{
-                    "id": item["id"],
-                    "quantity": item["quantity"],
-                    "buy_price": buy_p,
-                    "total_cost": cost,
-                    "added_on": str(item.get("added_on"))[:10] if item.get("added_on") else "",
-                    "notes": "",
-                }]
+                # Stale holding with no underlying open trades — clean it up!
+                try:
+                    db.execute("DELETE FROM client_shares WHERE id=?", (item["id"],))
+                    db.commit()
+                except Exception:
+                    pass
+                continue
             item["lots"] = stock_lots
             item["lots_count"] = len(stock_lots)
 
@@ -2911,16 +2919,18 @@ def create_app(config=None):
                 )
                 rem_sell = ZERO
 
-        trade_ids = insert_trades(cid, [{
-            "stock": holding["stock"],
-            "quantity": sell_qty,
-            "buy_price": holding["buy_price"],
-            "sell_price": sell_price,
-            "buy_date": buy_date,
-            "sell_date": sell_date,
-            "notes": "Sold from Holdings"
-        }])
-        trade_id = trade_ids[0] if trade_ids else None
+        trade_id = None
+        if rem_sell > ZERO:
+            trade_ids = insert_trades(cid, [{
+                "stock": holding["stock"],
+                "quantity": int(round(rem_sell)),
+                "buy_price": holding["buy_price"],
+                "sell_price": sell_price,
+                "buy_date": buy_date,
+                "sell_date": sell_date,
+                "notes": "Sold from Holdings"
+            }])
+            trade_id = trade_ids[0] if trade_ids else None
         pnl = ((dec(sell_price) - dec(holding["buy_price"])) * dec(sell_qty)).quantize(CENT, rounding=ROUND_HALF_UP)
         if pnl != ZERO:
             tag = f"[Trade #{trade_id}]" if trade_id else f"[Holding Sale #{sid}]"

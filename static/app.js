@@ -220,6 +220,9 @@
       form.action = button.dataset.closeTrade;
       form.elements.sell_price.value = "";
       form.elements.sell_date.min = button.dataset.buyDate || "";
+      if (form.elements.from_client) {
+        form.elements.from_client.value = button.dataset.clientId || "";
+      }
       document.getElementById("close-trade-stock").textContent = button.dataset.stock;
       showDialog("close-trade-dialog");
     });

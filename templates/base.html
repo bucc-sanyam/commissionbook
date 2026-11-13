@@ -92,6 +92,8 @@
 <dialog class="modal modal-sm" id="close-trade-dialog">
   <form method="post" id="close-trade-form" class="modal-inner">
     {{ csrf() }}
+    <input type="hidden" name="back" value="{{ request.full_path }}">
+    <input type="hidden" name="from_client" id="close-trade-from-client" value="">
     <div class="modal-heading"><div><span class="eyebrow">COMPLETE A TRADE</span><h2>Close position</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
     <p class="muted">Record the sale of <strong id="close-trade-stock"></strong> to calculate the realised return and commission.</p>
     <label class="field">Sell price per share<input type="number" name="sell_price" min="0" step="any" required inputmode="decimal"></label>

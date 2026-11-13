@@ -121,10 +121,13 @@
         <button class="icon-btn" type="button" data-dialog="payment-dialog" onclick="document.getElementById('payment-dialog').querySelector('[name=client_id]').value='{{ t.client_id }}'" aria-label="Record payment for this client" title="Record payment">{{ icon('wallet', 15) }}</button>
         <a class="icon-btn" href="{{ url_for('trade_form', tid=t.id) }}" aria-label="Edit {{ t.stock }} trade" title="Edit trade">{{ icon('edit', 16) }}</a>
         {% if t.status == 'Open' and t.buy_price is not none %}
-        <button class="icon-btn" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}" aria-label="Close {{ t.stock }} position" title="Close position">{{ icon('check-circle', 17) }}</button>
+        <button class="icon-btn" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}" data-client-id="{{ t.client_id if not show_client else '' }}" aria-label="Close {{ t.stock }} position" title="Close position">{{ icon('check-circle', 17) }}</button>
         {% endif %}
         <form method="post" action="{{ url_for('trade_delete', tid=t.id) }}" data-confirm="Delete this {{ t.stock }} trade? This cannot be undone.">
-          {{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete {{ t.stock }} trade" title="Delete trade">{{ icon('trash', 16) }}</button>
+          {{ csrf() }}
+          <input type="hidden" name="back" value="{{ request.full_path }}">
+          <input type="hidden" name="from_client" value="{{ t.client_id if not show_client else '' }}">
+          <button class="icon-btn icon-btn-danger" aria-label="Delete {{ t.stock }} trade" title="Delete trade">{{ icon('trash', 16) }}</button>
         </form>
       </div></td>
     </tr>
@@ -251,12 +254,14 @@
           {{ icon('edit', 13) }} Edit
         </a>
         {% if t.status == 'Open' and t.buy_price is not none %}
-        <button class="btn btn-primary btn-xs" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}">
+        <button class="btn btn-primary btn-xs" type="button" data-close-trade="{{ url_for('trade_close', tid=t.id) }}" data-stock="{{ t.stock }}" data-buy-date="{{ t.buy_date or '' }}" data-client-id="{{ t.client_id if not show_client else '' }}">
           {{ icon('check-circle', 13) }} Close
         </button>
         {% endif %}
         <form method="post" action="{{ url_for('trade_delete', tid=t.id) }}" data-confirm="Delete this {{ t.stock }} trade? This cannot be undone." style="display:inline;">
           {{ csrf() }}
+          <input type="hidden" name="back" value="{{ request.full_path }}">
+          <input type="hidden" name="from_client" value="{{ t.client_id if not show_client else '' }}">
           <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete {{ t.stock }} trade" title="Delete trade">
             {{ icon('trash', 14) }}
           </button>
