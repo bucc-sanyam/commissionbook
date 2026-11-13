@@ -2694,6 +2694,96 @@ html, body {
   }
 }
 
+/* Cumulative Holdings and Expandable Lots */
+.holding-main-row.has-sublots:hover {
+  background: #fbfdf9 !important;
+}
+.lots-toggle-btn {
+  transition: transform 0.2s ease, background 0.15s ease;
+}
+.lots-toggle-btn:hover {
+  background: #d8e5d2 !important;
+}
+.holding-lots-subrow td {
+  background: #fcfdfa;
+  border-bottom: 1px solid #edf1e8;
+}
+.lots-nested-table {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.lots-nested-table th {
+  background: #f2f6ee !important;
+  color: #5b6d52 !important;
+  font-weight: 600;
+  border: none !important;
+}
+.lots-nested-table td {
+  padding: 6px 12px !important;
+  border-bottom: 1px solid #f0f4ec !important;
+  white-space: nowrap;
+}
+.lots-nested-table tbody tr:hover {
+  background: #f8faf4 !important;
+}
+.lots-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #e8f0e4;
+  color: #2e5a36;
+}
+
+/* Candlestick Charts Page */
+.charts-page-wrapper {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.charts-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: flex-start;
+}
+@media (max-width: 960px) {
+  .charts-layout {
+    grid-template-columns: 1fr;
+  }
+  .charts-sidebar {
+    max-height: 280px;
+  }
+}
+.charts-sidebar .stock-list-item:hover {
+  background: #f7faf2 !important;
+}
+.charts-sidebar .stock-list-item.active {
+  background: #edf5e8 !important;
+  border-left: 3px solid #3f7352;
+}
+.chart-mode-btn.active {
+  background: #3f7352 !important;
+  color: #fff !important;
+  border-color: #3f7352 !important;
+}
+.chart-mode-btn {
+  transition: all 0.15s ease;
+}
+.range-btn.active {
+  background: #3f7352 !important;
+  color: #fff !important;
+  border-color: #3f7352 !important;
+}
+.range-btn {
+  transition: all 0.15s ease;
+}
+.range-btn:hover {
+  background: #f2f6ee !important;
+}
+.chart-tooltip {
+  transition: opacity 0.15s ease;
+}
+
 
 
 

@@ -1245,6 +1245,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// Expandable holdings trade lots toggle
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".lots-toggle-btn");
+  if (!btn) return;
+  e.preventDefault();
+  const targetId = btn.dataset.target;
+  if (!targetId) return;
+  const targetRow = document.getElementById(targetId);
+  if (!targetRow) return;
+  const isHidden = targetRow.style.display === "none" || targetRow.hidden;
+  targetRow.style.display = isHidden ? "table-row" : "none";
+  targetRow.hidden = !isHidden;
+  const svg = btn.querySelector("svg");
+  if (svg) {
+    svg.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+    svg.style.transition = "transform 0.2s ease";
+  }
+});
+
 
 
 

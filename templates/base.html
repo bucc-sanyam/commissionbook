@@ -52,6 +52,7 @@
       ('clients_list', 'Clients', 'users', ep in ('clients_list', 'client_detail')),
       ('payments_list', 'Payments', 'wallet', ep == 'payments_list'),
       ('holdings_list', 'Holdings', 'trend', ep == 'holdings_list'),
+      ('charts_view', 'Charts', 'candlestick', ep == 'charts_view'),
       ('alerts_list', 'Pop-up Trades', 'send', ep == 'alerts_list')
     ] %}
     <a class="nav-link{{ ' active' if active }}" href="{{ url_for(endpoint) }}" {% if active %}aria-current="page"{% endif %}>{{ icon(glyph, 19) }}<span>{{ label }}</span>{% if active %}<span class="nav-active-dot"></span>{% endif %}</a>

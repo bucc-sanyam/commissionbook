@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
+{% block title %}Candlestick Charts · {{ selected_stock or 'Stocks' }}{% endblock %}
+{% block breadcrumb %}Charts{% endblock %}
+
+{% block content %}
+<div class="charts-page-wrapper">
+  <div class="page-header" style="margin-bottom: 20px;">
+    <div>
+      <span class="eyebrow">{{ icon('candlestick', 13) }} TECHNICAL ANALYSIS</span>
+      <h1 style="font-size: 24px; margin: 4px 0 2px;">Stock Candlestick Charts</h1>
+      <p class="muted" style="margin: 0; font-size: 13px;">Real-time and historical candlestick charts for all shares recorded in the ledger and holdings.</p>
+    </div>
+  </div>
+
+  {% if not stocks %}
+    {{ empty_state('No shares in ledger', 'Once you record trades or holdings, they will automatically appear here with full candlestick charts.', 'candlestick') }}
+  {% else %}
+  <div class="charts-layout">
+    <!-- Left Column: Stocks Picker List -->
+    <aside class="charts-sidebar card" style="padding: 0; overflow: hidden;">
+      <div style="padding: 14px 16px; border-bottom: 1px solid var(--line, #edf1e8); background: #fafcf7;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+          <strong style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #5b6d52;">Ledger Shares</strong>
+          <span class="tiny-tag" style="background:#e8f0e4; color:#2e5a36; font-weight:600; padding:2px 8px; border-radius:12px;">{{ stocks|length }}</span>
+        </div>
+        <div style="position: relative;">
+          <input type="search" id="stock-search-input" placeholder="Filter stocks..." 
+            style="width: 100%; font-size: 12px; padding: 7px 10px 7px 28px; border: 1px solid #d4ded2; border-radius: 6px; box-sizing: border-box; background: #fff;"
+            aria-label="Filter ledger stocks">
+          <span style="position: absolute; left: 8px; top: 7px; color: #9aa28f;">{{ icon('search', 14) }}</span>
+        </div>
+      </div>
+
+      <div class="stock-list-items" id="stock-list-container" style="max-height: 680px; overflow-y: auto;">
+        {% for s in stocks %}
+        <a href="{{ url_for('charts_view', stock=s.symbol) }}" 
+           class="stock-list-item {{ 'active' if s.symbol == selected_stock else '' }}"
+           data-stock="{{ s.symbol }}"
+           data-ticker="{{ s.ticker }}"
+           style="display: block; padding: 12px 16px; border-bottom: 1px solid #f2f5ee; text-decoration: none; color: inherit; transition: background 0.15s;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <strong style="font-size: 13px; color: #173d34;">{{ s.symbol }}</strong>
+              <span class="exchange-badge" style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: #edf2e8; color: #506642; font-weight: 600;">{{ s.exchange }}</span>
+            </div>
+            {% if s.current_price %}
+              <strong class="tabular" style="font-size: 12px;">{{ s.current_price|money }}</strong>
+            {% else %}
+              <span class="muted" style="font-size: 11px;">—</span>
+            {% endif %}
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+            <span class="muted">
+              {% if s.total_quantity > 0 %}
+                {{ s.total_quantity }} sh &bull; {{ s.clients_count }} client{{ 's' if s.clients_count != 1 else '' }}
+              {% else %}
+                {{ s.trades_count }} trade{{ 's' if s.trades_count != 1 else '' }} in ledger
+              {% endif %}
+            </span>
+            {% if s.change is defined and s.change != 0 %}
+              <span class="tabular {{ 'pos' if s.change > 0 else 'neg' }}" style="font-size: 11px; font-weight: 600;">
+                {{ '+' if s.change > 0 else '' }}{{ (s.change_pct|round(2)) if s.change_pct is defined else 0 }}%
+              </span>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <!-- Main Column: Candlestick Chart and Position Breakdown -->
+    <main class="charts-main">
+      {% if selected_info %}
+      <!-- Stock Title & Key KPIs Card -->
+      <section class="card" style="margin-bottom: 16px; padding: 18px 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+              <h2 style="margin: 0; font-size: 24px; color: #173d34;">{{ selected_info.symbol }}</h2>
+              <span class="exchange-pill" style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #e0ebd7; color: #2e5a36;">{{ selected_info.exchange }}:{{ selected_info.ticker }}</span>
+              {% if selected_info.total_quantity > 0 %}
+                <span class="holding-status-pill" style="font-size: 11px; padding: 2px 7px; border-radius: 6px; background: #eef6ec; color: #2e7d32; font-weight: 600;">
+                  Active Holding
+                </span>
+              {% endif %}
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 10px;">
+              {% if selected_info.current_price %}
+                <span style="font-size: 26px; font-weight: 700; color: #173d34;" class="tabular">{{ selected_info.current_price|money }}</span>
+                <span class="tabular {{ 'pos' if selected_info.change > 0 else 'neg' if selected_info.change < 0 else 'muted' }}" style="font-size: 14px; font-weight: 600;">
+                  {{ '+' if selected_info.change > 0 else '' }}{{ selected_info.change|money }} ({{ '+' if selected_info.change > 0 else '' }}{{ (selected_info.change_pct|round(2)) if selected_info.change_pct is defined else 0 }}%)
+                </span>
+                {% if selected_info.updated_at %}
+                  <small class="muted" style="font-size: 11px;">Updated {{ selected_info.updated_at[11:16] }} IST</small>
+                {% endif %}
+              {% else %}
+                <span class="muted" style="font-size: 14px;">Market price pending update</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{{ url_for('trade_form', stock=selected_info.symbol) }}" class="btn btn-primary btn-sm">
+              {{ icon('plus', 14) }} Add trade for {{ selected_info.symbol }}
+            </a>
+            <a href="{{ url_for('alerts_list', stock=selected_info.symbol) }}" class="btn btn-secondary btn-sm">
+              {{ icon('send', 14) }} Trade Advisory
+            </a>
+          </div>
+        </div>
+
+        <!-- Metric mini-cards -->
+        <div class="stock-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #edf1e8;">
+          <div class="sm-card">
+            <span class="sm-label muted" style="font-size: 11px; display: block;">Total Client Holdings</span>
+            <strong style="font-size: 15px; color: #173d34;">{{ selected_info.total_quantity }} shares</strong>
+          </div>
+          <div class="sm-card">
+            <span class="sm-label muted" style="font-size: 11px; display: block;">Clients Holding</span>
+            <strong style="font-size: 15px; color: #173d34;">{{ selected_info.clients_count }} client{{ 's' if selected_info.clients_count != 1 else '' }}</strong>
+          </div>
+          <div class="sm-card">
+            <span class="sm-label muted" style="font-size: 11px; display: block;">Avg Buy Price</span>
+            <strong style="font-size: 15px; color: #173d34;">{{ selected_info.avg_buy_price|money if selected_info.avg_buy_price else '—' }}</strong>
+          </div>
+          <div class="sm-card">
+            <span class="sm-label muted" style="font-size: 11px; display: block;">Total Invested Basis</span>
+            <strong style="font-size: 15px; color: #173d34;">{{ selected_info.total_cost|money if selected_info.total_cost else '—' }}</strong>
+          </div>
+          <div class="sm-card">
+            <span class="sm-label muted" style="font-size: 11px; display: block;">Ledger Trades</span>
+            <strong style="font-size: 15px; color: #173d34;">{{ selected_info.trades_count }} recorded</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Candlestick Chart Container Card -->
+      <section class="card" style="margin-bottom: 20px; padding: 0; overflow: hidden;" id="chart-card-container">
+        <!-- Chart Controls Toolbar -->
+        <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: #fafcf7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <!-- Left: View Mode Toggle -->
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn btn-sm chart-mode-btn active" id="mode-tv-btn" data-mode="tv" style="padding: 4px 10px; font-size: 11px;">
+              TradingView Pro
+            </button>
+            <button type="button" class="btn btn-sm btn-ghost chart-mode-btn" id="mode-canvas-btn" data-mode="canvas" style="padding: 4px 10px; font-size: 11px;">
+              Native Candle Chart
+            </button>
+          </div>
+
+          <!-- Center: Range selectors for native chart -->
+          <div class="native-ranges" id="native-range-controls" style="display: none; align-items: center; gap: 4px;">
+            <button type="button" class="range-btn" data-range="5d" data-interval="15m" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">5D</button>
+            <button type="button" class="range-btn active" data-range="1mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #3f7352; border-radius: 4px; background: #3f7352; color: #fff; cursor: pointer;">1M</button>
+            <button type="button" class="range-btn" data-range="3mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">3M</button>
+            <button type="button" class="range-btn" data-range="6mo" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">6M</button>
+            <button type="button" class="range-btn" data-range="1y" data-interval="1d" style="padding: 3px 8px; font-size: 11px; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">1Y</button>
+          </div>
+
+          <!-- Right: Fullscreen & Live Indicator -->
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="live-dot-wrap" style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #3f7352;">
+              <span class="live-pulse" style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2e7d32;"></span>
+              Candles active
+            </span>
+            <button type="button" class="icon-btn" id="btn-chart-fullscreen" title="Full screen" aria-label="Toggle Fullscreen" style="border: none; background: none; cursor: pointer; color: #555;">
+              {{ icon('scan', 16) }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. TradingView Embed View -->
+        <div id="tv-chart-wrapper" style="height: 560px; width: 100%; position: relative; background: #ffffff;">
+          <div id="tradingview_widget_container" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <!-- 2. Native HTML5 Canvas Candlestick Chart View -->
+        <div id="native-chart-wrapper" style="display: none; height: 560px; width: 100%; position: relative; background: #ffffff; padding: 12px; box-sizing: border-box;">
+          <canvas id="candleCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+          <div id="canvas-tooltip" class="chart-tooltip" hidden style="position: absolute; pointer-events: none; z-index: 10; background: rgba(23, 61, 52, 0.95); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+          <div id="canvas-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #777;">
+            Loading candlestick data...
+          </div>
+        </div>
+      </section>
+
+      <!-- Client Holdings & Recent Trades for this Stock -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        <!-- Card 1: Client Holdings Breakdown -->
+        <section class="card" style="margin: 0;">
+          <div class="card-header">
+            <div>
+              <h2 style="font-size: 16px;">Clients Holding {{ selected_info.symbol }}</h2>
+              <p class="muted" style="font-size: 11px; margin: 0;">Active positions held by clients in Demat/portal books.</p>
+            </div>
+            <span class="tiny-tag">{{ clients_holding|length }}</span>
+          </div>
+
+          {% if clients_holding %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th class="r">Quantity</th>
+                  <th class="r">Avg Price</th>
+                  <th class="r">Value</th>
+                  <th class="r">Unrealized</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ch in clients_holding %}
+                <tr>
+                  <td>
+                    <a class="client-cell" href="{{ url_for('client_detail', cid=ch.client_id) }}">
+                      {{ avatar(ch.client_name, ch.client_id, small=True) }}
+                      <span>{{ ch.client_name }}</span>
+                    </a>
+                  </td>
+                  <td class="r tabular"><strong>{{ ch.quantity }}</strong></td>
+                  <td class="r tabular">{{ ch.buy_price|money }}</td>
+                  <td class="r tabular">{{ ch.current_value|money }}</td>
+                  <td class="r tabular">
+                    <span class="{{ 'pos' if ch.unrealized_pnl >= 0 else 'neg' }}">
+                      {{ '+' if ch.unrealized_pnl >= 0 else '' }}{{ ch.unrealized_pnl|money }}
+                    </span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            {{ empty_state('No client holds ' ~ selected_info.symbol, 'No clients currently have open positions in this stock.', 'users', compact=True) }}
+          {% endif %}
+        </section>
+
+        <!-- Card 2: Ledger Trades for this Stock -->
+        <section class="card" style="margin: 0;">
+          <div class="card-header">
+            <div>
+              <h2 style="font-size: 16px;">Recent Ledger Trades</h2>
+              <p class="muted" style="font-size: 11px; margin: 0;">Trade history in the books for {{ selected_info.symbol }}.</p>
+            </div>
+            <span class="tiny-tag">{{ stock_trades|length }}</span>
+          </div>
+
+          {% if stock_trades %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th class="r">Qty</th>
+                  <th class="r">Buy</th>
+                  <th class="r">Sell</th>
+                  <th>Status</th>
+                  <th class="r">P&amp;L</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for st in stock_trades %}
+                <tr>
+                  <td>
+                    <a class="client-cell" href="{{ url_for('client_detail', cid=st.client_id) }}">
+                      <span>{{ st.client_name }}</span>
+                    </a>
+                  </td>
+                  <td class="r tabular">{{ st.quantity }}</td>
+                  <td class="r tabular">{{ st.buy_price|money if st.buy_price else '—' }}</td>
+                  <td class="r tabular">{{ st.sell_price|money if st.sell_price else '—' }}</td>
+                  <td>
+                    <span class="status-pill {{ 'status-open' if st.status == 'Open' else 'status-closed' }}" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: {{ '#eaf3e5; color: #2e7d32;' if st.status == 'Open' else '#f0f0f0; color: #666;' }}">
+                      {{ st.status }}
+                    </span>
+                  </td>
+                  <td class="r tabular">
+                    {% if st.realized_pnl is not none %}
+                      <span class="{{ 'pos' if st.realized_pnl >= 0 else 'neg' }}">
+                        {{ '+' if st.realized_pnl >= 0 else '' }}{{ st.realized_pnl|money }}
+                      </span>
+                    {% else %}
+                      <span class="muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            {{ empty_state('No trades found', 'No past trades recorded for this stock.', 'book', compact=True) }}
+          {% endif %}
+        </section>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+.charts-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: flex-start;
+}
+@media (max-width: 960px) {
+  .charts-layout {
+    grid-template-columns: 1fr;
+  }
+  .charts-sidebar {
+    max-height: 280px;
+  }
+}
+.stock-list-item:hover {
+  background: #f7faf2 !important;
+}
+.stock-list-item.active {
+  background: #edf5e8 !important;
+  border-left: 3px solid #3f7352;
+}
+.live-pulse {
+  animation: pulse-ring 1.8s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+</style>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const selectedSymbol = "{{ selected_info.symbol if selected_info else '' }}";
+  const ticker = "{{ selected_info.ticker if selected_info else '' }}";
+  const exchange = "{{ selected_info.exchange if selected_info else 'NSE' }}";
+  const tvContainer = document.getElementById("tradingview_widget_container");
+  const tvWrapper = document.getElementById("tv-chart-wrapper");
+  const nativeWrapper = document.getElementById("native-chart-wrapper");
+  const canvas = document.getElementById("candleCanvas");
+  const canvasTooltip = document.getElementById("canvas-tooltip");
+  const canvasLoading = document.getElementById("canvas-loading");
+  const nativeRangeControls = document.getElementById("native-range-controls");
+  const modeTvBtn = document.getElementById("mode-tv-btn");
+  const modeCanvasBtn = document.getElementById("mode-canvas-btn");
+  const stockSearch = document.getElementById("stock-search-input");
+  let currentRange = "1mo";
+  let currentInterval = "1d";
+  let nativeCandles = [];
+
+  // 1. Stock Search Filter in sidebar
+  if (stockSearch) {
+    stockSearch.addEventListener("input", function() {
+      const q = this.value.trim().toLowerCase();
+      document.querySelectorAll(".stock-list-item").forEach(item => {
+        const s = (item.dataset.stock || "").toLowerCase();
+        const t = (item.dataset.ticker || "").toLowerCase();
+        if (!q || s.includes(q) || t.includes(q)) {
+          item.style.display = "block";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    });
+  }
+
+  // 2. Initialize TradingView Widget
+  function initTradingView() {
+    if (!tvContainer || !ticker) return;
+    tvContainer.innerHTML = "";
+    
+    // TradingView symbol e.g. NSE:RELIANCE or BSE:500325
+    const fullTvSymbol = exchange + ":" + ticker;
+    try {
+      if (typeof TradingView !== "undefined") {
+        new TradingView.widget({
+          "autosize": true,
+          "symbol": fullTvSymbol,
+          "interval": "D",
+          "timezone": "Asia/Kolkata",
+          "theme": "light",
+          "style": "1", // 1 = Candlesticks
+          "locale": "en",
+          "toolbar_bg": "#fafcf7",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tradingview_widget_container",
+          "hide_side_toolbar": false,
+          "withdateranges": true,
+          "studies": [
+            "MASimple@tv-basicstudies",
+            "RSI@tv-basicstudies"
+          ]
+        });
+      } else {
+        // Fallback to native chart if TradingView JS failed to load
+        switchToCanvas();
+      }
+    } catch(err) {
+      console.warn("TradingView widget init error:", err);
+      switchToCanvas();
+    }
+  }
+
+  // 3. Switch between TradingView and Native Canvas Chart
+  function switchToTv() {
+    if (tvWrapper) tvWrapper.style.display = "block";
+    if (nativeWrapper) nativeWrapper.style.display = "none";
+    if (nativeRangeControls) nativeRangeControls.style.display = "none";
+    if (modeTvBtn) {
+      modeTvBtn.classList.add("active");
+      modeTvBtn.classList.remove("btn-ghost");
+    }
+    if (modeCanvasBtn) {
+      modeCanvasBtn.classList.remove("active");
+      modeCanvasBtn.classList.add("btn-ghost");
+    }
+  }
+
+  function switchToCanvas() {
+    if (tvWrapper) tvWrapper.style.display = "none";
+    if (nativeWrapper) nativeWrapper.style.display = "block";
+    if (nativeRangeControls) nativeRangeControls.style.display = "flex";
+    if (modeCanvasBtn) {
+      modeCanvasBtn.classList.add("active");
+      modeCanvasBtn.classList.remove("btn-ghost");
+    }
+    if (modeTvBtn) {
+      modeTvBtn.classList.remove("active");
+      modeTvBtn.classList.add("btn-ghost");
+    }
+    loadNativeCandles(currentRange, currentInterval);
+  }
+
+  if (modeTvBtn) modeTvBtn.addEventListener("click", switchToTv);
+  if (modeCanvasBtn) modeCanvasBtn.addEventListener("click", switchToCanvas);
+
+  // 4. Native Canvas Candlestick Chart Renderer
+  function loadNativeCandles(range, interval) {
+    if (!canvas || !selectedSymbol) return;
+    if (canvasLoading) canvasLoading.style.display = "block";
+    
+    fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}/candles?range=${range}&interval=${interval}`)
+      .then(res => res.json())
+      .then(data => {
+        if (canvasLoading) canvasLoading.style.display = "none";
+        if (data && data.candles && data.candles.length) {
+          nativeCandles = data.candles;
+          drawCanvasChart();
+        } else {
+          if (canvasLoading) {
+            canvasLoading.textContent = "No candle data available.";
+            canvasLoading.style.display = "block";
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Candle fetch error:", err);
+        if (canvasLoading) {
+          canvasLoading.textContent = "Could not load candle data.";
+          canvasLoading.style.display = "block";
+        }
+      });
+  }
+
+  function drawCanvasChart(hoverIndex = -1) {
+    if (!canvas || !nativeCandles.length) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Margins
+    const padTop = 25;
+    const padBottom = 45;
+    const padLeft = 15;
+    const padRight = 65;
+    const plotW = w - padLeft - padRight;
+    const plotH = h - padTop - padBottom;
+    const volH = plotH * 0.22; // lower 22% for volume bars
+    const priceH = plotH - volH - 15;
+
+    // Determine price min/max
+    let minPrice = Infinity;
+    let maxPrice = -Infinity;
+    let maxVol = 0;
+    nativeCandles.forEach(c => {
+      if (c.low < minPrice) minPrice = c.low;
+      if (c.high > maxPrice) maxPrice = c.high;
+      if (c.volume > maxVol) maxVol = c.volume;
+    });
+
+    const priceSpan = (maxPrice - minPrice) || 1;
+    const upper = maxPrice + priceSpan * 0.05;
+    const lower = Math.max(0, minPrice - priceSpan * 0.05);
+
+    const getY = (val) => padTop + (upper - val) / (upper - lower) * priceH;
+    const getX = (idx) => padLeft + (idx + 0.5) / nativeCandles.length * plotW;
+
+    // Horizontal Price Grid Lines
+    ctx.strokeStyle = "#edf1e8";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.font = "10px Manrope, sans-serif";
+    ctx.fillStyle = "#647950";
+    ctx.textAlign = "left";
+
+    const steps = 5;
+    for (let s = 0; s <= steps; s++) {
+      const pVal = lower + (upper - lower) * (s / steps);
+      const yPos = getY(pVal);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, yPos);
+      ctx.lineTo(w - padRight, yPos);
+      ctx.stroke();
+
+      ctx.fillText("₹" + pVal.toFixed(2), w - padRight + 6, yPos + 3);
+    }
+    ctx.setLineDash([]);
+
+    // Volume Separator line
+    const volTopY = padTop + priceH + 15;
+    ctx.strokeStyle = "#e2e8dc";
+    ctx.beginPath();
+    ctx.moveTo(padLeft, volTopY);
+    ctx.lineTo(w - padRight, volTopY);
+    ctx.stroke();
+
+    // Draw Candlesticks & Volume
+    const candleWidth = Math.max(2, Math.min(22, (plotW / nativeCandles.length) * 0.72));
+
+    nativeCandles.forEach((c, i) => {
+      const cx = getX(i);
+      const isGreen = c.close >= c.open;
+      const color = isGreen ? "#1e9752" : "#d32f2f";
+
+      // 1. Volume Bar
+      if (maxVol > 0 && c.volume > 0) {
+        const vHeight = (c.volume / maxVol) * volH;
+        const vY = padTop + plotH - vHeight;
+        ctx.fillStyle = isGreen ? "rgba(30, 151, 82, 0.22)" : "rgba(211, 47, 47, 0.22)";
+        ctx.fillRect(cx - candleWidth / 2, vY, candleWidth, vHeight);
+      }
+
+      // 2. High-Low Wick
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, getY(c.high));
+      ctx.lineTo(cx, getY(c.low));
+      ctx.stroke();
+
+      // 3. Open-Close Body
+      const topBody = getY(Math.max(c.open, c.close));
+      const bottomBody = getY(Math.min(c.open, c.close));
+      const bodyH = Math.max(1.5, bottomBody - topBody);
+
+      ctx.fillStyle = color;
+      ctx.fillRect(cx - candleWidth / 2, topBody, candleWidth, bodyH);
+    });
+
+    // Date X-axis labels
+    ctx.fillStyle = "#8a947f";
+    ctx.textAlign = "center";
+    const labelStep = Math.max(1, Math.ceil(nativeCandles.length / 6));
+    nativeCandles.forEach((c, i) => {
+      if (i % labelStep === 0) {
+        const cx = getX(i);
+        const d = new Date(c.time * 1000);
+        const dStr = d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+        ctx.fillText(dStr, cx, h - padBottom + 18);
+      }
+    });
+
+    // Hover Crosshairs & Tooltip
+    if (hoverIndex >= 0 && hoverIndex < nativeCandles.length) {
+      const hc = nativeCandles[hoverIndex];
+      const hx = getX(hoverIndex);
+      const hy = getY(hc.close);
+
+      ctx.strokeStyle = "#496245";
+      ctx.lineWidth = 0.9;
+      ctx.setLineDash([4, 4]);
+
+      // Vertical line
+      ctx.beginPath();
+      ctx.moveTo(hx, padTop);
+      ctx.lineTo(hx, h - padBottom);
+      ctx.stroke();
+
+      // Horizontal line
+      ctx.beginPath();
+      ctx.moveTo(padLeft, hy);
+      ctx.lineTo(w - padRight, hy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Position Tooltip
+      if (canvasTooltip) {
+        const d = new Date(hc.time * 1000);
+        const changeVal = hc.close - hc.open;
+        const changePct = (changeVal / hc.open) * 100;
+        const chgSign = changeVal >= 0 ? "+" : "";
+
+        canvasTooltip.innerHTML = `
+          <div style="font-weight:700; margin-bottom:4px;">${d.toLocaleDateString("en-IN", { weekday:'short', month:'short', day:'numeric', year:'numeric' })}</div>
+          <div>Open: <strong style="color:#d4ded2;">₹${hc.open.toFixed(2)}</strong></div>
+          <div>High: <strong style="color:#a8e6cf;">₹${hc.high.toFixed(2)}</strong></div>
+          <div>Low: <strong style="color:#ffaaa5;">₹${hc.low.toFixed(2)}</strong></div>
+          <div>Close: <strong>₹${hc.close.toFixed(2)}</strong></div>
+          <div>Vol: ${hc.volume.toLocaleString("en-IN")}</div>
+          <div style="margin-top:3px; color:${changeVal >= 0 ? '#4caf50' : '#ff5252'}; font-weight:600;">
+            ${chgSign}₹${changeVal.toFixed(2)} (${chgSign}${changePct.toFixed(2)}%)
+          </div>
+        `;
+        canvasTooltip.hidden = false;
+        const tipX = Math.min(w - 180, Math.max(10, hx + 15));
+        const tipY = Math.min(h - 140, Math.max(10, hy - 40));
+        canvasTooltip.style.left = tipX + "px";
+        canvasTooltip.style.top = tipY + "px";
+      }
+    } else {
+      if (canvasTooltip) canvasTooltip.hidden = true;
+    }
+  }
+
+  // Canvas Mouse Move Crosshair Interaction
+  if (canvas) {
+    canvas.addEventListener("mousemove", function(e) {
+      if (!nativeCandles.length) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const padLeft = 15;
+      const padRight = 65;
+      const plotW = rect.width - padLeft - padRight;
+      const relX = x - padLeft;
+      if (relX < 0 || relX > plotW) {
+        drawCanvasChart(-1);
+        return;
+      }
+      const idx = Math.min(nativeCandles.length - 1, Math.max(0, Math.floor((relX / plotW) * nativeCandles.length)));
+      drawCanvasChart(idx);
+    });
+
+    canvas.addEventListener("mouseleave", function() {
+      drawCanvasChart(-1);
+    });
+
+    window.addEventListener("resize", function() {
+      drawCanvasChart(-1);
+    });
+  }
+
+  // Native Range Buttons
+  document.querySelectorAll(".range-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".range-btn").forEach(b => {
+        b.classList.remove("active");
+        b.style.background = "#fff";
+        b.style.color = "inherit";
+        b.style.borderColor = "#d4ded2";
+      });
+      this.classList.add("active");
+      this.style.background = "#3f7352";
+      this.style.color = "#fff";
+      this.style.borderColor = "#3f7352";
+
+      currentRange = this.dataset.range;
+      currentInterval = this.dataset.interval;
+      loadNativeCandles(currentRange, currentInterval);
+    });
+  });
+
+  // Fullscreen Toggle
+  const fsBtn = document.getElementById("btn-chart-fullscreen");
+  const chartCard = document.getElementById("chart-card-container");
+  if (fsBtn && chartCard) {
+    fsBtn.addEventListener("click", function() {
+      if (!document.fullscreenElement) {
+        chartCard.requestFullscreen().catch(err => console.warn(err));
+      } else {
+        document.exitFullscreen().catch(err => console.warn(err));
+      }
+    });
+  }
+
+  // Initialize TradingView on load
+  initTradingView();
+});
+</script>
+{% endblock %}

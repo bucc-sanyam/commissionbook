@@ -92,6 +92,12 @@ KNOWN_TICKERS: dict[str, str] = {
     "NTPC": "NTPC",
     "ONGC": "ONGC",
     "POWER GRID": "POWERGRID",
+    "BLS": "BLS",
+    "BLS POLYMERS": "BLS",
+    "BLS POLYMERS LIMITED": "BLS",
+    "BLS POLYMERS LTD": "BLS",
+    "BLS INTERNATIONAL": "BLS",
+    "BLS INTERNATIONAL SERVICES": "BLS",
 }
 
 
@@ -384,6 +390,281 @@ def get_cached_prices(db) -> dict[str, dict]:
         except Exception as exc:
             logger.warning("Could not read stock_prices: %s", exc)
             return {}
+
+
+def get_all_ledger_stocks_summary(db) -> list[dict]:
+    """Retrieve all unique stocks present in trades, client holdings, prices, or aliases with complete summary metrics."""
+    alias_map = {}
+    try:
+        alias_rows = db.execute("SELECT alias, canonical_name FROM stock_aliases").fetchall()
+        for ar in alias_rows:
+            alias_map[ar["alias"].strip().upper()] = ar["canonical_name"].strip().upper()
+    except Exception:
+        alias_map = {}
+
+    stocks_set = set()
+    # 1. Stocks from trades
+    try:
+        t_rows = db.execute("SELECT DISTINCT stock FROM trades WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in t_rows:
+            s = (r["stock"] or "").strip().upper()
+            if s:
+                stocks_set.add(alias_map.get(s, s))
+    except Exception:
+        pass
+
+    # 2. Stocks from client_shares
+    try:
+        cs_rows = db.execute("SELECT DISTINCT stock FROM client_shares WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in cs_rows:
+            s = (r["stock"] or "").strip().upper()
+            if s:
+                stocks_set.add(alias_map.get(s, s))
+    except Exception:
+        pass
+
+    # 3. Stocks from stock_prices
+    try:
+        sp_rows = db.execute("SELECT stock FROM stock_prices WHERE stock IS NOT NULL AND TRIM(stock) != ''").fetchall()
+        for r in sp_rows:
+            s = (r["stock"] or "").strip().upper()
+            if s:
+                stocks_set.add(alias_map.get(s, s))
+    except Exception:
+        pass
+
+    # Cached prices
+    cached_prices = get_cached_prices(db)
+
+    # Aggregations from client_shares
+    shares_agg = {}
+    try:
+        agg_rows = db.execute(
+            """SELECT stock, client_id, quantity, buy_price FROM client_shares WHERE quantity > 0"""
+        ).fetchall()
+        for r in agg_rows:
+            sym = alias_map.get((r["stock"] or "").strip().upper(), (r["stock"] or "").strip().upper())
+            if not sym:
+                continue
+            if sym not in shares_agg:
+                shares_agg[sym] = {"total_qty": Decimal("0"), "clients": set(), "total_cost": Decimal("0")}
+            q = Decimal(str(r["quantity"] or 0))
+            bp = Decimal(str(r["buy_price"] or 0))
+            shares_agg[sym]["total_qty"] += q
+            shares_agg[sym]["total_cost"] += q * bp
+            shares_agg[sym]["clients"].add(r["client_id"])
+    except Exception:
+        pass
+
+    # Trade counts
+    trades_count_map = {}
+    try:
+        t_count_rows = db.execute(
+            """SELECT stock, COUNT(*) as c FROM trades WHERE stock IS NOT NULL GROUP BY stock"""
+        ).fetchall()
+        for r in t_count_rows:
+            sym = alias_map.get((r["stock"] or "").strip().upper(), (r["stock"] or "").strip().upper())
+            trades_count_map[sym] = trades_count_map.get(sym, 0) + r["c"]
+    except Exception:
+        pass
+
+    result = []
+    for sym in sorted(stocks_set):
+        quote = cached_prices.get(sym, {})
+        agg = shares_agg.get(sym, {"total_qty": Decimal("0"), "clients": set(), "total_cost": Decimal("0")})
+        tickers = resolve_ticker_candidates(sym, alias_map)
+        ticker = tickers[0] if tickers else sym
+
+        cmp = quote.get("current_price")
+        chg = quote.get("change", Decimal("0"))
+        chg_pct = quote.get("change_pct", Decimal("0"))
+        tot_qty = int(round(agg["total_qty"]))
+        avg_bp = (agg["total_cost"] / agg["total_qty"]).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if agg["total_qty"] > Decimal("0") else Decimal("0")
+
+        result.append({
+            "symbol": sym,
+            "ticker": ticker,
+            "exchange": "NSE" if not ticker.isdigit() else "BSE",
+            "current_price": cmp,
+            "change": chg,
+            "change_pct": chg_pct,
+            "updated_at": quote.get("updated_at"),
+            "total_quantity": tot_qty,
+            "clients_count": len(agg["clients"]),
+            "avg_buy_price": avg_bp,
+            "total_cost": agg["total_cost"],
+            "trades_count": trades_count_map.get(sym, 0),
+        })
+
+    # Sort so stocks with active holdings appear first, then alphabetically
+    result.sort(key=lambda s: (-s["total_quantity"], s["symbol"]))
+    return result
+
+
+def fetch_stock_candles(raw_symbol: str, range_str: str = "1mo", interval: str = "1d", db=None) -> dict:
+    """Fetch candlestick (OHLCV) chart data for a stock, falling back to deterministic synthetic candles if external provider is unreachable."""
+    alias_map = {}
+    if db is not None:
+        try:
+            alias_rows = db.execute("SELECT alias, canonical_name FROM stock_aliases").fetchall()
+            for ar in alias_rows:
+                alias_map[ar["alias"].strip().upper()] = ar["canonical_name"].strip().upper()
+        except Exception:
+            alias_map = {}
+
+    candidates = resolve_ticker_candidates(raw_symbol, alias_map)
+    headers = {"User-Agent": USER_AGENTS[0], "Accept": "application/json"}
+
+    valid_ranges = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "max"}
+    if range_str not in valid_ranges:
+        range_str = "1mo"
+
+    valid_intervals = {"1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"}
+    if interval not in valid_intervals:
+        interval = "1d"
+
+    # Attempt live query from Yahoo Finance
+    for candidate in candidates:
+        variants = []
+        if not candidate.endswith(".NS") and not candidate.endswith(".BO"):
+            variants = [f"{candidate}.NS", f"{candidate}.BO"]
+        else:
+            variants = [candidate]
+
+        for ticker in variants:
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval={interval}&range={range_str}"
+            try:
+                req = urllib.request.Request(url, headers=headers)
+                with urllib.request.urlopen(req, timeout=2.5) as resp:
+                    if resp.status != 200:
+                        continue
+                    data = json.loads(resp.read().decode("utf-8"))
+
+                result = data.get("chart", {}).get("result")
+                if not result or len(result) == 0:
+                    continue
+
+                res = result[0]
+                timestamps = res.get("timestamp", [])
+                quote_block = res.get("indicators", {}).get("quote", [{}])[0]
+                opens = quote_block.get("open", [])
+                highs = quote_block.get("high", [])
+                lows = quote_block.get("low", [])
+                closes = quote_block.get("close", [])
+                volumes = quote_block.get("volume", [0] * len(timestamps))
+
+                candles = []
+                for i, ts in enumerate(timestamps):
+                    if i >= len(opens) or i >= len(closes):
+                        break
+                    o, h, l, c = opens[i], highs[i], lows[i], closes[i]
+                    if o is None or h is None or l is None or c is None:
+                        continue
+                    v = volumes[i] if i < len(volumes) and volumes[i] is not None else 0
+                    candles.append({
+                        "time": int(ts),
+                        "open": float(round(Decimal(str(o)), 2)),
+                        "high": float(round(Decimal(str(h)), 2)),
+                        "low": float(round(Decimal(str(l)), 2)),
+                        "close": float(round(Decimal(str(c)), 2)),
+                        "volume": int(v),
+                    })
+
+                if candles:
+                    return {
+                        "status": "ok",
+                        "stock": raw_symbol,
+                        "ticker": candidate.replace(".NS", "").replace(".BO", ""),
+                        "exchange": "BSE" if ticker.endswith(".BO") else "NSE",
+                        "range": range_str,
+                        "interval": interval,
+                        "candles": candles,
+                        "source": "live",
+                    }
+            except Exception as exc:
+                logger.debug("Candle fetch error for %s (%s): %s", candidate, ticker, exc)
+                continue
+
+    # Fallback to realistic deterministic candles based on known stock prices or trade history
+    base_price = 100.0
+    if db is not None:
+        try:
+            sp = db.execute("SELECT current_price, previous_close FROM stock_prices WHERE UPPER(TRIM(stock))=?", (raw_symbol.strip().upper(),)).fetchone()
+            if sp and sp["current_price"]:
+                base_price = float(sp["current_price"])
+            else:
+                tp = db.execute("SELECT buy_price, sell_price FROM trades WHERE UPPER(TRIM(stock))=? AND (buy_price > 0 OR sell_price > 0) ORDER BY id DESC LIMIT 1", (raw_symbol.strip().upper(),)).fetchone()
+                if tp:
+                    base_price = float(tp["buy_price"] or tp["sell_price"] or 100.0)
+        except Exception:
+            pass
+
+    range_days = {
+        "1d": 1,
+        "5d": 5,
+        "1mo": 30,
+        "3mo": 90,
+        "6mo": 180,
+        "1y": 365,
+        "2y": 730,
+        "5y": 1825,
+        "max": 1825,
+    }.get(range_str, 30)
+
+    import random
+    seed_val = int(base_price * 100) + sum(ord(c) for c in raw_symbol)
+    rng = random.Random(seed_val)
+
+    now_dt = datetime.now(timezone.utc).replace(hour=10, minute=0, second=0, microsecond=0)
+    trading_days = []
+    curr = now_dt
+    target_count = min(range_days, 250 if range_str in ("1y", "2y", "5y", "max") else range_days)
+    while len(trading_days) < target_count:
+        if curr.weekday() < 5:
+            trading_days.append(curr)
+        curr -= timedelta(days=1)
+    trading_days.reverse()
+
+    # Walk backwards to derive starting price
+    current_walk = base_price * (0.90 + rng.random() * 0.15)
+    fallback_candles = []
+    for day in trading_days:
+        daily_drift = (rng.random() - 0.48) * 0.025 * current_walk
+        o = round(current_walk, 2)
+        c = round(max(0.5, current_walk + daily_drift), 2)
+        spread = abs(c - o)
+        h = round(max(o, c) + rng.random() * max(spread * 0.8, current_walk * 0.012), 2)
+        l = round(max(0.2, min(o, c) - rng.random() * max(spread * 0.8, current_walk * 0.012)), 2)
+        v = int(rng.randint(25000, 350000))
+        fallback_candles.append({
+            "time": int(day.timestamp()),
+            "open": o,
+            "high": h,
+            "low": l,
+            "close": c,
+            "volume": v,
+        })
+        current_walk = c
+
+    # Ensure the last candle close matches current_price if known
+    if fallback_candles and base_price > 0:
+        fallback_candles[-1]["close"] = round(base_price, 2)
+        if fallback_candles[-1]["close"] > fallback_candles[-1]["high"]:
+            fallback_candles[-1]["high"] = fallback_candles[-1]["close"]
+        if fallback_candles[-1]["close"] < fallback_candles[-1]["low"]:
+            fallback_candles[-1]["low"] = fallback_candles[-1]["close"]
+
+    chosen_ticker = candidates[0] if candidates else raw_symbol
+    return {
+        "status": "ok",
+        "stock": raw_symbol,
+        "ticker": chosen_ticker,
+        "exchange": "NSE" if not chosen_ticker.isdigit() else "BSE",
+        "range": range_str,
+        "interval": interval,
+        "candles": fallback_candles,
+        "source": "model",
+    }
 
 
 class DailyPriceScheduler:

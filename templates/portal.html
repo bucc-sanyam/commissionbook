@@ -179,17 +179,30 @@
           </thead>
           <tbody>
             {% for h in shares %}
-            <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
+            <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}" class="holding-main-row {% if h.lots and h.lots|length > 1 %}has-sublots{% endif %}">
               <td>
-                <div class="stock-sym-wrap">
-                  <strong>{{ h.stock }}</strong>
-                  <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
-                    {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
-                  </span>
+                <div class="stock-sym-wrap" style="display: flex; align-items: center; gap: 8px;">
+                  {% if h.lots and h.lots|length > 1 %}
+                  <button type="button" class="lots-toggle-btn icon-btn" data-target="portal-lots-{{ loop.index }}" aria-label="Toggle trade lots for {{ h.stock }}" title="View {{ h.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                    {{ icon('chevron-down', 14) }}
+                  </button>
+                  {% endif %}
+                  <div>
+                    <strong style="font-size: 13px;">{{ h.stock }}</strong>
+                    {% if h.lots and h.lots|length > 1 %}
+                      <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ h.lots|length }} trades</span>
+                    {% endif %}
+                    <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
+                      {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
+                    </span>
+                  </div>
                 </div>
               </td>
               <td class="r tabular"><strong>{{ (h.quantity|int) if h.quantity else '—' }}</strong></td>
-              <td class="r tabular">{{ h.buy_price|money if h.buy_price else '—' }}</td>
+              <td class="r tabular">
+                <span title="Weighted Average Price">{{ h.buy_price|money if h.buy_price else '—' }}</span>
+                {% if h.lots and h.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
+              </td>
               <td class="r tabular">
                 {% if h.cmp %}
                   <span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</span>
@@ -212,6 +225,37 @@
               </td>
               <td class="r date-cell muted">{{ h.added_on[:10] }}</td>
             </tr>
+            {% if h.lots and h.lots|length > 1 %}
+            <tr class="holding-lots-subrow" id="portal-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+              <td colspan="7" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
+                <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                  {{ icon('book', 12) }} Open Trades for {{ h.stock }} &bull; Accumulated {{ h.quantity }} shares at average {{ h.buy_price|money }}
+                </div>
+                <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+                  <thead>
+                    <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                      <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
+                      <th style="padding: 6px 12px; text-align: right;">Quantity</th>
+                      <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
+                      <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
+                      <th style="padding: 6px 12px; text-align: left;">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lot in h.lots %}
+                    <tr style="border-top: 1px solid #edf1e8;">
+                      <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
+                      <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
+                      <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
+                      <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
+                      <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
             {% endfor %}
           </tbody>
         </table>
@@ -270,6 +314,19 @@
                 <strong class="mtd-val">{{ h.added_on[:10] }}</strong>
               </div>
             </div>
+            {% if h.lots and h.lots|length > 1 %}
+            <div class="mobile-lots-breakdown" style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #d4ded2;">
+              <span style="font-size: 11px; font-weight: 600; color: #44593c; display: block; margin-bottom: 6px;">
+                Open Trades Breakdown ({{ h.lots|length }} trades at avg {{ h.buy_price|money }}):
+              </span>
+              {% for lot in h.lots %}
+              <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #edf1e8;">
+                <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
+                <strong class="tabular" style="color: #173d34;">{{ lot.total_cost|money }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
           </div>
         </details>
         {% endfor %}

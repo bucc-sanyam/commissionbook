@@ -43,7 +43,8 @@ from .database import get_db, install_database
 from .prices import (
     DailyPriceScheduler, fetch_stock_quote, get_all_held_stocks,
     get_cached_prices, invalidate_prices_cache, is_market_hours,
-    update_all_stock_prices, IST,
+    update_all_stock_prices, IST, get_all_ledger_stocks_summary,
+    fetch_stock_candles,
 )
 from .security import (
     configure_app, credential_version, csrf_token, local_setup_allowed, require_csrf,
@@ -858,98 +859,241 @@ def aggregate_clients_sql(start=None, end=None):
 
 
 def sync_client_holdings_from_trades(cid=None, db=None):
-    """Sync open buy trades into client_shares in batch so client_shares remains the single canonical store."""
+    """Sync open buy trades into client_shares, accumulating all open trades per client and stock
+    into a single cumulative holding with weighted average buy price (like standard Demat/trading accounts)."""
     if db is None:
         db = get_db()
 
+    alias_map = get_alias_mapping(db)
+
+    # 1. First, check if there are any client_shares rows with no corresponding open trades in trades table.
+    #    If so, insert an open trade for each into trades, ensuring no pre-existing holdings are lost.
+    try:
+        where_cs = "WHERE client_id=?" if cid is not None else ""
+        cs_params = (cid,) if cid is not None else ()
+        raw_cs = db.execute(
+            f"SELECT id, client_id, stock, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares {where_cs}",
+            cs_params
+        ).fetchall()
+
+        for cs in raw_cs:
+            c_id = cs["client_id"]
+            raw_s = (cs["stock"] or "").strip().upper()
+            stk = alias_map.get(raw_s, raw_s)
+            qty = dec(cs["quantity"] or 0)
+            if not stk or qty <= ZERO:
+                continue
+            # Check if open trade exists in trades for this client and stock
+            existing_t = db.execute(
+                """SELECT id FROM trades
+                   WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+                   LIMIT 1""",
+                (c_id, raw_s)
+            ).fetchone()
+            if not existing_t and stk != raw_s:
+                existing_t = db.execute(
+                    """SELECT id FROM trades
+                       WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+                       LIMIT 1""",
+                    (c_id, stk)
+                ).fetchone()
+
+            if not existing_t:
+                b_date = str(cs["added_on"])[:10] if cs.get("added_on") else date.today().isoformat()
+                db.execute(
+                    """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+                       VALUES (?, ?, ?, ?, ?, 'Holding position', 'holdings', ?)""",
+                    (c_id, stk, qty, cs["buy_price"], b_date, cs.get("deduct_from_funds", 0))
+                )
+        db.commit()
+    except Exception as exc:
+        current_app.logger.warning("sync_client_holdings_from_trades pre-sync: %s", exc)
+
+    # 2. Query all open trades for client(s)
     where_sql = "WHERE client_id=?" if cid is not None else ""
     params = (cid,) if cid is not None else ()
 
     try:
         open_trades = db.execute(
             f"""SELECT id, client_id, stock, quantity, buy_price, COALESCE(buy_date, created_at) as added_on,
-                       COALESCE(deduct_from_funds, 0) as deduct_from_funds
+                       COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, source
                 FROM trades
                 {where_sql} {"AND" if where_sql else "WHERE"} buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
-                ORDER BY id ASC""",
+                ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
             params
         ).fetchall()
-        if not open_trades:
-            return
 
-        client_ids = list({ot["client_id"] for ot in open_trades})
-        placeholders = ",".join("?" for _ in client_ids)
-        existing_rows = db.execute(
-            f"SELECT client_id, UPPER(TRIM(stock)) as stock FROM client_shares WHERE client_id IN ({placeholders})",
-            client_ids
-        ).fetchall()
-        existing_set = {(r["client_id"], r["stock"]) for r in existing_rows}
-        alias_map = get_alias_mapping(db)
-
-        to_insert = []
+        # Group open trades by (client_id, canonical_stock)
+        grouped = {}
         for ot in open_trades:
             c_id = ot["client_id"]
             raw_s = (ot["stock"] or "").strip().upper()
             stk = alias_map.get(raw_s, raw_s)
             if not stk:
                 continue
-            if (c_id, stk) not in existing_set:
-                qty = int(round(dec(ot["quantity"])))
-                bp = dec(ot["buy_price"]).quantize(CENT, rounding=ROUND_HALF_UP)
-                added_on = ot["added_on"] or date.today().isoformat()
-                if isinstance(added_on, (date, datetime)):
-                    added_on = added_on.isoformat()
-                elif len(str(added_on)) > 10:
-                    added_on = str(added_on)[:10]
-                deduct_val = 1 if ot.get("deduct_from_funds") else 0
-                to_insert.append((c_id, stk, qty, bp, added_on, deduct_val))
-                existing_set.add((c_id, stk))
+            key = (c_id, stk)
+            if key not in grouped:
+                grouped[key] = []
+            grouped[key].append(ot)
 
-        for item in to_insert:
-            db.execute(
-                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds) VALUES (?, ?, ?, ?, ?, ?)",
-                item
-            )
-        if to_insert:
-            db.commit()
+        # Clients to process
+        if cid is not None:
+            target_cids = [cid]
+        else:
+            all_c = db.execute("SELECT id FROM clients").fetchall()
+            target_cids = [c["id"] for c in all_c]
+
+        for target_cid in target_cids:
+            client_keys = [k for k in grouped.keys() if k[0] == target_cid]
+            seen_stocks = set()
+
+            for key in client_keys:
+                stk = key[1]
+                seen_stocks.add(stk)
+                trades_list = grouped[key]
+
+                total_qty = ZERO
+                total_cost = ZERO
+                earliest_date = None
+                deduct_val = 0
+
+                for t in trades_list:
+                    qty = dec(t["quantity"] or 0)
+                    bp = dec(t["buy_price"] or 0)
+                    if qty > ZERO:
+                        total_qty += qty
+                        total_cost += qty * bp
+                        if t.get("deduct_from_funds"):
+                            deduct_val = 1
+                        t_date = str(t["added_on"])[:10] if t.get("added_on") else ""
+                        if t_date and (not earliest_date or t_date < earliest_date):
+                            earliest_date = t_date
+
+                if total_qty > ZERO:
+                    avg_buy_price = (total_cost / total_qty).quantize(CENT, rounding=ROUND_HALF_UP)
+                    earliest_date = earliest_date or date.today().isoformat()
+                    int_qty = int(round(total_qty))
+
+                    # Check if client_shares already has this (client_id, stock)
+                    existing_cs = db.execute(
+                        "SELECT id FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
+                        (target_cid, stk)
+                    ).fetchall()
+
+                    if existing_cs:
+                        db.execute(
+                            "UPDATE client_shares SET quantity=?, buy_price=?, added_on=?, deduct_from_funds=? WHERE id=?",
+                            (int_qty, avg_buy_price, earliest_date, deduct_val, existing_cs[0]["id"])
+                        )
+                        for dup in existing_cs[1:]:
+                            db.execute("DELETE FROM client_shares WHERE id=?", (dup["id"],))
+                    else:
+                        db.execute(
+                            "INSERT INTO client_shares (client_id, stock, quantity, buy_price, added_on, deduct_from_funds) VALUES (?, ?, ?, ?, ?, ?)",
+                            (target_cid, stk, int_qty, avg_buy_price, earliest_date, deduct_val)
+                        )
+                else:
+                    db.execute(
+                        "DELETE FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
+                        (target_cid, stk)
+                    )
+
+            # Clean up any stocks in client_shares for this client that no longer have open trades
+            current_cs = db.execute(
+                "SELECT id, UPPER(TRIM(stock)) as stock FROM client_shares WHERE client_id=?",
+                (target_cid,)
+            ).fetchall()
+            for cs in current_cs:
+                cs_stock = alias_map.get(cs["stock"], cs["stock"])
+                if cs_stock not in seen_stocks:
+                    db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
+
+        db.commit()
     except Exception as exc:
         current_app.logger.warning("sync_client_holdings_from_trades: %s", exc)
 
 
-def get_client_calculated_holdings(cid, db=None, sync_trades=False):
+def get_client_calculated_holdings(cid, db=None, sync_trades=True):
     if db is None:
         db = get_db()
 
     if sync_trades:
         sync_client_holdings_from_trades(cid, db)
 
+    alias_map = get_alias_mapping(db)
+
+    # Fetch individual open trade lots for this client
     try:
-        raw_shares = db.execute(
-            "SELECT id, stock, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares WHERE client_id=? ORDER BY stock ASC",
+        open_trades = db.execute(
+            """SELECT id, client_id, stock, quantity, buy_price,
+                      COALESCE(buy_date, created_at) as added_on,
+                      COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, source
+               FROM trades
+               WHERE client_id=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
             (cid,)
         ).fetchall()
     except Exception:
-        try:
-            raw_shares = db.execute(
-                "SELECT id, stock, quantity, buy_price, added_on FROM client_shares WHERE client_id=? ORDER BY stock ASC",
-                (cid,)
-            ).fetchall()
-        except Exception:
-            raw_shares = []
+        open_trades = []
 
-    alias_map = get_alias_mapping(db)
-    results = []
-    for r in raw_shares:
-        raw_s = (r["stock"] or "").strip().upper()
+    lots_by_stock = {}
+    for ot in open_trades:
+        raw_s = (ot["stock"] or "").strip().upper()
         stk = alias_map.get(raw_s, raw_s)
         if not stk:
             continue
+        if stk not in lots_by_stock:
+            lots_by_stock[stk] = []
+        ot_qty = dec(ot["quantity"] or 0)
+        ot_bp = dec(ot["buy_price"] or 0)
+        lots_by_stock[stk].append({
+            "id": ot["id"],
+            "stock": stk,
+            "quantity": int(round(ot_qty)),
+            "buy_price": ot_bp.quantize(CENT, rounding=ROUND_HALF_UP),
+            "total_cost": (ot_qty * ot_bp).quantize(CENT, rounding=ROUND_HALF_UP),
+            "added_on": str(ot["added_on"])[:10] if ot.get("added_on") else "",
+            "notes": ot.get("notes") or "",
+            "source": ot.get("source") or "",
+            "deduct_from_funds": 1 if ot.get("deduct_from_funds") else 0,
+        })
+
+    # Fetch accumulated positions from client_shares
+    try:
+        raw_shares = db.execute(
+            "SELECT id, stock, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares WHERE client_id=? AND quantity > 0 ORDER BY stock ASC",
+            (cid,)
+        ).fetchall()
+    except Exception:
+        raw_shares = []
+
+    results = []
+    seen_stocks = set()
+    for r in raw_shares:
+        raw_s = (r["stock"] or "").strip().upper()
+        stk = alias_map.get(raw_s, raw_s)
+        if not stk or stk in seen_stocks:
+            continue
+        seen_stocks.add(stk)
         qty = dec(r["quantity"]) if r["quantity"] is not None else ZERO
         bp = dec(r["buy_price"]) if r["buy_price"] is not None else ZERO
         if qty <= ZERO:
             continue
         tot_invested = (qty * bp).quantize(CENT, rounding=ROUND_HALF_UP)
         deduct_val = 1 if r.get("deduct_from_funds") else 0
+        stock_lots = lots_by_stock.get(stk, [])
+        if not stock_lots:
+            stock_lots = [{
+                "id": r["id"],
+                "stock": stk,
+                "quantity": int(round(qty)),
+                "buy_price": bp.quantize(CENT, rounding=ROUND_HALF_UP),
+                "total_cost": tot_invested,
+                "added_on": str(r["added_on"])[:10] if r.get("added_on") else "",
+                "notes": "",
+                "source": "holding",
+                "deduct_from_funds": deduct_val,
+            }]
         results.append({
             "id": r["id"],
             "stock": stk,
@@ -958,7 +1102,28 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=False):
             "total_invested": tot_invested,
             "added_on": str(r["added_on"]) if r.get("added_on") else "",
             "deduct_from_funds": deduct_val,
+            "lots": stock_lots,
+            "lots_count": len(stock_lots),
         })
+
+    # In case any stock has open trades but didn't make it to client_shares yet
+    for stk, stock_lots in lots_by_stock.items():
+        if stk not in seen_stocks and stock_lots:
+            seen_stocks.add(stk)
+            tot_qty = sum((l["quantity"] for l in stock_lots), 0)
+            tot_invested = sum((l["total_cost"] for l in stock_lots), ZERO)
+            avg_bp = (tot_invested / dec(tot_qty)).quantize(CENT, rounding=ROUND_HALF_UP) if tot_qty else ZERO
+            results.append({
+                "id": stock_lots[0]["id"],
+                "stock": stk,
+                "quantity": tot_qty,
+                "buy_price": avg_bp,
+                "total_invested": tot_invested,
+                "added_on": stock_lots[0]["added_on"],
+                "deduct_from_funds": 1 if any(l.get("deduct_from_funds") for l in stock_lots) else 0,
+                "lots": stock_lots,
+                "lots_count": len(stock_lots),
+            })
 
     results.sort(key=lambda x: x["stock"])
     return results
@@ -1770,6 +1935,7 @@ def create_app(config=None):
     def holdings_list():
         stock_query = request.args.get("stock", "").strip().upper()
         db = get_db()
+        sync_client_holdings_from_trades(None, db)
 
         base_query = """
             SELECT h.id, h.stock, c.name as client_name, c.id as client_id, h.quantity, h.buy_price, h.added_on
@@ -1788,6 +1954,33 @@ def create_app(config=None):
                 base_query + " ORDER BY h.stock, lower(c.name)"
             ).fetchall()
 
+        alias_map = get_alias_mapping(db)
+        open_trades = db.execute(
+            """SELECT id, client_id, stock, quantity, buy_price,
+                      COALESCE(buy_date, created_at) as added_on,
+                      COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, source
+               FROM trades
+               WHERE buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC"""
+        ).fetchall()
+        lots_map = {}
+        for ot in open_trades:
+            raw_s = (ot["stock"] or "").strip().upper()
+            stk = alias_map.get(raw_s, raw_s)
+            k = (ot["client_id"], stk)
+            if k not in lots_map:
+                lots_map[k] = []
+            ot_qty = dec(ot["quantity"] or 0)
+            ot_bp = dec(ot["buy_price"] or 0)
+            lots_map[k].append({
+                "id": ot["id"],
+                "quantity": int(round(ot_qty)),
+                "buy_price": ot_bp.quantize(CENT, rounding=ROUND_HALF_UP),
+                "total_cost": (ot_qty * ot_bp).quantize(CENT, rounding=ROUND_HALF_UP),
+                "added_on": str(ot["added_on"])[:10] if ot.get("added_on") else "",
+                "notes": ot.get("notes") or "",
+            })
+
         prices = get_cached_prices(db)
         holdings = []
         total_invested = ZERO
@@ -1802,7 +1995,22 @@ def create_app(config=None):
             item["quantity"] = int(round(qty))
 
             stock_sym = (item.get("stock") or "").strip().upper()
-            quote = prices.get(stock_sym)
+            canon_sym = alias_map.get(stock_sym, stock_sym)
+            k = (item["client_id"], canon_sym)
+            stock_lots = lots_map.get(k, [])
+            if not stock_lots:
+                stock_lots = [{
+                    "id": item["id"],
+                    "quantity": item["quantity"],
+                    "buy_price": buy_p,
+                    "total_cost": cost,
+                    "added_on": str(item.get("added_on"))[:10] if item.get("added_on") else "",
+                    "notes": "",
+                }]
+            item["lots"] = stock_lots
+            item["lots_count"] = len(stock_lots)
+
+            quote = prices.get(stock_sym) or prices.get(canon_sym)
             if quote:
                 cmp = quote["current_price"]
                 cur_val = qty * cmp
@@ -1845,6 +2053,109 @@ def create_app(config=None):
             known_stocks=get_known_stocks(get_db()),
             client_entered_stocks=get_client_entered_stocks(get_db()),
         )
+
+    @app.route("/charts")
+    @login_required
+    def charts_view():
+        db = get_db()
+        stocks = get_all_ledger_stocks_summary(db)
+        selected_stock = request.args.get("stock", "").strip().upper()
+        if not selected_stock and stocks:
+            selected_stock = stocks[0]["symbol"]
+
+        alias_map = get_alias_mapping(db)
+        canonical_selected = alias_map.get(selected_stock, selected_stock) if selected_stock else ""
+
+        selected_info = None
+        for s in stocks:
+            if s["symbol"] == canonical_selected or s["symbol"] == selected_stock:
+                selected_info = s
+                break
+        if not selected_info and stocks:
+            selected_info = stocks[0]
+            canonical_selected = selected_info["symbol"]
+            selected_stock = canonical_selected
+
+        enriched_clients_holding = []
+        if canonical_selected:
+            try:
+                ch_rows = db.execute(
+                    """SELECT c.id as client_id, c.name as client_name, cs.stock, cs.quantity, cs.buy_price
+                       FROM client_shares cs
+                       JOIN clients c ON c.id = cs.client_id
+                       WHERE c.active = 1 AND cs.quantity > 0"""
+                ).fetchall()
+                cmp = selected_info.get("current_price") if selected_info else None
+                for r in ch_rows:
+                    r_stk = alias_map.get((r["stock"] or "").strip().upper(), (r["stock"] or "").strip().upper())
+                    if r_stk == canonical_selected:
+                        q = dec(r["quantity"] or 0)
+                        bp = dec(r["buy_price"] or 0)
+                        invested = (q * bp).quantize(CENT, rounding=ROUND_HALF_UP)
+                        cur_val = (q * cmp).quantize(CENT, rounding=ROUND_HALF_UP) if cmp else invested
+                        pnl = cur_val - invested
+                        pnl_pct = (pnl / invested * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if invested else ZERO
+                        enriched_clients_holding.append({
+                            "client_id": r["client_id"],
+                            "client_name": r["client_name"],
+                            "quantity": int(round(q)),
+                            "buy_price": bp,
+                            "invested": invested,
+                            "current_value": cur_val,
+                            "unrealized_pnl": pnl,
+                            "unrealized_pct": pnl_pct,
+                        })
+            except Exception as exc:
+                current_app.logger.warning("Error fetching client holdings for stock %s: %s", canonical_selected, exc)
+
+        stock_trades = []
+        if canonical_selected:
+            try:
+                all_t = db.execute(
+                    """SELECT t.*, c.name as client_name
+                       FROM trades t
+                       JOIN clients c ON c.id = t.client_id
+                       ORDER BY COALESCE(t.sell_date, t.buy_date, t.created_at) DESC LIMIT 25"""
+                ).fetchall()
+                for t in all_t:
+                    t_stk = alias_map.get((t["stock"] or "").strip().upper(), (t["stock"] or "").strip().upper())
+                    if t_stk == canonical_selected:
+                        t_dict = dict(t)
+                        t_qty = dec(t["quantity"] or 0)
+                        t_bp = dec(t["buy_price"] or 0) if t.get("buy_price") is not None else None
+                        t_sp = dec(t["sell_price"] or 0) if t.get("sell_price") is not None else None
+                        t_pnl = None
+                        if t_bp is not None and t_sp is not None:
+                            t_pnl = ((t_sp - t_bp) * t_qty).quantize(CENT, rounding=ROUND_HALF_UP)
+                        t_dict.update({
+                            "quantity": int(round(t_qty)),
+                            "buy_price": t_bp,
+                            "sell_price": t_sp,
+                            "realized_pnl": t_pnl,
+                            "status": "Closed" if t_sp is not None else "Open",
+                        })
+                        stock_trades.append(t_dict)
+            except Exception as exc:
+                current_app.logger.warning("Error fetching trades for stock %s: %s", canonical_selected, exc)
+
+        return render_template(
+            "charts.html",
+            stocks=stocks,
+            selected_stock=canonical_selected or selected_stock,
+            selected_info=selected_info,
+            clients_holding=enriched_clients_holding,
+            stock_trades=stock_trades,
+            known_stocks=get_known_stocks(db),
+        )
+
+    @app.route("/api/stocks/<path:stock_name>/candles")
+    @login_required
+    def api_stock_candles(stock_name):
+        db = get_db()
+        range_str = request.args.get("range", "1mo").strip()
+        interval = request.args.get("interval", "1d").strip()
+        candles_data = fetch_stock_candles(stock_name, range_str=range_str, interval=interval, db=db)
+        return jsonify(candles_data)
 
     # Cache and throttling for price update endpoints
     _price_update_state = {
@@ -2259,7 +2570,7 @@ def create_app(config=None):
             funds = []
         total_funds = sum((dec(fund["amount"]) for fund in funds), ZERO)
 
-        raw_shares = get_client_calculated_holdings(cid, get_db(), sync_trades=False)
+        raw_shares = get_client_calculated_holdings(cid, get_db(), sync_trades=True)
         prices = get_cached_prices(get_db())
         shares = []
         total_holdings_invested = ZERO
@@ -2399,32 +2710,15 @@ def create_app(config=None):
         deduct_from_funds = 1 if raw_deduct in (1, "1", "true", "True", "on", True) else 0
         if not stock:
             abort(400)
-        qty_int = int(round(quantity)) if quantity is not None else None
+        qty_int = int(round(quantity)) if quantity is not None else 1
 
-        existing = db.execute(
-            "SELECT id, quantity, buy_price FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
-            (cid, stock.upper())
-        ).fetchone()
-        if existing:
-            old_qty = dec(existing["quantity"] or 0)
-            old_bp = dec(existing["buy_price"] or 0)
-            add_qty = dec(qty_int or 0)
-            add_bp = dec(buy_price or old_bp)
-            new_qty = int(round(old_qty + add_qty))
-            if new_qty > 0 and (old_qty * old_bp + add_qty * add_bp) > 0:
-                new_avg = ((old_qty * old_bp + add_qty * add_bp) / dec(new_qty)).quantize(CENT, rounding=ROUND_HALF_UP)
-            else:
-                new_avg = add_bp
-            db.execute(
-                "UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?",
-                (new_qty, new_avg, deduct_from_funds, existing["id"])
-            )
-        else:
-            db.execute(
-                "INSERT INTO client_shares (client_id, stock, quantity, buy_price, deduct_from_funds) VALUES (?, ?, ?, ?, ?)",
-                (cid, stock.upper(), qty_int, buy_price, deduct_from_funds)
-            )
-        db.commit()
+        db.execute(
+            """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+               VALUES (?, ?, ?, ?, ?, 'Holding added by admin', 'manual', ?)""",
+            (cid, stock.upper(), qty_int, buy_price, date.today().isoformat(), deduct_from_funds)
+        )
+        sync_client_holdings_from_trades(cid, db)
+        invalidate_stock_caches()
         flash("Holding added.", "success")
         return redirect(safe_redirect_target(request.form.get("back"), url_for("client_detail", cid=cid)))
 
@@ -2448,6 +2742,7 @@ def create_app(config=None):
                     )
                 except Exception:
                     pass
+        sync_client_holdings_from_trades(cid, db)
         db.commit()
         flash("Holding deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -2495,7 +2790,6 @@ def create_app(config=None):
                     (cid, stock.upper(), qty_int, buy_price, deduct_from_funds)
                 )
         else:
-            # Also keep any open trade for this stock in sync
             try:
                 db.execute(
                     """UPDATE trades SET quantity=?, buy_price=?
@@ -2505,6 +2799,7 @@ def create_app(config=None):
             except Exception:
                 pass
 
+        sync_client_holdings_from_trades(cid, db)
         db.commit()
         flash("Holding updated.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -2541,6 +2836,34 @@ def create_app(config=None):
 
         buy_date = holding["added_on"][:10] if holding.get("added_on") else date.today().isoformat()
 
+        # FIFO deduction from open trades in trades table
+        rem_sell = dec(sell_qty)
+        open_trades = db.execute(
+            """SELECT id, quantity, buy_price, buy_date FROM trades
+               WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+            (cid, holding["stock"].upper())
+        ).fetchall()
+
+        for ot in open_trades:
+            if rem_sell <= ZERO:
+                break
+            ot_qty = dec(ot["quantity"] or 0)
+            if ot_qty <= rem_sell:
+                db.execute(
+                    "UPDATE trades SET sell_price=?, sell_date=?, notes=COALESCE(notes, '') || ' [Sold from Holdings]' WHERE id=?",
+                    (sell_price, sell_date, ot["id"])
+                )
+                rem_sell -= ot_qty
+            else:
+                db.execute("UPDATE trades SET quantity=? WHERE id=?", (int(round(ot_qty - rem_sell)), ot["id"]))
+                db.execute(
+                    """INSERT INTO trades (client_id, stock, quantity, buy_price, sell_price, buy_date, sell_date, notes, source)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, 'Sold from Holdings', 'manual')""",
+                    (cid, holding["stock"], int(round(rem_sell)), ot["buy_price"], sell_price, ot["buy_date"] or buy_date, sell_date)
+                )
+                rem_sell = ZERO
+
         trade_ids = insert_trades(cid, [{
             "stock": holding["stock"],
             "quantity": sell_qty,
@@ -2565,6 +2888,7 @@ def create_app(config=None):
                     (cid, pnl, sell_date, pnl_note),
                 )
 
+        sync_client_holdings_from_trades(cid, db)
         db.commit()
         flash(f"Sold {sell_qty} shares of {holding['stock']} and recorded in Trade Ledger.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -3045,7 +3369,7 @@ def create_app(config=None):
         cid = session["client_id"]
         client = get_client(cid)
         trades = query_trades({"client_id": cid})
-        shares = get_client_calculated_holdings(cid, get_db(), sync_trades=False)
+        shares = get_client_calculated_holdings(cid, get_db(), sync_trades=True)
 
         prices = get_cached_prices(get_db())
         enriched_shares = []
@@ -3456,6 +3780,7 @@ def create_app(config=None):
         else:
             flash(f"Sell trade for {quantity} shares of {stock} recorded. Your holdings have been updated.", "success")
 
+        sync_client_holdings_from_trades(cid, db)
         invalidate_prices_cache()
         invalidate_stock_caches()
         db.commit()
