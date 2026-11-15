@@ -3,11 +3,11 @@
 {% block title %}{{ 'Edit trade' if trade and trade.id else 'Add trade' }}{% endblock %}
 {% block breadcrumb %}Trade ledger / {{ 'Edit trade' if trade and trade.id else 'Add trade' }}{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">A PLACE FOR EVERY TRADE</p><h1>{{ 'A little fine-tuning' if trade and trade.id else 'Add to your ledger' }}<span class="accent-period">.</span></h1><p>{{ 'Update the details. Your totals will follow.' if trade and trade.id else 'The details go here. We will take care of the numbers.' }}</p></div><a class="btn btn-ghost" href="{{ url_for('trades_list') }}">{{ icon('arrow-left', 15) }}Back to ledger</a></div>
+<div class="page-heading"><div><p class="eyebrow">A PLACE FOR EVERY TRADE</p><h1>{{ 'A little fine-tuning' if trade and trade.id else 'Add to your ledger' }}<span class="accent-period">.</span></h1><p>{{ 'Update the details. Your totals will follow.' if trade and trade.id else 'The details go here. We will take care of the numbers.' }}</p></div><a class="btn btn-ghost" href="{{ back if back else url_for('trades_list') }}">{{ icon('arrow-left', 15) }}{{ 'Back to client' if back and '/clients/' in back else 'Back to ledger' }}</a></div>
 <div class="content-with-aside">
 <form method="post" class="card" data-trade-form>
   {{ csrf() }}
-  <input type="hidden" name="back" value="{{ back if back and trade and trade.id else '' }}">
+  <input type="hidden" name="back" value="{{ back or '' }}">
   <section class="form-section">
     <div class="form-section-heading"><span class="section-number">01</span><div><h2>The essentials</h2><p>Who made the trade, and what did they buy?</p></div></div>
     <div class="form-grid">

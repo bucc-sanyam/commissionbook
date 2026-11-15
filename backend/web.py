@@ -2248,14 +2248,27 @@ def create_app(config=None):
                 sync_client_holdings_from_trades(cid, get_db())
                 invalidate_stock_caches()
                 flash("Trade added.", "success")
+            back = request.form.get("back")
+            if not back and cid:
+                if request.referrer and f"/clients/{cid}" in request.referrer:
+                    back = url_for("client_detail", cid=cid)
+                elif request.args.get("client"):
+                    back = url_for("client_detail", cid=cid)
             if request.form.get("add_another"):
-                return redirect(url_for("trade_form", client=name))
-            return redirect(safe_redirect_target(request.form.get("back"), url_for("trades_list")))
+                return redirect(url_for("trade_form", client=name, back=back))
+            default_target = url_for("client_detail", cid=cid) if (back and f"/clients/{cid}" in back) else url_for("trades_list")
+            return redirect(safe_redirect_target(back, default_target))
         clients = get_db().execute("SELECT name FROM clients ORDER BY lower(name)").fetchall()
+        back_url = request.args.get("back") or safe_redirect_target(request.referrer, url_for("trades_list"))
+        preset = request.args.get("client", "")
+        if not request.args.get("back") and preset and back_url == url_for("trades_list"):
+            c_row = get_db().execute("SELECT id FROM clients WHERE lower(name)=lower(?)", (preset,)).fetchone()
+            if c_row:
+                back_url = url_for("client_detail", cid=c_row["id"])
         return render_template(
             "trade_form.html", trade=trade, clients=clients,
-            preset_client=request.args.get("client", ""),
-            back=safe_redirect_target(request.referrer, url_for("trades_list")),
+            preset_client=preset,
+            back=back_url,
         )
 
     @app.route("/trades/<int:tid>/delete", methods=["POST"])

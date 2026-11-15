@@ -1267,6 +1267,29 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// Disable mouse wheel scrolling on all number/numeric value fields
+document.addEventListener("wheel", (e) => {
+  if (
+    (e.target && e.target.tagName === "INPUT" && (e.target.type === "number" || e.target.inputMode === "decimal" || e.target.inputMode === "numeric")) ||
+    (document.activeElement && document.activeElement.tagName === "INPUT" && (document.activeElement.type === "number" || document.activeElement.inputMode === "decimal" || document.activeElement.inputMode === "numeric"))
+  ) {
+    if (document.activeElement && document.activeElement.tagName === "INPUT") {
+      document.activeElement.blur();
+    }
+  }
+}, { passive: true });
+
+// Prevent ArrowUp / ArrowDown keys from incrementing/decrementing number fields
+document.addEventListener("keydown", (e) => {
+  if (
+    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+    e.target && e.target.tagName === "INPUT" &&
+    (e.target.type === "number" || e.target.inputMode === "decimal" || e.target.inputMode === "numeric")
+  ) {
+    e.preventDefault();
+  }
+});
+
 
 
 

@@ -22,7 +22,7 @@
   <div class="heading-actions">
     <button class="btn btn-secondary" type="button" onclick="openClientPopupTrade('{{ client.id }}')">{{ icon('send', 14) }} Send Pop-up Trade</button>
     <a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a>
-    <a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name) }}">{{ icon('plus', 16) }}Add trade</a>
+    <a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name, back=url_for('client_detail', cid=client.id)) }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
 </div>
 <div class="kpi-grid">

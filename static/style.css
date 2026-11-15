@@ -304,6 +304,16 @@ input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-width: 
 .search-field input[type="search"] { padding-left: 37px; width: 100%; font-size: 11px; }
 input::placeholder, textarea::placeholder { color: #b0baa4; font-size: 11px; opacity: 1; }
 input[type="date"] { font-variant-numeric: tabular-nums; }
+/* Disable spin buttons and scrolling on all number/numeric value fields */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 input[type="file"] { padding: 8px; }
 input[type="file"]::file-selector-button { border: 0; border-radius: 5px; padding: 5px 10px; background: #edf3e5; color: #728660; margin-right: 10px; font: inherit; font-size: 10px; cursor: pointer; }
 input[readonly] { background: #f6f8f0; color: #89977d; }
