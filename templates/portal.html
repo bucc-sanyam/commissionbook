@@ -122,17 +122,6 @@
       </div>
 
       <div class="metric-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          <span class="metric-label">AVAILABLE CASH / BANK</span>
-          <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('adjust-funds-dialog').showModal()" style="padding: 2px 8px; font-size: 11px; margin-top: -4px; border: 1px solid #d4ded2; border-radius: 6px; background: #fafcf8;" title="Add or remove funds">
-            {{ icon('edit', 12) }} Edit Funds
-          </button>
-        </div>
-        <div class="metric-value">{{ money_in_bank|money }}</div>
-        <div class="metric-sub muted">Total Capital: <span class="tabular" style="font-weight: 600;">{{ total_funds|money }}</span></div>
-      </div>
-
-      <div class="metric-card">
         <span class="metric-label">REALISED P&amp;L (TRADES)</span>
         <div class="metric-value {{ 'pos' if s.pnl >= 0 else 'neg' }}">{{ s.pnl|money }}</div>
         <div class="metric-sub muted">{{ trades|length }} closed trade{{ 's' if trades|length != 1 }}</div>

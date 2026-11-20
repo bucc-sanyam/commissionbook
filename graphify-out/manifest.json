@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1794570314.0,
-    "ast_hash": "1d4a9dff3f55e7b88427942a5ce03f62",
+    "mtime": 1795174756.8311408,
+    "ast_hash": "76b215447fa9af671a5021b30c836a80",
     "semantic_hash": ""
   },
   "templates/charts.html": {
@@ -210,7 +210,7 @@
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795168249.7952225,
+    "mtime": 1795174588.1791298,
     "ast_hash": "818f1f8f21497301511feddfb00074d5",
     "semantic_hash": ""
   },
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1794559402.0,
-    "ast_hash": "dab46f6c67cd7599e154863513002f8c",
+    "mtime": 1795174747.2923722,
+    "ast_hash": "7f5a098d02f8e16362c010fbfa0e9db1",
     "semantic_hash": ""
   },
   "templates/settings.html": {
