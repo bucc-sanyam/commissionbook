@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1794731672.0,
-    "ast_hash": "52d1ad8263e450c6535d2192d6a607b4",
+    "mtime": 1795168249.7952225,
+    "ast_hash": "818f1f8f21497301511feddfb00074d5",
     "semantic_hash": ""
   },
   "templates/clients.html": {
@@ -307,6 +307,11 @@
   "static/icon-maskable-512.png": {
     "mtime": 1791881740.0,
     "ast_hash": "fd00efbd5f8de4651acf243d2d6a8104",
+    "semantic_hash": ""
+  },
+  "PROJECT_SUMMARY.md": {
+    "mtime": 1795168268.4935966,
+    "ast_hash": "ce898d5a55cfb83b29f39ee07182ca04",
     "semantic_hash": ""
   }
 }
