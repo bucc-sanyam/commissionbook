@@ -1,42 +1,41 @@
-{% from "_macros.html" import icon, brand, csrf with context %}
+{% from "_macros.html" import icon, brand, brand_story, csrf with context %}
 <!doctype html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#142a2a">
+  <meta name="theme-color" content="#29232b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="description"
     content="{{ og_description | default('A clear view of your trades, your clients and every commission earned.') }}">
-  <title>{% block title %}Overview{% endblock %} · Commission Book</title>
+  <title>{% block title %}Overview{% endblock %} · Alder & Vane</title>
   <!-- Open Graph / WhatsApp / Telegram -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Commission Book">
-  <meta property="og:title" content="{{ og_title | default('Commission Book') }}">
+  <meta property="og:site_name" content="Alder & Vane">
+  <meta property="og:title" content="{{ og_title | default('Alder & Vane') }}">
   <meta property="og:description"
     content="{{ og_description | default('A clear view of your trades, your clients and every commission earned.') }}">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{{ og_title | default('Commission Book') }}">
+  <meta name="twitter:title" content="{{ og_title | default('Alder & Vane') }}">
   <meta name="twitter:description"
     content="{{ og_description | default('A clear view of your trades, your clients and every commission earned.') }}">
-  <meta name="theme-color" content="#0f382c">
   <link rel="icon" type="image/png" sizes="192x192"
-    href="{{ url_for('static', filename='icon-192.png') }}?v=20261013-3">
+    href="{{ url_for('static', filename='icon-192.png') }}?v=20261125-1">
   <link rel="icon" type="image/png" sizes="512x512"
-    href="{{ url_for('static', filename='icon-512.png') }}?v=20261013-3">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}?v=20261013-3">
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}?v=20261013-3">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=20261013-3">
+    href="{{ url_for('static', filename='icon-512.png') }}?v=20261125-1">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}?v=20261125-1">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}?v=20261125-1">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=20261125-1">
   <link rel="preload" href="{{ url_for('static', filename='fonts/dm-sans-latin.woff2') }}" as="font" type="font/woff2"
     crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-latin.woff2') }}" as="font" type="font/woff2"
     crossorigin>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261120-1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261125-1">
   <script>
     window.__STOCK_SUGGESTIONS__ = {{ (all_stock_suggestions | default ([])) | tojson }};
   </script>
@@ -51,7 +50,7 @@
   {% set ep = request.endpoint %}
   <div class="mobile-scrim" id="mobile-scrim" hidden></div>
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-    <a class="brand" href="{{ url_for('dashboard') }}" aria-label="Commission Book home">{{ brand() }}</a>
+    <a class="brand" href="{{ url_for('dashboard') }}" aria-label="Alder & Vane home">{{ brand() }}</a>
     <div class="workspace-switch"><span class="workspace-icon">{{ icon('book', 17) }}</span><span
         class="workspace-title" title="{{ business_name or 'Personal workspace' }}">{{ business_name or 'Personal
         workspace' }}<small>Your commission, organised.</small></span><span class="workspace-dot"
@@ -117,8 +116,7 @@
     <main id="main" class="main-content">
       {% block flashes %}{% include "_flashes.html" %}{% endblock %}
       {% block content %}{% endblock %}
-      <footer class="app-footer"><span>Made for the details. Built for the bigger picture.</span><span>Commission Book
-          <span class="footer-dot"></span> Personal workspace</span></footer>
+      <footer class="app-footer">{{ brand_story() }}</footer>
     </main>
   </div>
   <dialog class="modal modal-sm" id="close-trade-dialog">

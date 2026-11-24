@@ -50,7 +50,7 @@
       const value = lower + (upper - lower) * index / 4;
       const yy = y(value);
       svg.append(svgElement("line", { x1: left, y1: yy, x2: width - right, y2: yy, stroke: "#eaf0e3", "stroke-dasharray": "3 4", "stroke-width": 1 }));
-      svg.append(svgElement("text", { x: left - 9, y: yy + 3, "text-anchor": "end", fill: "#647950", "font-size": 10, "font-family": "inherit" }, money(value, true)));
+      svg.append(svgElement("text", { x: left - 9, y: yy + 3, "text-anchor": "end", fill: "#565f62", "font-size": 10, "font-family": "inherit" }, money(value, true)));
     }
     if (min < 0) svg.append(svgElement("line", { x1: left, y1: y(0), x2: width - right, y2: y(0), stroke: "#c5d4b6", "stroke-width": 1 }));
     const barWidth = Math.min(32, plotWidth / values.length * .55);
@@ -62,7 +62,7 @@
         x: xx - barWidth / 2, y: Math.min(yy, y(0)),
         width: barWidth, height: Math.max(Math.abs(y(0) - yy), 2),
         rx: Math.min(4, barWidth / 4),
-        fill: value < 0 ? "#d49b86" : index === values.length - 1 ? "#3f7352" : "#b8d29b",
+        fill: value < 0 ? "#d49b86" : index === values.length - 1 ? "#542d49" : "#b297ab",
         tabindex: 0, role: "img", "aria-label": `${monthLabel(chart.months[index], true)}: ${money(value)}`,
       });
       bar.append(svgElement("title", {}, `${monthLabel(chart.months[index], true)}: ${money(value)}`));
@@ -79,7 +79,7 @@
       bar.addEventListener("blur", () => { tooltip.hidden = true; });
       svg.append(bar);
       if (index % labelEvery === 0) {
-        svg.append(svgElement("text", { x: xx, y: height - 12, "text-anchor": "middle", fill: "#647950", "font-size": 10, "font-family": "inherit" }, monthLabel(chart.months[index], values.length > 12)));
+        svg.append(svgElement("text", { x: xx, y: height - 12, "text-anchor": "middle", fill: "#565f62", "font-size": 10, "font-family": "inherit" }, monthLabel(chart.months[index], values.length > 12)));
       }
     });
     chartBox.replaceChildren(svg, tooltip);
@@ -112,7 +112,7 @@
 
   const donut = document.querySelector("#client-donut svg");
   if (donut && chart.clients.length) {
-    const colors = ["#4e7950", "#92b472", "#c1d3a5", "#d6b996", "#dce4d1"];
+    const colors = ["#542d49", "#8b627e", "#b297ab", "#d6b996", "#e4dce3"];
     const slices = chart.clients.map((name, index) => ({ name, value: Number(chart.client_commission[index]) }));
     const displayed = slices.slice(0, 4);
     if (slices.length > 4) displayed.push({ name: "Other clients", value: slices.slice(4).reduce((sum, slice) => sum + slice.value, 0) });

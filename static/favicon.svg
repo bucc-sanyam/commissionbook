@@ -1,26 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <radialGradient id="bg-grad" cx="42%" cy="32%" r="80%">
-      <stop offset="0%" stop-color="#144d3d" />
-      <stop offset="55%" stop-color="#0e3c2f" />
-      <stop offset="100%" stop-color="#06221a" />
-    </radialGradient>
-    <linearGradient id="m-glyph" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="420">
-      <stop offset="0%" stop-color="#efffb5" />
-      <stop offset="30%" stop-color="#d6fa7c" />
-      <stop offset="100%" stop-color="#8ee62e" />
-    </linearGradient>
-    <filter id="m-elevation" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#02100a" flood-opacity="0.6"/>
-    </filter>
-  </defs>
-
-  <rect x="6" y="6" width="500" height="500" rx="136" fill="url(#bg-grad)" />
-  <rect x="8" y="8" width="496" height="496" rx="134" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="3" />
-
-  <g filter="url(#m-elevation)" stroke="url(#m-glyph)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M 180 162 H 276 C 330 162 368 198 368 256 C 368 314 330 350 276 350 H 180 C 166 350 156 340 156 326 V 186 C 156 172 166 162 180 162 Z" />
-    <path d="M 228 96 L 228 416" />
-    <path d="M 156 256 L 344 256" />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Alder and Vane">
+  <rect width="64" height="64" rx="12" fill="#542d49"/>
+  <text x="32" y="41" text-anchor="middle" fill="#f8f6f0" font-family="Georgia, serif" font-size="26" font-weight="bold">AV</text>
 </svg>

@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795543124.9626286,
-    "ast_hash": "ad6d4994abc6754f9ae918ab5d019965",
+    "mtime": 1795546552.7526207,
+    "ast_hash": "a13914ad719cf129d47701751dca6e57",
     "semantic_hash": ""
   },
   "static/app.js": {
@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "static/dashboard.js": {
-    "mtime": 1791968485.0,
-    "ast_hash": "6506b157b62a5dcd570eadeba3548854",
+    "mtime": 1795546740.4197428,
+    "ast_hash": "87dad04e6410b4feff3f38a236129927",
     "semantic_hash": ""
   },
   "static/lightweight-charts.js": {
@@ -65,13 +65,13 @@
     "semantic_hash": ""
   },
   "static/manifest.json": {
-    "mtime": 1791878858.0,
-    "ast_hash": "deef6233db964e0736ca7298860872f2",
+    "mtime": 1795546552.7567825,
+    "ast_hash": "65d4e703398ebf09132a8d14e4d7371e",
     "semantic_hash": ""
   },
   "static/sw.js": {
-    "mtime": 1792052373.0,
-    "ast_hash": "a8d353f24d3b297464892a87f0cb4ea2",
+    "mtime": 1795546552.7529886,
+    "ast_hash": "74372c1b046f56211b9efeeae017786e",
     "semantic_hash": ""
   },
   "static/upload.js": {
@@ -160,8 +160,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790912620.0,
-    "ast_hash": "a112440ee7e3b9e36686bf05422be5c9",
+    "mtime": 1795546740.4204836,
+    "ast_hash": "3f39c4f74510470f3a91707a2f5137d3",
     "semantic_hash": ""
   },
   "requirements-dev.txt": {
@@ -185,133 +185,133 @@
     "semantic_hash": ""
   },
   "templates/_flashes.html": {
-    "mtime": 1790912605.0,
+    "mtime": 1795546552.7481916,
     "ast_hash": "8046f0538236dc6a0dd825d0ca2bfbf4",
     "semantic_hash": ""
   },
   "templates/_macros.html": {
-    "mtime": 1795525724.7633848,
-    "ast_hash": "4841c39e483568eb0d6a42229afa841c",
+    "mtime": 1795546552.7534688,
+    "ast_hash": "a0856f78a2fc052f18e98d1ac9055a81",
     "semantic_hash": ""
   },
   "templates/alerts.html": {
-    "mtime": 1792141145.0,
+    "mtime": 1795546552.7502823,
     "ast_hash": "347e658d1b3559add3c18ee613f997ec",
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795525724.7638602,
-    "ast_hash": "4a5af357b3e0858a1af895599ceb6cb7",
+    "mtime": 1795546552.7536192,
+    "ast_hash": "4a7b8cafc3767e154c10e903d8a986bb",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795543658.4113498,
-    "ast_hash": "a3238cf0bd586a7b15386bc15d9a9e15",
+    "mtime": 1795546552.7546947,
+    "ast_hash": "90855b8f5b602795a1cede25541e36e5",
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795542631.1671827,
+    "mtime": 1795546552.745514,
     "ast_hash": "38ceaa04f8acf9eb24ee257c842e0463",
     "semantic_hash": ""
   },
   "templates/clients.html": {
-    "mtime": 1795525724.7650962,
+    "mtime": 1795546552.7463884,
     "ast_hash": "e98eb0caef491ebdaf80352b1f68e16f",
     "semantic_hash": ""
   },
   "templates/dashboard.html": {
-    "mtime": 1795525724.7654119,
-    "ast_hash": "e4159f0af762e807ba1760f30a5df4c0",
+    "mtime": 1795546740.4180799,
+    "ast_hash": "c7683260d4818d1a47e305fd34e5e4e0",
     "semantic_hash": ""
   },
   "templates/error.html": {
-    "mtime": 1790912605.0,
+    "mtime": 1795546552.749877,
     "ast_hash": "2a5772bae2da0b0dfa9022000fccf986",
     "semantic_hash": ""
   },
   "templates/holdings.html": {
-    "mtime": 1795525724.765866,
+    "mtime": 1795546552.7497025,
     "ast_hash": "6934d55c631438e0376472e6f7b655d0",
     "semantic_hash": ""
   },
   "templates/login.html": {
-    "mtime": 1791878858.0,
-    "ast_hash": "7d25f28b5e5d1b961ca2c28d30d601e8",
+    "mtime": 1795546552.7537172,
+    "ast_hash": "ef55fc172d551bb67b9955cfa6a46955",
     "semantic_hash": ""
   },
   "templates/pay.html": {
-    "mtime": 1791355487.0,
-    "ast_hash": "a84cdf6e9650e1e1012df197cc1d6a5b",
+    "mtime": 1795546552.7447872,
+    "ast_hash": "91ef9bdbff5cd4222f6ceb009ad33ee3",
     "semantic_hash": ""
   },
   "templates/payments.html": {
-    "mtime": 1792055499.0,
+    "mtime": 1795546552.746019,
     "ast_hash": "99abac3490886575778b4c92ef126150",
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795544766.0419672,
-    "ast_hash": "0ed909e9c267173c6e7a1643f3b3124d",
+    "mtime": 1795546740.418936,
+    "ast_hash": "6f6c99a83208ffdcd2b3ec5fd145283a",
     "semantic_hash": ""
   },
   "templates/settings.html": {
-    "mtime": 1795525724.7664669,
+    "mtime": 1795546552.7493513,
     "ast_hash": "4a79cf09852f1f39ec045a87ac491c28",
     "semantic_hash": ""
   },
   "templates/trade_form.html": {
-    "mtime": 1795525724.7667592,
+    "mtime": 1795546552.7467506,
     "ast_hash": "40bce6d4d524c091aa5d839adf3b1fbf",
     "semantic_hash": ""
   },
   "templates/trades.html": {
-    "mtime": 1795525724.76718,
+    "mtime": 1795546552.7511227,
     "ast_hash": "822d2308172b01e161fe5897ef42674a",
     "semantic_hash": ""
   },
   "templates/upload.html": {
-    "mtime": 1791878858.0,
-    "ast_hash": "1856995bed3247c1d1fb49ea7da2cfce",
+    "mtime": 1795546552.7508163,
+    "ast_hash": "c6e6fd6ee4172d029229aeffe354917a",
     "semantic_hash": ""
   },
   "templates/uploads.html": {
-    "mtime": 1792055633.0,
+    "mtime": 1795546552.74326,
     "ast_hash": "a5a90f1909c63d78e60b99458dfe2d1d",
     "semantic_hash": ""
   },
   "static/apple-touch-icon.png": {
-    "mtime": 1791881740.0,
-    "ast_hash": "b60f7c19c488d6a8388b6899cb57107a",
+    "mtime": 1795546740.510323,
+    "ast_hash": "1a71b1e65d4713167c59aa608c5b1da3",
     "semantic_hash": ""
   },
   "static/favicon.svg": {
-    "mtime": 1791881740.0,
-    "ast_hash": "a306d5097ba15bc08eeb362d6ab6b808",
+    "mtime": 1795546740.5184262,
+    "ast_hash": "009ff5022d481caedaaca57b1037539f",
     "semantic_hash": ""
   },
   "static/icon-192.png": {
-    "mtime": 1791881740.0,
-    "ast_hash": "6d75eed5e18e558cab1743a46668ad61",
+    "mtime": 1795546740.504915,
+    "ast_hash": "71995ec3f4bd92c925384af93b1ff63a",
     "semantic_hash": ""
   },
   "static/icon-512.png": {
-    "mtime": 1791881740.0,
-    "ast_hash": "0595a36d146d6aa1b4797d2a8505126f",
+    "mtime": 1795546740.5070581,
+    "ast_hash": "412107b0517ad99cc9683ba0ca8b2754",
     "semantic_hash": ""
   },
   "static/icon-maskable-192.png": {
-    "mtime": 1791881740.0,
-    "ast_hash": "b76d32177bd8958c2e8ef503fbd3e5b8",
+    "mtime": 1795546740.5077996,
+    "ast_hash": "71995ec3f4bd92c925384af93b1ff63a",
     "semantic_hash": ""
   },
   "static/icon-maskable-512.png": {
-    "mtime": 1791881740.0,
-    "ast_hash": "fd00efbd5f8de4651acf243d2d6a8104",
+    "mtime": 1795546740.509728,
+    "ast_hash": "412107b0517ad99cc9683ba0ca8b2754",
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795525724.746577,
-    "ast_hash": "ce898d5a55cfb83b29f39ee07182ca04",
+    "mtime": 1795546740.4201124,
+    "ast_hash": "74c33f9befbc0a432a5045e2d789dced",
     "semantic_hash": ""
   },
   ".githooks/post-commit": {
@@ -327,6 +327,11 @@
   ".github/workflows/sync-and-deploy.yml": {
     "mtime": 1795537498.1501408,
     "ast_hash": "a66d6e4c5b2b8c0885d72425131aa0d7",
+    "semantic_hash": ""
+  },
+  "REDESIGN_ROADMAP.md": {
+    "mtime": 1795546265.8820105,
+    "ast_hash": "1c5fc22fd01d831377fd9b71cf7ce47f",
     "semantic_hash": ""
   }
 }

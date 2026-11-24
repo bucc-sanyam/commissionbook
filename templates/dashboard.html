@@ -3,33 +3,33 @@
 {% block title %}Overview{% endblock %}
 {% block content %}
 <div class="page-heading">
-  <div><p class="eyebrow">YOUR PERSONAL TRADING OFFICE</p><h1>The bigger picture<span class="accent-period">.</span></h1><p>Track the trades. Know your earnings. Keep things in balance.</p></div>
+  <h1>Overview</h1>
   <div class="heading-actions">
-    <button class="btn btn-primary" type="button" onclick="document.getElementById('global-popup-trade-dialog').showModal()">{{ icon('send', 15) }} Send Pop-up Trade</button>
+    <button class="btn" type="button" onclick="document.getElementById('global-popup-trade-dialog').showModal()">{{ icon('send', 15) }} Send Pop-up Trade</button>
     <button class="btn" type="button" data-dialog="share-dialog">{{ icon('link', 15) }}Share upload link</button>
-    <a class="btn btn-secondary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
+    <a class="btn btn-primary" href="{{ url_for('trade_form') }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
 </div>
 
-<div class="kpi-grid">
+<div class="kpi-grid dashboard-statement">
   <section class="card kpi kpi-featured">
     <div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div>
-    <div class="kpi-value">{{ total.commission|money }}</div>
+    <div data-privacy-value class="kpi-value">{{ total.commission|money }}</div>
     <div class="kpi-bottom"><span class="stat-pill">{{ icon('check', 11) }}{{ total.closed }} closed</span><span>{{ 'in selected period' if args['from'] or args['to'] else 'across all trades' }}</span></div>
   </section>
   <section class="card kpi">
     <div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div>
-    <div class="kpi-value">{{ total.paid|money }}</div>
+    <div data-privacy-value class="kpi-value">{{ total.paid|money }}</div>
     <div class="kpi-bottom">{{ icon('check-circle', 12) }}<span>Collected from clients · all time</span></div>
   </section>
   <section class="card kpi kpi-amber">
     <div class="kpi-top"><h2 class="kpi-label">{{ 'Client credit' if total.outstanding < 0 else 'Still to collect' }}</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div>
-    <div class="kpi-value">{{ (total.outstanding|abs)|money }}</div>
+    <div data-privacy-value class="kpi-value">{{ (total.outstanding|abs)|money }}</div>
     <div class="kpi-bottom">{{ icon('clock', 12) }}<span>{{ 'Payments ahead of earnings' if total.outstanding < 0 else 'Outstanding commissions' }} · all time</span></div>
   </section>
   <section class="card kpi">
     <div class="kpi-top"><h2 class="kpi-label">Client realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div>
-    <div class="kpi-value {{ 'neg' if total.pnl < 0 else 'pos' if total.pnl > 0 }}">{{ total.pnl|money }}</div>
+    <div data-privacy-value class="kpi-value {{ 'neg' if total.pnl < 0 else 'pos' if total.pnl > 0 }}">{{ total.pnl|money }}</div>
     <div class="kpi-bottom"><span class="stat-pill">{{ '%.0f'|format(total.wins / total.closed * 100) if total.closed else '0' }}% wins</span><span>{{ total.wins }} profitable · {{ total.losses }} losing</span></div>
   </section>
 </div>
@@ -37,7 +37,7 @@
 <div class="dashboard-charts">
   <section class="card">
     <div class="card-header">
-      <div><h2>Earnings over time</h2><p>Your progress, one month at a time.</p></div>
+      <div><h2>Earnings over time</h2></div>
       <details class="filter-popover">
         <summary class="btn btn-sm">{{ icon('calendar', 14) }}{{ 'Custom range' if args['from'] or args['to'] else 'All time' }}{{ icon('chevron-down', 12) }}</summary>
         <form class="popover-panel" method="get">
@@ -60,7 +60,7 @@
     <div class="chart-legend"><span><span class="legend-dot"></span><span id="chart-legend-label">Monthly commission</span></span><span>{{ (args['from'] or 'Beginning') ~ ' to ' ~ (args['to'] or 'today') if args['from'] or args['to'] else 'All-time view' }}</span></div>
   </section>
   <section class="card donut-card">
-    <div class="card-header"><div><h2>Where earnings come from</h2><p>Commission, split by client.</p></div>{{ icon('pie', 17) }}</div>
+    <div class="card-header"><div><h2>Commission by client</h2></div>{{ icon('pie', 17) }}</div>
     <div class="donut-area" id="client-donut" data-privacy-value>
       <svg viewBox="0 0 180 180" role="img" aria-label="Commission distribution by client"><circle cx="90" cy="90" r="66" fill="none" stroke="#eef2e8" stroke-width="22"/></svg>
       <div class="donut-label"><strong data-privacy-value>{{ per_client|length }}</strong><small>client{{ 's' if per_client|length != 1 }}</small></div>
@@ -73,7 +73,7 @@
 
 <section class="card">
   <div class="card-header">
-    <div><h2>Good relationships. Clear numbers.</h2><p>An at-a-glance statement for every client.</p></div>
+    <div><h2>Client statements</h2></div>
     <a class="btn btn-sm" href="{{ url_for('export_trades', **{'from': args['from'] or '', 'to': args['to'] or ''}) }}">{{ icon('download', 14) }}Export report</a>
   </div>
   {% if per_client %}
@@ -192,5 +192,5 @@
 {% endblock %}
 {% block scripts %}
 <script id="dashboard-data" type="application/json">{{ {'chart': chart, 'currency': currency|default('₹'), 'totals': {'commission': total.commission, 'pnl': total.pnl}}|tojson }}</script>
-<script src="{{ url_for('static', filename='dashboard.js') }}?v=20261014-2" defer></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}?v=20261125-1" defer></script>
 {% endblock %}

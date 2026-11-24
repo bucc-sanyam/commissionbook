@@ -1,4 +1,4 @@
-# Commission Book
+# Alder & Vane
 
 A personal bookkeeping app for tracking the stock trades of people you advise, and the commission you earn from each of them.
 

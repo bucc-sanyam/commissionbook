@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
+{% from "_macros.html" import icon, avatar, empty_state, csrf, brand, brand_story with context %}
 {% block title %}My Portfolio · {{ client.name }}{% endblock %}
 {% block head %}
 <script src="{{ url_for('static', filename='lightweight-charts.js') }}"></script>
@@ -12,6 +12,7 @@
 
   <!-- Left Side Panel (Admin-style Docked / Drawer) -->
   <aside class="portal-sidebar" id="portal-sidebar" aria-label="Portal navigation">
+    <div class="brand portal-wordmark">{{ brand() }}</div>
     <div class="portal-sidebar-brand">
       <span class="portal-avatar-large">{{ client.name[0]|upper }}</span>
       <div class="portal-sidebar-user">
@@ -264,26 +265,15 @@
 
           <!-- Advisory Slab & Exit Charges Summary Tile -->
           {% if shares %}
-          <section class="card portal-card" style="margin-top: 1.5rem; background: linear-gradient(135deg, #fbfdfa 0%, #f4f8f2 100%); border: 1.5px solid #d2e4ce; cursor: pointer; transition: all 0.15s ease;" onclick="switchPortalTab(document.querySelector('.portal-nav-btn[data-tab=\'portal-tab-advisory\']'), 'portal-tab-advisory')">
-            <div style="padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-              <div style="display: flex; gap: 14px; align-items: center;">
-                <span style="width: 44px; height: 44px; border-radius: 10px; background: #e2f0dd; color: #1e4620; display: grid; place-items: center; flex-shrink: 0;">
-                  {{ icon('shield', 22) }}
-                </span>
-                <div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <strong style="font-size: 15px; color: #173d34;">Advisory Slab &amp; Exit Breakup</strong>
-                    <span class="badge" style="background:#e8f5e9; color:#1b5e20;">{{ rule }}</span>
-                  </div>
-                  <p style="margin: 4px 0 0; font-size: 13px; color: #516d56; line-height: 1.4;">
-                    Review calculated advisory commission, capital gains taxes (STCG 20% / LTCG 12.5%), and detailed broker charges (STT, DP &#8377;15.34, GST) if sold at CMP.
-                  </p>
-                </div>
-              </div>
-              <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none;">
-                {{ icon('pie', 14) }} Open Advisory &amp; Charges &rarr;
-              </button>
+          <section class="card portal-card portal-advisory-summary" aria-labelledby="advisory-summary-title">
+            <div>
+              <h2 id="advisory-summary-title">Advisory &amp; exit charges</h2>
+              <p>Review your {{ rule }} commission, capital gains tax and broker charges if you sell at the current market price.</p>
             </div>
+            <button type="button" class="btn btn-secondary btn-sm" aria-controls="portal-tab-advisory"
+              onclick="switchPortalTab(document.querySelector('.portal-nav-btn[data-tab=portal-tab-advisory]'), 'portal-tab-advisory')">
+              View breakdown {{ icon('arrow-up-right', 14) }}
+            </button>
           </section>
           {% endif %}
 
@@ -1198,6 +1188,7 @@
         profits. Real-time market valuations and portfolio ledger metrics are for private tracking purposes only.
       </div>
     </footer>
+    {{ brand_story() }}
   </main>
   </div> <!-- Close .portal-app-shell -->
 </div> <!-- Close .client-portal-wrapper -->
@@ -1530,7 +1521,7 @@
         <div class="advisory-price-block">
           <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">TARGET
             PRICE</small>
-          <strong class="pos" style="font-size:16px; color:#1e9752;">{{ alert.target_price|money }}</strong>
+          <strong class="pos" style="font-size:16px; color:#236146;">{{ alert.target_price|money }}</strong>
         </div>
         {% endif %}
         {% if alert.stop_loss %}
@@ -1721,12 +1712,12 @@
     });
 
     portalCandleSeries = portalLwChart.addCandlestickSeries({
-      upColor: "#1e9752",
-      downColor: "#d32f2f",
-      borderUpColor: "#1e9752",
-      borderDownColor: "#d32f2f",
-      wickUpColor: "#1e9752",
-      wickDownColor: "#d32f2f"
+      upColor: "#236146",
+      downColor: "#913e42",
+      borderUpColor: "#236146",
+      borderDownColor: "#913e42",
+      wickUpColor: "#236146",
+      wickDownColor: "#913e42"
     });
 
     portalVolumeSeries = portalLwChart.addHistogramSeries({
@@ -1840,7 +1831,7 @@
     const changePct = c.open > 0 ? (change / c.open) * 100 : 0;
     const isPos = change >= 0;
     const sign = isPos ? "+" : "";
-    const changeColor = isPos ? "#1e9752" : "#d32f2f";
+    const changeColor = isPos ? "#236146" : "#913e42";
 
     hud.innerHTML = `
       <span style="font-weight:700; color:#173d34; margin-right:6px;">${dateStr}</span>

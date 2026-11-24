@@ -13,12 +13,12 @@ if [ "$CURRENT_BRANCH" = "main" ]; then
     echo "🔄 [post-commit] Syncing master branch with main..."
     git branch -f master HEAD 2>/dev/null || true
     echo "🚀 [post-commit] Pushing main and master to origin (deploying to prod)..."
-    git push origin main master
-    echo "✅ [post-commit] Pushed to both main and master. Vercel prod deployment triggered: https://commissionbook.vercel.app"
+    git push origin main master || exit 1
+    echo "✅ [post-commit] Pushed to both main and master. Vercel prod deployment triggered: https://ordervain.vercel.app"
 elif [ "$CURRENT_BRANCH" = "master" ]; then
     echo "🔄 [post-commit] Syncing main branch with master..."
     git branch -f main HEAD 2>/dev/null || true
     echo "🚀 [post-commit] Pushing master and main to origin (deploying to prod)..."
-    git push origin master main
-    echo "✅ [post-commit] Pushed to both master and main. Vercel prod deployment triggered: https://commissionbook.vercel.app"
+    git push origin master main || exit 1
+    echo "✅ [post-commit] Pushed to both master and main. Vercel prod deployment triggered: https://ordervain.vercel.app"
 fi

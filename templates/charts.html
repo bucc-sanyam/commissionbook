@@ -661,12 +661,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     candleSeries = lwChart.addCandlestickSeries({
-      upColor: "#1e9752",
-      downColor: "#d32f2f",
-      borderUpColor: "#1e9752",
-      borderDownColor: "#d32f2f",
-      wickUpColor: "#1e9752",
-      wickDownColor: "#d32f2f"
+      upColor: "#236146",
+      downColor: "#913e42",
+      borderUpColor: "#236146",
+      borderDownColor: "#913e42",
+      wickUpColor: "#236146",
+      wickDownColor: "#913e42"
     });
 
     volumeSeries = lwChart.addHistogramSeries({
@@ -737,7 +737,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const changePct = c.open > 0 ? (change / c.open) * 100 : 0;
     const isPos = change >= 0;
     const sign = isPos ? "+" : "";
-    const changeColor = isPos ? "#1e9752" : "#d32f2f";
+    const changeColor = isPos ? "#236146" : "#913e42";
 
     lwLegend.innerHTML = `
       <span style="font-weight:700; color:#173d34; margin-right:6px;">${dateStr}</span>

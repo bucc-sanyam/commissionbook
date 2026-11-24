@@ -1,10 +1,10 @@
 {
-  "name": "Commission Book",
-  "short_name": "CommissionBook",
+  "name": "Alder & Vane",
+  "short_name": "Alder & Vane",
   "start_url": "/login",
   "display": "standalone",
-  "background_color": "#0b2920",
-  "theme_color": "#0f382c",
+  "background_color": "#f8f6f0",
+  "theme_color": "#29232b",
   "icons": [
     {
       "src": "/static/icon-192.png",

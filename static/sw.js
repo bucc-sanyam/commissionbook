@@ -1,4 +1,4 @@
-// Commission Book Web Push Service Worker
+// Alder & Vane Web Push Service Worker
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -17,7 +17,7 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const title = data.title || 'Commission Book Alert';
+  const title = data.title || 'Alder & Vane Alert';
   const targetUrl = data.url || (data.data && data.data.url) || '/portal';
 
   const options = {

@@ -1,23 +1,12 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, brand, csrf with context %}
+{% from "_macros.html" import icon, brand, brand_story, csrf with context %}
 {% block title %}{{ 'Set up your workspace' if first_run else 'Welcome · Sign in' }}{% endblock %}
 {% block body_class %}auth-body{% endblock %}
 {% block shell %}
 <main class="auth-layout" id="main">
   <section class="auth-story">
-    <a class="brand" href="{{ url_for('login') }}" aria-label="Commission Book">{{ brand() }}</a>
-    <div class="auth-story-main">
-      <span class="eyebrow">CLEAR HOLDINGS. INSTANT ADVISORIES.</span>
-      <h1>Your trades.<br>Your people.<br><em>All in balance.</em></h1>
-      <p>A thoughtful, secure portal for your portfolio holdings, trade advisories, and tracked commissions.</p>
-      <div class="auth-art" aria-hidden="true">
-        <div class="auth-art-label"><span>Live Portfolio View</span>{{ icon('trend', 17) }}</div>
-        <strong>Every holding &amp; trade counts.</strong>
-        <div class="auth-art-line"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        <div class="auth-art-caption"><span>Real-time valuations.</span><span>Safe in-app recommendations.</span></div>
-      </div>
-    </div>
-    <div class="auth-story-footer">{{ icon('shield', 14) }}Your books and holdings are private. Log in securely.</div>
+    <a class="brand" href="{{ url_for('login') }}" aria-label="Alder & Vane">{{ brand() }}</a>
+    <div class="auth-story-main"><h1>Portfolio &amp; trade ledger</h1></div>
   </section>
 
   <section class="auth-form-panel">
@@ -116,6 +105,7 @@
           </button>
         </form>
       </div>
+      {{ brand_story() }}
     </div>
 
     <script>

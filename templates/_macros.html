@@ -55,8 +55,19 @@
 {%- endmacro %}
 
 {% macro brand() -%}
-<span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M11 10h6c3.3 0 5.5 2.5 5.5 6s-2.2 6-5.5 6h-6c-.8 0-1.5-.7-1.5-1.5v-9c0-.8.7-1.5 1.5-1.5Z" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 6v20M9.5 16h11.5" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/></svg></span>
-<span class="brand-name">commission<span>book</span><span class="brand-dot">.</span></span>
+<span class="brand-mark" aria-hidden="true">AV</span>
+<span class="brand-name">Alder &amp; Vane</span>
+{%- endmacro %}
+
+{% macro brand_story() -%}
+<details class="brand-story">
+  <summary>Why Alder &amp; Vane?</summary>
+  <p>An alder is a tree. A weather vane turns to show which way the wind is blowing.
+    We chose the alder for its roots and the vane for its sense of direction.</p>
+  <p>Commission Book began as a place to record trades and fees. As the ledger grew to
+    include holdings, portfolio values and client statements, we wanted a name that
+    reflected both the record you keep and the decisions it helps you make.</p>
+</details>
 {%- endmacro %}
 
 {% macro avatar(name, color=0, small=False) -%}
