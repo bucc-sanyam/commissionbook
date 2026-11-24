@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Git post-commit hook: sync main & master and push to origin on every commit
+
+# Avoid re-entry if git commands invoke hooks
+if [ -n "$SYNC_IN_PROGRESS" ]; then
+    exit 0
+fi
+export SYNC_IN_PROGRESS=1
+
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+    echo "🔄 [post-commit] Syncing master branch with main..."
+    git branch -f master HEAD 2>/dev/null || true
+    echo "🚀 [post-commit] Pushing main and master to origin (deploying to prod)..."
+    git push origin main master
+    echo "✅ [post-commit] Pushed to both main and master. Vercel prod deployment triggered: https://commissionbook.vercel.app"
+elif [ "$CURRENT_BRANCH" = "master" ]; then
+    echo "🔄 [post-commit] Syncing main branch with master..."
+    git branch -f main HEAD 2>/dev/null || true
+    echo "🚀 [post-commit] Pushing master and main to origin (deploying to prod)..."
+    git push origin master main
+    echo "✅ [post-commit] Pushed to both master and main. Vercel prod deployment triggered: https://commissionbook.vercel.app"
+fi

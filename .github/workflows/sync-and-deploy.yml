@@ -1,0 +1,44 @@
+name: Sync Main and Master (Auto-deploy to Prod)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip sync]')"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync branches
+        run: |
+          REF_NAME="${{ github.ref_name }}"
+          echo "Triggered by push to: $REF_NAME"
+
+          if [ "$REF_NAME" = "main" ]; then
+            echo "Syncing master with main..."
+            git checkout master
+            git merge --ff-only main || git merge -X theirs main -m "sync: merge main into master [skip sync]"
+            git push origin master
+          elif [ "$REF_NAME" = "master" ]; then
+            echo "Syncing main with master..."
+            git checkout main
+            git merge --ff-only master || git merge -X theirs master -m "sync: merge master into main [skip sync]"
+            git push origin main
+          fi
