@@ -107,15 +107,6 @@
         <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 15) }}</span>
         <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
       </button>
-
-      <form method="post" action="{{ url_for('logout') }}" class="desktop-only portal-top-signout-form"
-        style="margin: 0; flex-shrink: 0;">
-        {{ csrf() }}
-        <button type="submit" class="btn btn-ghost btn-sm portal-top-signout-btn" aria-label="Sign out"
-          style="padding: 6px 8px;">
-          {{ icon('logout', 15) }}<span>Sign out</span>
-        </button>
-      </form>
     </div>
   </header>
 
