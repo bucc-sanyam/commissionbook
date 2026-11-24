@@ -96,528 +96,792 @@
 </section>
 {% endif %}
 
-<!-- Client holdings (shown at top of main content for quick access) -->
-  <section class="card">
-    <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
-    {% if shares %}
-    <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
-    {% for sh in shares %}
-      <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
-        <td>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            {% if sh.lots and sh.lots|length > 1 %}
-            <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
-              {{ icon('chevron-down', 14) }}
-            </button>
-            {% endif %}
-            <div>
-              <strong>{{ sh.stock }}</strong>
-              {% if sh.lots and sh.lots|length > 1 %}
-                <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
-              {% endif %}
-            </div>
-          </div>
-        </td>
-        <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
-        <td class="r tabular">
-          <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
-          {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
-        </td>
-        <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
-        <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
-        <td>
-          <div class="row-actions" style="justify-content: flex-end;">
-            <button class="icon-btn edit-holding-btn" type="button" 
-              data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
-              data-stock="{{ sh.stock }}"
-              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-              data-buy-price="{{ sh.buy_price or '' }}"
-              aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
-            <button class="icon-btn sell-holding-btn" type="button" 
-              data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
-              data-stock="{{ sh.stock }}"
-              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-              aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
-            <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
-          </div>
-        </td>
-      </tr>
-      {% if sh.lots and sh.lots|length > 1 %}
-      <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
-        <td colspan="6" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
-          <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-            {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
-          </div>
-          <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
-            <thead>
-              <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
-                <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
-                <th style="padding: 6px 12px; text-align: right;">Quantity</th>
-                <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
-                <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
-                <th style="padding: 6px 12px; text-align: left;">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for lot in sh.lots %}
-              <tr style="border-top: 1px solid #edf1e8;">
-                <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
-                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
-                <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
-                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
-                <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </td>
-      </tr>
-      {% endif %}
-    {% endfor %}</tbody></table></div>
+<!-- ===== CLIENT PAGE TAB BAR ===== -->
+<div class="client-page-tabs" role="tablist">
+  <button class="client-tab-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
+    {{ icon('pie', 14) }} Overview
+  </button>
+  <button class="client-tab-btn" role="tab" data-tab="tab-ledger" onclick="switchClientTab(this, 'tab-ledger')">
+    {{ icon('book', 14) }} Trade Ledger
+  </button>
+  <button class="client-tab-btn" role="tab" data-tab="tab-advisories" onclick="switchClientTab(this, 'tab-advisories')">
+    {{ icon('send', 14) }} Advisories
+    {% if advisories %}<span style="background:#3f7352;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;">{{ advisories|length }}</span>{% endif %}
+  </button>
+  <button class="client-tab-btn" role="tab" data-tab="tab-payments" onclick="switchClientTab(this, 'tab-payments')">
+    {{ icon('wallet', 14) }} Payments &amp; Funds
+  </button>
+</div>
 
-    <div class="mobile-detail-holdings-list">
-      {% for sh in shares %}
-      <div class="mobile-trade-card" style="padding: 12px 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-          <div>
-            <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
+<!-- ===== TAB 0: OVERVIEW ===== -->
+<div class="client-tab-panel active" id="tab-overview">
+  <div class="detail-grid">
+    <!-- LEFT: Holdings + Advisory Slab -->
+    <div>
+      <!-- Client Holdings Card -->
+      <section class="card">
+        <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
+        {% if shares %}
+        <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
+        {% for sh in shares %}
+          <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                {% if sh.lots and sh.lots|length > 1 %}
+                <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                  {{ icon('chevron-down', 14) }}
+                </button>
+                {% endif %}
+                <div>
+                  <strong>{{ sh.stock }}</strong>
+                  {% if sh.lots and sh.lots|length > 1 %}
+                    <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+            <td class="r tabular">
+              <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
+              {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
+            </td>
+            <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
+            <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
+            <td>
+              <div class="row-actions" style="justify-content: flex-end;">
+                <button class="icon-btn edit-holding-btn" type="button" 
+                  data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+                  data-stock="{{ sh.stock }}"
+                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-buy-price="{{ sh.buy_price or '' }}"
+                  aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
+                <button class="icon-btn sell-holding-btn" type="button" 
+                  data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+                  data-stock="{{ sh.stock }}"
+                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
+                <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
+              </div>
+            </td>
+          </tr>
+          {% if sh.lots and sh.lots|length > 1 %}
+          <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+            <td colspan="6" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
+              <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
+              </div>
+              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+                <thead>
+                  <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                    <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
+                    <th style="padding: 6px 12px; text-align: right;">Quantity</th>
+                    <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
+                    <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
+                    <th style="padding: 6px 12px; text-align: left;">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for lot in sh.lots %}
+                  <tr style="border-top: 1px solid #edf1e8;">
+                    <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
+                    <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
+                    <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
+                    <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
+                    <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+        {% endfor %}</tbody></table></div>
+
+        <div class="mobile-detail-holdings-list">
+          {% for sh in shares %}
+          <div class="mobile-trade-card" style="padding: 12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+              <div>
+                <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
+                {% if sh.lots and sh.lots|length > 1 %}
+                  <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+                {% endif %}
+              </div>
+              <strong class="tabular" style="font-size: 14px;">{{ sh.current_value|money }}</strong>
+            </div>
+            <div class="mtd-grid" style="margin-bottom: 10px;">
+              <div class="mtd-item">
+                <span class="mtd-label">Quantity</span>
+                <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Avg Buy Price</span>
+                <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">CMP (Current)</span>
+                <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
+              </div>
+              <div class="mtd-item">
+                <span class="mtd-label">Valuation</span>
+                <strong class="mtd-val">{{ sh.current_value|money }}</strong>
+              </div>
+            </div>
             {% if sh.lots and sh.lots|length > 1 %}
-              <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+            <div class="mobile-lots-breakdown" style="margin-bottom: 10px; padding: 8px 10px; background: #fbfdf9; border: 1px solid #e8ede3; border-radius: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #405738; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                Open Trades Breakdown ({{ sh.lots|length }} trades):
+              </span>
+              {% for lot in sh.lots %}
+              <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #f0f4ec;">
+                <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
+                <strong class="tabular">{{ lot.total_cost|money }}</strong>
+              </div>
+              {% endfor %}
+            </div>
             {% endif %}
-          </div>
-          <strong class="tabular" style="font-size: 14px;">{{ sh.current_value|money }}</strong>
-        </div>
-        <div class="mtd-grid" style="margin-bottom: 10px;">
-          <div class="mtd-item">
-            <span class="mtd-label">Quantity</span>
-            <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">Avg Buy Price</span>
-            <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">CMP (Current)</span>
-            <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">Valuation</span>
-            <strong class="mtd-val">{{ sh.current_value|money }}</strong>
-          </div>
-        </div>
-        {% if sh.lots and sh.lots|length > 1 %}
-        <div class="mobile-lots-breakdown" style="margin-bottom: 10px; padding: 8px 10px; background: #fbfdf9; border: 1px solid #e8ede3; border-radius: 6px;">
-          <span style="font-size: 10px; font-weight: 700; color: #405738; text-transform: uppercase; display: block; margin-bottom: 4px;">
-            Open Trades Breakdown ({{ sh.lots|length }} trades):
-          </span>
-          {% for lot in sh.lots %}
-          <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #f0f4ec;">
-            <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
-            <strong class="tabular">{{ lot.total_cost|money }}</strong>
+            <div style="display:flex; justify-content:flex-end; gap:6px; border-top:1px solid #edf4eb; padding-top:8px;">
+              <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
+                data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+                data-stock="{{ sh.stock }}"
+                data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                data-buy-price="{{ sh.buy_price or '' }}">
+                {{ icon('edit', 12) }} Edit
+              </button>
+              <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
+                data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+                data-stock="{{ sh.stock }}"
+                data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
+                {{ icon('trend', 12) }} Sell
+              </button>
+              <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
+                {{ csrf() }}
+                <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete holding">{{ icon('trash', 13) }}</button>
+              </form>
+            </div>
           </div>
           {% endfor %}
         </div>
-        {% endif %}
-        <div style="display:flex; justify-content:flex-end; gap:6px; border-top:1px solid #edf4eb; padding-top:8px;">
-          <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
-            data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
-            data-stock="{{ sh.stock }}"
-            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-            data-buy-price="{{ sh.buy_price or '' }}">
-            {{ icon('edit', 12) }} Edit
-          </button>
-          <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
-            data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
-            data-stock="{{ sh.stock }}"
-            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
-            {{ icon('trend', 12) }} Sell
-          </button>
-          <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
+        <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
+        <dialog class="modal" id="dynamic-edit-holding-dialog">
+          <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">
             {{ csrf() }}
-            <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete holding">{{ icon('trash', 13) }}</button>
+            <input type="hidden" name="back" value="1">
+            <div class="modal-heading">
+              <div><span class="eyebrow">UPDATE</span><h2 id="dynamic-edit-holding-title">Edit holding</h2></div>
+              <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+            </div>
+            <div class="form-grid">
+              <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
+              <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
+              <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
+              <label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
+                <input name="deduct_from_funds" id="dynamic-edit-holding-deduct" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;">
+                <span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span>
+              </label>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+              <button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button>
+            </div>
           </form>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
-    <dialog class="modal" id="dynamic-edit-holding-dialog">
-      <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">
-        {{ csrf() }}
-        <input type="hidden" name="back" value="1">
-        <div class="modal-heading">
-          <div><span class="eyebrow">UPDATE</span><h2 id="dynamic-edit-holding-title">Edit holding</h2></div>
-          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
-        </div>
-        <div class="form-grid">
-          <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
-          <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
-          <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
-          <label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
-            <input name="deduct_from_funds" id="dynamic-edit-holding-deduct" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;">
-            <span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span>
-          </label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
-          <button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button>
-        </div>
-      </form>
-    </dialog>
-    <dialog class="modal" id="dynamic-sell-holding-dialog">
-      <form method="post" id="dynamic-sell-holding-form" action="" class="modal-inner">
-        {{ csrf() }}
-        <input type="hidden" name="back" value="1">
-        <div class="modal-heading">
-          <div><span class="eyebrow">RECORD SALE</span><h2 id="dynamic-sell-holding-title">Sell holding</h2></div>
-          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
-        </div>
-        <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
-        <div class="form-grid">
-          <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
-          <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
-          <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
-          <button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button>
-        </div>
-      </form>
-    </dialog>
-    {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
-  </section>
-
-<section class="card">
-  <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · <span class="tabular" data-privacy-value>{{ s.invested_open|money }}</span> invested</p></div><span class="badge">{{ rule }}</span></div>
-  {{ trade_table(trades, s, show_client=False) }}
-</section>
-
-<!-- Pop-up Trade Advisories & Acknowledgments Card (Audit trail requested by admin) -->
-<section class="card" style="margin-top: 1.5rem;">
-  <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
-    <div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <h2>Pop-up Trade Advisories &amp; Acknowledgments</h2>
-        <span class="badge" style="background:#e8f4fd; color:#0366d6;">SEBI Compliance Audit</span>
-      </div>
-      <p class="muted">Live record of trade pop-ups sent to {{ client.name }} and their mandatory acknowledgment status.</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary btn-sm" type="button" onclick="openClientPopupTrade('{{ client.id }}')">
-        {{ icon('send', 14) }} Send New Pop-up Trade
-      </button>
-    </div>
-  </div>
-
-  {% if advisories %}
-  <!-- Desktop Advisories Table (Hidden on Mobile) -->
-  <div class="desktop-detail-advisories-table table-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Stock Symbol</th>
-          <th>Action</th>
-          <th class="r">Entry Price</th>
-          <th class="r">Target</th>
-          <th class="r">Stop Loss</th>
-          <th>Sent At</th>
-          <th>Client Acknowledgment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for a in advisories %}
-        <tr>
-          <td>
-            <strong>{{ a.stock }}</strong>
-            {% if a.message %}
-              <span class="cell-secondary" title="{{ a.message }}">{{ a.message|truncate(45) }}</span>
-            {% endif %}
-          </td>
-          <td>
-            <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
-              {{ a.action }}
-            </span>
-          </td>
-          <td class="r tabular">{{ a.price|money if a.price else 'CMP' }}</td>
-          <td class="r tabular pos">{{ a.target_price|money if a.target_price else '—' }}</td>
-          <td class="r tabular neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</td>
-          <td class="date-cell muted" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</td>
-          <td>
-            {% if a.acknowledged %}
-              <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
-                {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('short') }}){% endif %}
-              </span>
-            {% elif a.is_expired %}
-              <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
-                {{ icon('clock', 12) }} Expired
-              </span>
-            {% else %}
-              <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
-                {{ icon('clock', 12) }} Pending Acknowledgment
-              </span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Mobile Advisories Cards (Zero Horizontal Scroll for Phones) -->
-  <div class="mobile-detail-advisories-list">
-    {% for a in advisories %}
-    <div class="mobile-audit-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
-            {{ a.action }}
-          </span>
-          <strong style="font-size: 15px;">{{ a.stock }}</strong>
-        </div>
-        <span class="date-cell muted" style="font-size:11px;" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</span>
-      </div>
-
-      <div class="mac-price-grid">
-        <div class="mac-price-item">
-          <span class="mac-label">Entry</span>
-          <strong class="mac-val">{{ a.price|money if a.price else 'CMP' }}</strong>
-        </div>
-        <div class="mac-price-item">
-          <span class="mac-label">Target</span>
-          <strong class="mac-val pos">{{ a.target_price|money if a.target_price else '—' }}</strong>
-        </div>
-        <div class="mac-price-item">
-          <span class="mac-label">Stop Loss</span>
-          <strong class="mac-val neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</strong>
-        </div>
-      </div>
-
-      {% if a.message %}
-      <div class="mac-message">{{ a.message }}</div>
-      {% endif %}
-
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid #edf4eb;">
-        <span class="mac-label">Acknowledgment</span>
-        {% if a.acknowledged %}
-          <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
-            {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('chip') }}){% endif %}
-          </span>
-        {% elif a.is_expired %}
-          <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
-            {{ icon('clock', 12) }} Expired
-          </span>
-        {% else %}
-          <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
-            {{ icon('clock', 12) }} Pending
-          </span>
-        {% endif %}
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% else %}
-    {{ empty_state('No trade advisories sent yet', 'Click "Send New Pop-up Trade" to dispatch a mandatory pop-up recommendation directly to this client\'s screen.', 'send', compact=True) }}
-  {% endif %}
-</section>
-
-<div class="detail-grid">
-  <section class="card">
-    <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
-    {% if payments %}
-    <div class="desktop-detail-payments-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
-    {% for p in payments %}
-      <tr><td class="date-cell">{{ p.paid_on }}</td><td>{{ p.mode or 'Not specified' }}{% if p.notes %}<span class="cell-secondary" title="{{ p.notes }}">{{ p.notes|truncate(32) }}</span>{% endif %}</td><td class="r pos tabular strong">{{ p.amount|money }}</td><td><form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment">{{ icon('trash', 15) }}</button></form></td></tr>
-    {% endfor %}</tbody></table></div>
-
-    <div class="mobile-detail-payments-list">
-      {% for p in payments %}
-      <div class="mobile-payment-card">
-        <div class="mpc-top">
-          <span class="date-cell muted">{{ p.paid_on }}</span>
-          <strong class="pos tabular" style="font-size: 15px;">+{{ p.amount|money }}</strong>
-        </div>
-        <div class="mpc-mid">
-          <span class="source-tag">{{ p.mode or 'Not specified' }}</span>
-          {% if p.notes %}<span class="muted" style="font-size:11px;">{{ p.notes|truncate(30) }}</span>{% endif %}
-        </div>
-        <div class="mpc-actions">
-          <form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">
+        </dialog>
+        <dialog class="modal" id="dynamic-sell-holding-dialog">
+          <form method="post" id="dynamic-sell-holding-form" action="" class="modal-inner">
             {{ csrf() }}
-            <button class="btn btn-ghost btn-xs text-danger" aria-label="Delete payment">{{ icon('trash', 13) }} Delete</button>
+            <input type="hidden" name="back" value="1">
+            <div class="modal-heading">
+              <div><span class="eyebrow">RECORD SALE</span><h2 id="dynamic-sell-holding-title">Sell holding</h2></div>
+              <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+            </div>
+            <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
+            <div class="form-grid">
+              <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
+              <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
+              <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+              <button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button>
+            </div>
           </form>
+        </dialog>
+        {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
+      </section>
+
+      <!-- Advisory Slab & Exit Breakup Card -->
+      {% if shares %}
+      <section class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <div>
+            <h2>Advisory Slab &amp; Exit Breakup</h2>
+            <p>Projected commission, taxes &amp; charges if all holdings were sold today at CMP.</p>
+          </div>
+          <span class="badge" style="background:#f4f8f1; color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}{{ empty_state('Ready when they settle up', 'Record a payment to keep the outstanding balance up to date.', 'wallet', compact=True) }}{% endif %}
-    <div class="card-footer"><span>Total received</span><strong class="pos tabular">{{ s.paid|money }}</strong></div>
-  </section>
-  <section class="card">
-    <div class="card-header"><div><h2>Capital &amp; Funds Ledger</h2><p>Capital deposited or withdrawn by client and admin.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
-    {% if funds %}
-    <div class="desktop-detail-funds-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
-    {% for f in funds %}
-      <tr>
-        <td class="date-cell">{{ f.added_on }}</td>
-        <td>
-          {% if f.notes and '[Client' in f.notes %}
-            <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px; margin-right: 4px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
-            <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() or 'Via Client Portal' }}</span>
-          {% elif f.notes %}
-            <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes|truncate(36) }}</span>
+
+        <!-- Section A: Commission Slab Summary -->
+        <div style="padding: 14px 18px 10px; border-bottom: 1px solid #edf2e5;">
+          <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+            {{ icon('trend', 13) }} Section A — Advisory Commission Slab
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+              <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
+            </div>
+            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+              <span style="color:#64786a;">Type:</span> <strong>{{ client.commission_type or 'profit_pct' }}</strong>
+            </div>
+            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+              <span style="color:#64786a;">Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
+            </div>
+          </div>
+          <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
+            <thead>
+              <tr style="background:#f4f8f1; color:#5b6d52; font-size:11px; text-transform:uppercase;">
+                <th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e1e9de;">Stock</th>
+                <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Qty</th>
+                <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Avg Buy</th>
+                <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">CMP</th>
+                <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Unrealised P&amp;L</th>
+                <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Commission Owed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set ns_total_comm = namespace(val=0) %}
+              {% set ns_total_pnl = namespace(val=0) %}
+              {% for sh in shares %}
+              {% set comm_rate = (client.commission_rate or 10)|float %}
+              {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
+              {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
+              {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
+              {% if client.commission_type == 'turnover_pct' %}
+                {% set my_commission = (buy_val + sell_val) * comm_rate / 100 %}
+              {% elif client.commission_type == 'flat' %}
+                {% set my_commission = comm_rate %}
+              {% else %}
+                {% set my_commission = profit * comm_rate / 100 if profit > 0 else 0 %}
+              {% endif %}
+              {% set ns_total_comm.val = ns_total_comm.val + my_commission %}
+              {% set ns_total_pnl.val = ns_total_pnl.val + profit %}
+              <tr style="border-bottom:1px solid #f0f4ec;">
+                <td style="padding:7px 10px;"><strong>{{ sh.stock }}</strong></td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|int }}</td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.cmp|money if sh.cmp else '—' }}</td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:600;" class="{{ 'pos' if profit >= 0 else 'neg' }}">
+                  {{ '+' if profit > 0 else '' }}{{ profit|money }}
+                </td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:700; color:#1e4620;">
+                  {{ my_commission|money }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr style="background:#f0fdf4; border-top:2px solid #bbf7d0;">
+                <td colspan="4" style="padding:8px 10px; font-weight:700; font-size:12px; color:#166534;">Total</td>
+                <td style="padding:8px 10px; text-align:right; font-weight:700; font-family:monospace;" class="{{ 'pos' if ns_total_pnl.val >= 0 else 'neg' }}">{{ '+' if ns_total_pnl.val > 0 else '' }}{{ ns_total_pnl.val|money }}</td>
+                <td style="padding:8px 10px; text-align:right; font-weight:700; font-family:monospace; color:#166534;">{{ ns_total_comm.val|money }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Section B: Per-holding Exit Price Breakup -->
+        <div style="padding: 14px 18px 16px;">
+          <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;">
+            {{ icon('pie', 13) }} Section B — Exit Price Breakup (If sold today at CMP)
+          </div>
+
+          {% for sh in shares %}
+          {% if sh.cmp and sh.buy_price %}
+          {% set comm_rate = (client.commission_rate or 10)|float %}
+          {% set qty = sh.quantity|float %}
+          {% set sell_val = qty * (sh.cmp|float) %}
+          {% set buy_val = qty * (sh.buy_price|float) %}
+          {% set profit = sh.unrealized_pnl|float %}
+
+          {# Commission calculation by type #}
+          {% if client.commission_type == 'turnover_pct' %}
+            {% set my_commission = (buy_val + sell_val) * comm_rate / 100 %}
+          {% elif client.commission_type == 'flat' %}
+            {% set my_commission = comm_rate %}
           {% else %}
-            Not specified
+            {% set my_commission = profit * comm_rate / 100 if profit > 0 else 0 %}
           {% endif %}
-        </td>
-        <td class="r {{ 'pos' if f.amount >= 0 else 'neg' }} tabular strong">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</td>
-        <td>
-          <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
-            {{ csrf() }}
-            <button class="icon-btn icon-btn-danger" aria-label="Delete fund entry">{{ icon('trash', 15) }}</button>
-          </form>
-        </td>
-      </tr>
-    {% endfor %}</tbody></table></div>
 
-    <div class="mobile-detail-funds-list">
-      {% for f in funds %}
-      <div class="mobile-payment-card">
-        <div class="mpc-top">
-          <span class="date-cell muted">{{ f.added_on }}</span>
-          <strong class="{{ 'pos' if f.amount >= 0 else 'neg' }} tabular" style="font-size: 15px;">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</strong>
-        </div>
-        <div class="mpc-mid">
-          {% if f.notes and '[Client' in f.notes %}
-            <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
+          {# LTCG / STCG classification — compare buy year #}
+          {% set buy_date_str = sh.lots[0].added_on if sh.lots else sh.added_on %}
+          {% set buy_year = buy_date_str[:4]|int if buy_date_str else (today[:4]|int) %}
+          {% set today_year = today[:4]|int %}
+          {% set is_ltcg = buy_year <= (today_year - 1) %}
+          {% set tax_rate = 0.125 if is_ltcg else 0.20 %}
+          {% set tax = profit * tax_rate if profit > 0 else 0 %}
+
+          {# Broker charges (delivery, Zerodha/Groww style) #}
+          {% set stt = sell_val * 0.001 %}
+          {% set exch = sell_val * 0.0000345 %}
+          {% set sebi = sell_val * 0.000001 %}
+          {% set dp = 15.34 %}
+          {% set gst = (exch + sebi + dp) * 0.18 %}
+          {% set broker_total = stt + exch + sebi + dp + gst %}
+
+          {% set net = profit - tax - broker_total - my_commission %}
+
+          <div class="breakup-stock-block">
+            <div class="breakup-stock-header">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <strong style="font-size:14px;">{{ sh.stock }}</strong>
+                <span class="cap-gain-pill {{ 'pill-ltcg' if is_ltcg else 'pill-stcg' }}">
+                  {{ 'LTCG 12.5%' if is_ltcg else 'STCG 20%' }}
+                </span>
+                {% if buy_date_str %}
+                <span style="font-size:11px; color:#64786a;">Held since {{ buy_date_str[:10] }}</span>
+                {% endif %}
+              </div>
+              <div style="text-align:right; font-size:12px; color:#64786a;">
+                {{ sh.quantity|int }} shares &bull; CMP {{ sh.cmp|money }}
+              </div>
+            </div>
+
+            <!-- Profit row -->
+            <div class="breakup-row">
+              <span class="label">Gross Profit <small style="color:#9eb09e;">(CMP − Avg Buy) × Qty</small></span>
+              <span class="value {{ 'pos' if profit >= 0 else 'neg' }}">{{ '+' if profit > 0 else '' }}{{ profit|money }}</span>
+            </div>
+
+            <hr class="breakup-divider">
+
+            <!-- Tax -->
+            <div class="breakup-row">
+              <span class="label">
+                Capital Gains Tax
+                <span class="cap-gain-pill {{ 'pill-ltcg' if is_ltcg else 'pill-stcg' }}" style="margin-left:4px;">
+                  {{ 'LTCG 12.5%' if is_ltcg else 'STCG 20%' }}
+                </span>
+              </span>
+              <span class="value neg">−{{ tax|money }}</span>
+            </div>
+
+            <hr class="breakup-divider">
+
+            <!-- Broker charges breakdown -->
+            <div class="breakup-row">
+              <span class="label">STT <small style="color:#9eb09e;">(0.1% of sell value)</small></span>
+              <span class="value neg">−{{ stt|money }}</span>
+            </div>
+            <div class="breakup-row">
+              <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345%)</small></span>
+              <span class="value neg">−{{ exch|money }}</span>
+            </div>
+            <div class="breakup-row">
+              <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001%)</small></span>
+              <span class="value neg">−{{ sebi|money }}</span>
+            </div>
+            <div class="breakup-row">
+              <span class="label">DP Charges <small style="color:#9eb09e;">(₹15.34/scrip/sell)</small></span>
+              <span class="value neg">−{{ dp|money }}</span>
+            </div>
+            <div class="breakup-row">
+              <span class="label">GST on Charges <small style="color:#9eb09e;">(18% on exch+SEBI+DP)</small></span>
+              <span class="value neg">−{{ gst|money }}</span>
+            </div>
+            <div class="breakup-row" style="background:#fef9ec;">
+              <span class="label" style="font-weight:600;">Total Broker Charges</span>
+              <span class="value neg" style="font-weight:700;">−{{ broker_total|money }}</span>
+            </div>
+            <div class="breakup-row" style="font-size:11px; color:#9eb09e; font-style:italic; background:#fafcf8;">
+              <span class="label">Stamp Duty <small>(0.015% of buy value — already paid at purchase)</small></span>
+              <span class="value" style="color:#9eb09e;">note</span>
+            </div>
+
+            <hr class="breakup-divider">
+
+            <!-- My commission -->
+            <div class="breakup-row" style="background:#f4f8f1;">
+              <span class="label" style="font-weight:600;">
+                My Commission
+                <small style="color:#9eb09e; font-weight:400;">
+                  {% if client.commission_type == 'turnover_pct' %}
+                    ({{ comm_rate }}% of turnover)
+                  {% elif client.commission_type == 'flat' %}
+                    (flat ₹{{ comm_rate }})
+                  {% else %}
+                    ({{ comm_rate }}% of profit)
+                  {% endif %}
+                </small>
+              </span>
+              <span class="value" style="color:#1e4620; font-weight:700;">−{{ my_commission|money }}</span>
+            </div>
+
+            <!-- Net Take-home -->
+            <div class="breakup-net-row">
+              <span>Net Take-Home for Client</span>
+              <span class="{{ 'pos' if net >= 0 else 'neg' }}">{{ '+' if net > 0 else '' }}{{ net|money }}</span>
+            </div>
+          </div>
+          {% elif sh.cmp == none or not sh.buy_price %}
+          <div class="breakup-stock-block">
+            <div class="breakup-stock-header">
+              <strong>{{ sh.stock }}</strong>
+              <span style="font-size:12px; color:#9eb09e;">CMP or buy price not available — breakup unavailable</span>
+            </div>
+          </div>
           {% endif %}
-          <span class="cell-secondary">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() if f.notes else 'Fund entry' }}</span>
+          {% endfor %}
+
+          <p style="font-size:11px; color:#9eb09e; margin-top:12px; line-height:1.6;">
+            * LTCG classification: buy year ≤ previous year (conservative 12-month estimate). Actual 12-month holding check applies on exact dates.
+            * Broker charges are for delivery trades (zero brokerage). STT shown for sell side only.
+            * Stamp duty (0.015% of buy value) already paid at purchase time and is excluded from net.
+          </p>
         </div>
-        <div class="mpc-actions">
-          <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
-            {{ csrf() }}
-            <button class="btn btn-ghost btn-xs text-danger">{{ icon('trash', 13) }} Delete</button>
-          </form>
-        </div>
-      </div>
-      {% endfor %}
+      </section>
+      {% endif %}
     </div>
-    {% else %}{{ empty_state('Track client bank deposits', 'Record capital injected or withdrawn by client.', 'bank', compact=True) }}{% endif %}
-    <div class="card-footer"><span>Net capital on record</span><strong class="tabular {{ 'pos' if s.net_funds >= 0 else 'neg' }}">{{ '+' if s.net_funds > 0 else '' }}{{ s.net_funds|money }}</strong></div>
+
+    <!-- RIGHT SIDEBAR: Portal Credentials, Client Details, Message Summary, Uploads -->
+    <div class="stack">
+      <!-- Client Portal Credentials Card -->
+      <section class="card card-pad" id="portal-credentials-card">
+        <div class="settings-heading">
+          <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
+          <div>
+            <h2>Client Portal Credentials</h2>
+            <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
+          </div>
+        </div>
+
+        <!-- Username line with Edit/Create button -->
+        <div class="details-line" style="align-items: center;">
+          <span>Portal Username</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            {% if client.username %}
+              <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
+                {{ icon('copy', 12) }}
+              </button>
+              <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
+            {% else %}
+              <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
+            {% endif %}
+            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
+              {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="details-line">
+          <span>Login Identifier (ID / Phone)</span>
+          <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
+        </div>
+        <div class="details-line" style="align-items: center;">
+          <span>Current Password</span>
+          {% if client.password_plain %}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
+              <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
+                {{ icon('eye', 14) }}
+              </button>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
+                {{ icon('copy', 13) }} Copy
+              </button>
+            </div>
+          {% elif client.password_hash %}
+            <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
+          {% else %}
+            <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
+          {% endif %}
+        </div>
+        <div class="details-line">
+          <span>Portal Status</span>
+          {% if client.password_hash or client.password_plain %}
+            <span class="badge badge-pos">Access Enabled</span>
+          {% else %}
+            <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
+          {% endif %}
+        </div>
+
+        <!-- Reset Password Form with Strong Password Generator -->
+        <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
+          {{ csrf() }}
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
+              {{ icon('repeat', 11) }} Generate Strong
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <label class="field" style="margin: 0;">
+              <span style="font-size: 11px;">New Password</span>
+              <input type="text" id="detail-new-password" name="client_password" required minlength="8" placeholder="Min 8 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
+            </label>
+            <label class="field" style="margin: 0;">
+              <span style="font-size: 11px;">Confirm Password</span>
+              <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="8" placeholder="Repeat password" autocomplete="off" style="font-family:monospace; font-weight:600;">
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm btn-wide">
+            {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="card card-pad">
+        <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
+        <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
+        <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
+        <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
+        {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
+        <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
+      </section>
+      <section class="card card-pad">
+        <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
+        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
+        <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
+          {% if client.phone %}
+          {% set wa_clean_phone = client.phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
+          {% set wa_phone = ('91' ~ wa_clean_phone) if (wa_clean_phone|length == 10) else wa_clean_phone %}
+          <a class="btn btn-ghost btn-sm" style="flex:1; justify-content:center" href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener noreferrer">{{ icon('send', 14) }}WhatsApp</a>
+          {% endif %}
+        </div>
+      </section>
+      {% if uploads %}
+      <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 1: TRADE LEDGER ===== -->
+<div class="client-tab-panel" id="tab-ledger">
+  <section class="card">
+    <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · <span class="tabular" data-privacy-value>{{ s.invested_open|money }}</span> invested</p></div><span class="badge">{{ rule }}</span></div>
+    {{ trade_table(trades, s, show_client=False) }}
   </section>
 </div>
 
-  <div class="stack">
-    <!-- Client Portal Credentials Card -->
-    <section class="card card-pad" id="portal-credentials-card">
-      <div class="settings-heading">
-        <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
-        <div>
-          <h2>Client Portal Credentials</h2>
-          <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
+<!-- ===== TAB 2: ADVISORIES ===== -->
+<div class="client-tab-panel" id="tab-advisories">
+  <section class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h2>Pop-up Trade Advisories &amp; Acknowledgments</h2>
+          <span class="badge" style="background:#e8f4fd; color:#0366d6;">SEBI Compliance Audit</span>
         </div>
+        <p class="muted">Live record of trade pop-ups sent to {{ client.name }} and their mandatory acknowledgment status.</p>
       </div>
-
-      <!-- Username line with Edit/Create button -->
-      <div class="details-line" style="align-items: center;">
-        <span>Portal Username</span>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          {% if client.username %}
-            <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
-            <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
-              {{ icon('copy', 12) }}
-            </button>
-            <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
-          {% else %}
-            <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
-          {% endif %}
-          <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
-            {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
-          </button>
-        </div>
-      </div>
-
-      <div class="details-line">
-        <span>Login Identifier (ID / Phone)</span>
-        <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
-      </div>
-      <div class="details-line" style="align-items: center;">
-        <span>Current Password</span>
-        {% if client.password_plain %}
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
-            <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
-              {{ icon('eye', 14) }}
-            </button>
-            <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
-              {{ icon('copy', 13) }} Copy
-            </button>
-          </div>
-        {% elif client.password_hash %}
-          <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
-        {% else %}
-          <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
-        {% endif %}
-      </div>
-      <div class="details-line">
-        <span>Portal Status</span>
-        {% if client.password_hash or client.password_plain %}
-          <span class="badge badge-pos">Access Enabled</span>
-        {% else %}
-          <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
-        {% endif %}
-      </div>
-
-      <!-- Reset Password Form with Strong Password Generator -->
-      <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
-        {{ csrf() }}
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
-          <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
-            {{ icon('repeat', 11) }} Generate Strong
-          </button>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-          <label class="field" style="margin: 0;">
-            <span style="font-size: 11px;">New Password</span>
-            <input type="text" id="detail-new-password" name="client_password" required minlength="8" placeholder="Min 8 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
-          </label>
-          <label class="field" style="margin: 0;">
-            <span style="font-size: 11px;">Confirm Password</span>
-            <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="8" placeholder="Repeat password" autocomplete="off" style="font-family:monospace; font-weight:600;">
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-sm btn-wide">
-          {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" type="button" onclick="openClientPopupTrade('{{ client.id }}')">
+          {{ icon('send', 14) }} Send New Pop-up Trade
         </button>
-      </form>
-    </section>
-
-    <section class="card card-pad">
-      <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
-      <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
-      <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
-      <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
-      {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
-      <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
-    </section>
-    <section class="card card-pad">
-      <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
-      {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
-      <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
-        {% if client.phone %}
-        {% set wa_clean_phone = client.phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
-        {% set wa_phone = ('91' ~ wa_clean_phone) if (wa_clean_phone|length == 10) else wa_clean_phone %}
-        <a class="btn btn-ghost btn-sm" style="flex:1; justify-content:center" href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener noreferrer">{{ icon('send', 14) }}WhatsApp</a>
-        {% endif %}
       </div>
-    </section>
-    {% if uploads %}
-    <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
+    </div>
+
+    {% if advisories %}
+    <!-- Desktop Advisories Table (Hidden on Mobile) -->
+    <div class="desktop-detail-advisories-table table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Stock Symbol</th>
+            <th>Action</th>
+            <th class="r">Entry Price</th>
+            <th class="r">Target</th>
+            <th class="r">Stop Loss</th>
+            <th>Sent At</th>
+            <th>Client Acknowledgment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in advisories %}
+          <tr>
+            <td>
+              <strong>{{ a.stock }}</strong>
+              {% if a.message %}
+                <span class="cell-secondary" title="{{ a.message }}">{{ a.message|truncate(45) }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
+                {{ a.action }}
+              </span>
+            </td>
+            <td class="r tabular">{{ a.price|money if a.price else 'CMP' }}</td>
+            <td class="r tabular pos">{{ a.target_price|money if a.target_price else '—' }}</td>
+            <td class="r tabular neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</td>
+            <td class="date-cell muted" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</td>
+            <td>
+              {% if a.acknowledged %}
+                <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
+                  {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('short') }}){% endif %}
+                </span>
+              {% elif a.is_expired %}
+                <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
+                  {{ icon('clock', 12) }} Expired
+                </span>
+              {% else %}
+                <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+                  {{ icon('clock', 12) }} Pending Acknowledgment
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Advisories Cards (Zero Horizontal Scroll for Phones) -->
+    <div class="mobile-detail-advisories-list">
+      {% for a in advisories %}
+      <div class="mobile-audit-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}" style="font-size:11px; padding:2px 8px;">
+              {{ a.action }}
+            </span>
+            <strong style="font-size: 15px;">{{ a.stock }}</strong>
+          </div>
+          <span class="date-cell muted" style="font-size:11px;" title="{{ a.created_at|ist('full') }}">{{ a.created_at|ist('short') }}</span>
+        </div>
+
+        <div class="mac-price-grid">
+          <div class="mac-price-item">
+            <span class="mac-label">Entry</span>
+            <strong class="mac-val">{{ a.price|money if a.price else 'CMP' }}</strong>
+          </div>
+          <div class="mac-price-item">
+            <span class="mac-label">Target</span>
+            <strong class="mac-val pos">{{ a.target_price|money if a.target_price else '—' }}</strong>
+          </div>
+          <div class="mac-price-item">
+            <span class="mac-label">Stop Loss</span>
+            <strong class="mac-val neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</strong>
+          </div>
+        </div>
+
+        {% if a.message %}
+        <div class="mac-message">{{ a.message }}</div>
+        {% endif %}
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid #edf4eb;">
+          <span class="mac-label">Acknowledgment</span>
+          {% if a.acknowledged %}
+            <span class="badge badge-pos" style="font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:700;" title="{{ a.acknowledged_at|ist('full') }}">
+              {{ icon('check', 12) }} Acknowledged {% if a.acknowledged_at %}({{ a.acknowledged_at|ist('chip') }}){% endif %}
+            </span>
+          {% elif a.is_expired %}
+            <span class="badge" style="background:#fff3e0; color:#b76e00; font-size:11px; border:1px solid #ffe0b2; font-weight:600;">
+              {{ icon('clock', 12) }} Expired
+            </span>
+          {% else %}
+            <span class="badge" style="background:#fff3cd; color:#856404; font-size:11px; display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+              {{ icon('clock', 12) }} Pending
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      {{ empty_state('No trade advisories sent yet', 'Click "Send New Pop-up Trade" to dispatch a mandatory pop-up recommendation directly to this client\'s screen.', 'send', compact=True) }}
     {% endif %}
+  </section>
+</div>
+
+<!-- ===== TAB 3: PAYMENTS & FUNDS ===== -->
+<div class="client-tab-panel" id="tab-payments">
+  <div class="detail-grid">
+    <section class="card">
+      <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
+      {% if payments %}
+      <div class="desktop-detail-payments-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+      {% for p in payments %}
+        <tr><td class="date-cell">{{ p.paid_on }}</td><td>{{ p.mode or 'Not specified' }}{% if p.notes %}<span class="cell-secondary" title="{{ p.notes }}">{{ p.notes|truncate(32) }}</span>{% endif %}</td><td class="r pos tabular strong">{{ p.amount|money }}</td><td><form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete payment">{{ icon('trash', 15) }}</button></form></td></tr>
+      {% endfor %}</tbody></table></div>
+
+      <div class="mobile-detail-payments-list">
+        {% for p in payments %}
+        <div class="mobile-payment-card">
+          <div class="mpc-top">
+            <span class="date-cell muted">{{ p.paid_on }}</span>
+            <strong class="pos tabular" style="font-size: 15px;">+{{ p.amount|money }}</strong>
+          </div>
+          <div class="mpc-mid">
+            <span class="source-tag">{{ p.mode or 'Not specified' }}</span>
+            {% if p.notes %}<span class="muted" style="font-size:11px;">{{ p.notes|truncate(30) }}</span>{% endif %}
+          </div>
+          <div class="mpc-actions">
+            <form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" data-confirm="Delete this payment? The client's outstanding balance will increase.">
+              {{ csrf() }}
+              <button class="btn btn-ghost btn-xs text-danger" aria-label="Delete payment">{{ icon('trash', 13) }} Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}{{ empty_state('Ready when they settle up', 'Record a payment to keep the outstanding balance up to date.', 'wallet', compact=True) }}{% endif %}
+      <div class="card-footer"><span>Total received</span><strong class="pos tabular">{{ s.paid|money }}</strong></div>
+    </section>
+    <section class="card">
+      <div class="card-header"><div><h2>Capital &amp; Funds Ledger</h2><p>Capital deposited or withdrawn by client and admin.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="fund-dialog">{{ icon('plus', 14) }}Record deposit</button></div></div>
+      {% if funds %}
+      <div class="desktop-detail-funds-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Note / Source</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+      {% for f in funds %}
+        <tr>
+          <td class="date-cell">{{ f.added_on }}</td>
+          <td>
+            {% if f.notes and '[Client' in f.notes %}
+              <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px; margin-right: 4px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
+              <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() or 'Via Client Portal' }}</span>
+            {% elif f.notes %}
+              <span class="cell-secondary" title="{{ f.notes }}">{{ f.notes|truncate(36) }}</span>
+            {% else %}
+              Not specified
+            {% endif %}
+          </td>
+          <td class="r {{ 'pos' if f.amount >= 0 else 'neg' }} tabular strong">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</td>
+          <td>
+            <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+              {{ csrf() }}
+              <button class="icon-btn icon-btn-danger" aria-label="Delete fund entry">{{ icon('trash', 15) }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}</tbody></table></div>
+
+      <div class="mobile-detail-funds-list">
+        {% for f in funds %}
+        <div class="mobile-payment-card">
+          <div class="mpc-top">
+            <span class="date-cell muted">{{ f.added_on }}</span>
+            <strong class="{{ 'pos' if f.amount >= 0 else 'neg' }} tabular" style="font-size: 15px;">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</strong>
+          </div>
+          <div class="mpc-mid">
+            {% if f.notes and '[Client' in f.notes %}
+              <span class="badge {{ 'badge-green' if f.amount >= 0 else 'badge-amber' }}" style="font-size: 10px; padding: 1px 6px;">{{ 'Client Deposit' if f.amount >= 0 else 'Client Withdrawal' }}</span>
+            {% endif %}
+            <span class="cell-secondary">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() if f.notes else 'Fund entry' }}</span>
+          </div>
+          <div class="mpc-actions">
+            <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+              {{ csrf() }}
+              <button class="btn btn-ghost btn-xs text-danger">{{ icon('trash', 13) }} Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}{{ empty_state('Track client bank deposits', 'Record capital injected or withdrawn by client.', 'bank', compact=True) }}{% endif %}
+      <div class="card-footer"><span>Net capital on record</span><strong class="tabular {{ 'pos' if s.net_funds >= 0 else 'neg' }}">{{ '+' if s.net_funds > 0 else '' }}{{ s.net_funds|money }}</strong></div>
+    </section>
   </div>
 </div>
 
@@ -742,5 +1006,29 @@ function generateStrongPassword(...targetIds) {
   }
   return result;
 }
+
+// ===== Client Page Tab Switching =====
+function switchClientTab(btn, tabId) {
+  // Deactivate all tabs and panels
+  document.querySelectorAll('.client-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
+  // Activate selected
+  btn.classList.add('active');
+  const panel = document.getElementById(tabId);
+  if (panel) panel.classList.add('active');
+  // Persist tab in URL hash without scroll jump
+  try {
+    history.replaceState(null, '', '#' + tabId);
+  } catch(e) {}
+}
+
+// Restore tab from URL hash on page load
+(function() {
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    const btn = document.querySelector('.client-tab-btn[data-tab="' + hash + '"]');
+    if (btn) switchClientTab(btn, hash);
+  }
+})();
 </script>
 {% endblock %}
