@@ -15,12 +15,12 @@
     "semantic_hash": ""
   },
   "backend/database.py": {
-    "mtime": 1792057396.0,
-    "ast_hash": "405ebd1692727f43fec83eda4e8615dd",
+    "mtime": 1795539127.972362,
+    "ast_hash": "9026d6ba3e7b0300f1d174598108100b",
     "semantic_hash": ""
   },
   "backend/prices.py": {
-    "mtime": 1794569201.0,
+    "mtime": 1795525724.7469091,
     "ast_hash": "0f60ae4b120406344c4bf856746ffc6f",
     "semantic_hash": ""
   },
@@ -45,12 +45,12 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1794731704.0,
-    "ast_hash": "13b13e7c43f1e6bab9aac67001befe0a",
+    "mtime": 1795539870.114446,
+    "ast_hash": "411baca9ad9cf4f620f2df6384543620",
     "semantic_hash": ""
   },
   "static/app.js": {
-    "mtime": 1794731733.0,
+    "mtime": 1795525724.7615438,
     "ast_hash": "6ae5d96fdd319cb246d130e7471613a0",
     "semantic_hash": ""
   },
@@ -60,7 +60,7 @@
     "semantic_hash": ""
   },
   "static/lightweight-charts.js": {
-    "mtime": 1794562474.0,
+    "mtime": 1795525724.7621026,
     "ast_hash": "46fce8438cde9404ad3cbbaf654ce4b2",
     "semantic_hash": ""
   },
@@ -145,12 +145,12 @@
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
-    "mtime": 1795163541.5307798,
+    "mtime": 1795525724.7448292,
     "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
     "semantic_hash": ""
   },
   ".agents/workflows/graphify.md": {
-    "mtime": 1795163541.5310044,
+    "mtime": 1795525724.7450755,
     "ast_hash": "0bc020d491fca99550c1ea3de0a5f862",
     "semantic_hash": ""
   },
@@ -190,7 +190,7 @@
     "semantic_hash": ""
   },
   "templates/_macros.html": {
-    "mtime": 1794731690.0,
+    "mtime": 1795525724.7633848,
     "ast_hash": "4841c39e483568eb0d6a42229afa841c",
     "semantic_hash": ""
   },
@@ -200,27 +200,27 @@
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795174756.8311408,
-    "ast_hash": "76b215447fa9af671a5021b30c836a80",
+    "mtime": 1795525724.7638602,
+    "ast_hash": "4a5af357b3e0858a1af895599ceb6cb7",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1794562892.0,
-    "ast_hash": "8198abd83d9ef551ea17c966312cf8a9",
+    "mtime": 1795539387.5044007,
+    "ast_hash": "9e7bd337a17b1d8ad4cdbc99e5ac13f3",
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795174588.1791298,
-    "ast_hash": "818f1f8f21497301511feddfb00074d5",
+    "mtime": 1795539830.7152193,
+    "ast_hash": "574cf3c8afadf53f469495e0e35b0026",
     "semantic_hash": ""
   },
   "templates/clients.html": {
-    "mtime": 1794568934.0,
+    "mtime": 1795525724.7650962,
     "ast_hash": "e98eb0caef491ebdaf80352b1f68e16f",
     "semantic_hash": ""
   },
   "templates/dashboard.html": {
-    "mtime": 1794568934.0,
+    "mtime": 1795525724.7654119,
     "ast_hash": "e4159f0af762e807ba1760f30a5df4c0",
     "semantic_hash": ""
   },
@@ -230,7 +230,7 @@
     "semantic_hash": ""
   },
   "templates/holdings.html": {
-    "mtime": 1794573291.0,
+    "mtime": 1795525724.765866,
     "ast_hash": "6934d55c631438e0376472e6f7b655d0",
     "semantic_hash": ""
   },
@@ -250,22 +250,22 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795174747.2923722,
-    "ast_hash": "7f5a098d02f8e16362c010fbfa0e9db1",
+    "mtime": 1795540154.2484553,
+    "ast_hash": "b421964305d5a3e80654b58796bbfe24",
     "semantic_hash": ""
   },
   "templates/settings.html": {
-    "mtime": 1794572024.0,
+    "mtime": 1795525724.7664669,
     "ast_hash": "4a79cf09852f1f39ec045a87ac491c28",
     "semantic_hash": ""
   },
   "templates/trade_form.html": {
-    "mtime": 1794731663.0,
+    "mtime": 1795525724.7667592,
     "ast_hash": "40bce6d4d524c091aa5d839adf3b1fbf",
     "semantic_hash": ""
   },
   "templates/trades.html": {
-    "mtime": 1794573276.0,
+    "mtime": 1795525724.76718,
     "ast_hash": "822d2308172b01e161fe5897ef42674a",
     "semantic_hash": ""
   },
@@ -310,8 +310,23 @@
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795168268.4935966,
+    "mtime": 1795525724.746577,
     "ast_hash": "ce898d5a55cfb83b29f39ee07182ca04",
+    "semantic_hash": ""
+  },
+  ".githooks/post-commit": {
+    "mtime": 1795537504.0437756,
+    "ast_hash": "10d20afb6eb227a6b14e8676bee94f73",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/011_stock_price_targets.sql": {
+    "mtime": 1795539134.2711556,
+    "ast_hash": "ad81ba10b545254b6aca4ca52cbc44be",
+    "semantic_hash": ""
+  },
+  ".github/workflows/sync-and-deploy.yml": {
+    "mtime": 1795537498.1501408,
+    "ast_hash": "a66d6e4c5b2b8c0885d72425131aa0d7",
     "semantic_hash": ""
   }
 }

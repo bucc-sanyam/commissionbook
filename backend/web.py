@@ -3319,6 +3319,9 @@ def create_app(config=None):
         except Exception:
             all_targets = {}
 
+        _, eff_rate = effective_rule(client)
+        show_advisory_agreement = float(eff_rate) < 35.0
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
             funds=funds, total_funds=total_funds, shares=shares, advisories=advisories,
@@ -3327,6 +3330,7 @@ def create_app(config=None):
             payment_token=payment_signer().dumps(cid),
             pending_reconciliations=pending_reconciliations,
             stock_targets=all_targets,
+            show_advisory_agreement=show_advisory_agreement,
         )
 
     @app.route("/clients/<int:cid>/set-username", methods=["POST"])
@@ -4314,6 +4318,9 @@ def create_app(config=None):
         except Exception:
             all_targets = {}
 
+        _, eff_rate = effective_rule(client)
+        show_advisory_agreement = float(eff_rate) < 35.0
+
         return render_template(
             "portal.html",
             client=client,
@@ -4333,6 +4340,7 @@ def create_app(config=None):
             known_stocks=get_known_stocks(get_db()),
             stock_targets=all_targets,
             rule=rule_label(client["commission_type"], client["commission_rate"]),
+            show_advisory_agreement=show_advisory_agreement,
         )
 
     @app.route("/portal/shares/new", methods=["POST"])

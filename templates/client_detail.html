@@ -106,7 +106,11 @@
     </div>
     <nav class="client-sidebar-nav" role="tablist">
       <button class="client-sidebar-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
-        <span class="btn-left">{{ icon('pie', 15) }} <span>Overview &amp; Slab</span></span>
+        <span class="btn-left">{{ icon('pie', 15) }} <span>Overview</span></span>
+      </button>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisory" onclick="switchClientTab(this, 'tab-advisory')">
+        <span class="btn-left">{{ icon('shield', 15) }} <span>Advisory &amp; Charges</span></span>
+        <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">{{ rule }}</span>
       </button>
       <button class="client-sidebar-btn" role="tab" data-tab="tab-holdings" onclick="switchClientTab(this, 'tab-holdings')">
         <span class="btn-left">{{ icon('trend', 15) }} <span>Holdings</span></span>
@@ -135,13 +139,15 @@
 
 <!-- ===== TAB 0: OVERVIEW & ADVISORY SLAB (MAIN PAGE) ===== -->
 <div class="client-tab-panel active" id="tab-overview">
-  <!-- Losses Policy Notice Callout -->
+  <!-- Losses Policy Notice Callout (Shown only if commission rate < 35%) -->
+  {% if show_advisory_agreement %}
   <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
     <span style="color: #16a34a; flex-shrink: 0;">{{ icon('info', 18) }}</span>
     <div style="font-size: 12px; color: #166534; line-height: 1.45;">
       <strong>Commission Agreement:</strong> {{ rule }}. <strong>Losses Policy:</strong> If a client incurs a loss in any share, the loss is borne solely by the client and is <strong>never subtracted from advisor commission</strong>. Commission is calculated exclusively on profitable trades.
     </div>
   </div>
+  {% endif %}
 
   <div class="detail-grid">
     <!-- LEFT: Holdings + Advisory Slab -->
@@ -337,7 +343,152 @@
         {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
       </section>
 
-      <!-- Advisory Slab & Exit Breakup Card -->
+      <!-- Advisory Slab & Exit Charges Summary Tile -->
+      {% if shares %}
+      <section class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, #fbfdfa 0%, #f4f8f2 100%); border: 1.5px solid #d2e4ce; cursor: pointer;" onclick="switchClientTab(document.querySelector('.client-sidebar-btn[data-tab=\'tab-advisory\']'), 'tab-advisory')">
+        <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <span style="width: 40px; height: 40px; border-radius: 8px; background: #e2f0dd; color: #1e4620; display: grid; place-items: center; flex-shrink: 0;">
+              {{ icon('shield', 20) }}
+            </span>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong style="font-size: 14px; color: #173d34;">Advisory Slab &amp; Exit Breakup</strong>
+                <span class="badge" style="background:#e8f5e9; color:#1b5e20;">{{ rule }}</span>
+              </div>
+              <p style="margin: 3px 0 0; font-size: 12px; color: #516d56;">
+                Projected commission, STCG/LTCG taxes, and broker charges (STT, DP &#8377;15.34, GST) if sold at CMP.
+              </p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none;">
+            {{ icon('pie', 14) }} View Full Breakup &rarr;
+          </button>
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT SIDEBAR: Portal Credentials, Client Details, Message Summary, Uploads -->
+    <div class="stack">
+      <!-- Client Portal Credentials Card -->
+      <section class="card card-pad" id="portal-credentials-card">
+        <div class="settings-heading">
+          <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
+          <div>
+            <h2>Client Portal Credentials</h2>
+            <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
+          </div>
+        </div>
+
+        <!-- Username line with Edit/Create button -->
+        <div class="details-line" style="align-items: center;">
+          <span>Portal Username</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            {% if client.username %}
+              <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
+                {{ icon('copy', 12) }}
+              </button>
+              <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
+            {% else %}
+              <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
+            {% endif %}
+            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
+              {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="details-line">
+          <span>Login Identifier (ID / Phone)</span>
+          <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
+        </div>
+        <div class="details-line" style="align-items: center;">
+          <span>Current Password</span>
+          {% if client.password_plain %}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
+              <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
+                {{ icon('eye', 14) }}
+              </button>
+              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
+                {{ icon('copy', 13) }} Copy
+              </button>
+            </div>
+          {% elif client.password_hash %}
+            <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
+          {% else %}
+            <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
+          {% endif %}
+        </div>
+        <div class="details-line">
+          <span>Portal Status</span>
+          {% if client.password_hash or client.password_plain %}
+            <span class="badge badge-pos">Access Enabled</span>
+          {% else %}
+            <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
+          {% endif %}
+        </div>
+
+        <!-- Reset Password Form with Strong Password Generator -->
+        <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
+          {{ csrf() }}
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
+              {{ icon('repeat', 11) }} Generate Strong
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <label class="field" style="margin: 0;">
+              <span style="font-size: 11px;">New Password</span>
+              <input type="text" id="detail-new-password" name="client_password" required minlength="8" placeholder="Min 8 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
+            </label>
+            <label class="field" style="margin: 0;">
+              <span style="font-size: 11px;">Confirm Password</span>
+              <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="8" placeholder="Repeat password" autocomplete="off" style="font-family:monospace; font-weight:600;">
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm btn-wide">
+            {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="card card-pad">
+        <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
+        <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
+        <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
+        <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
+        {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
+        <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
+      </section>
+      <section class="card card-pad">
+        <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
+        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
+        <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
+          {% if client.phone %}
+          {% set wa_clean_phone = client.phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
+          {% set wa_phone = ('91' ~ wa_clean_phone) if (wa_clean_phone|length == 10) else wa_clean_phone %}
+          <a class="btn btn-ghost btn-sm" style="flex:1; justify-content:center" href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener noreferrer">{{ icon('send', 14) }}WhatsApp</a>
+          {% endif %}
+        </div>
+      </section>
+      {% if uploads %}
+      <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: ADVISORY SLAB & EXIT BREAKUP ===== -->
+<div class="client-tab-panel" id="tab-advisory">
+  <!-- Advisory Slab & Exit Breakup Card -->
       {% if shares %}
       <section class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
@@ -635,123 +786,6 @@
         {% endif %}
       </section>
       {% endif %}
-    </div>
-
-    <!-- RIGHT SIDEBAR: Portal Credentials, Client Details, Message Summary, Uploads -->
-    <div class="stack">
-      <!-- Client Portal Credentials Card -->
-      <section class="card card-pad" id="portal-credentials-card">
-        <div class="settings-heading">
-          <span class="settings-glyph" style="background:#e8f4fd;color:#0366d6">{{ icon('lock', 19) }}</span>
-          <div>
-            <h2>Client Portal Credentials</h2>
-            <p>Login credentials for {{ client.name }} (Client #{{ client.id }}).</p>
-          </div>
-        </div>
-
-        <!-- Username line with Edit/Create button -->
-        <div class="details-line" style="align-items: center;">
-          <span>Portal Username</span>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            {% if client.username %}
-              <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
-              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
-                {{ icon('copy', 12) }}
-              </button>
-              <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
-            {% else %}
-              <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
-            {% endif %}
-            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
-              {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="details-line">
-          <span>Login Identifier (ID / Phone)</span>
-          <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
-        </div>
-        <div class="details-line" style="align-items: center;">
-          <span>Current Password</span>
-          {% if client.password_plain %}
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
-              <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
-                {{ icon('eye', 14) }}
-              </button>
-              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
-                {{ icon('copy', 13) }} Copy
-              </button>
-            </div>
-          {% elif client.password_hash %}
-            <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
-          {% else %}
-            <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
-          {% endif %}
-        </div>
-        <div class="details-line">
-          <span>Portal Status</span>
-          {% if client.password_hash or client.password_plain %}
-            <span class="badge badge-pos">Access Enabled</span>
-          {% else %}
-            <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
-          {% endif %}
-        </div>
-
-        <!-- Reset Password Form with Strong Password Generator -->
-        <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
-          {{ csrf() }}
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
-            <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
-              {{ icon('repeat', 11) }} Generate Strong
-            </button>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-            <label class="field" style="margin: 0;">
-              <span style="font-size: 11px;">New Password</span>
-              <input type="text" id="detail-new-password" name="client_password" required minlength="8" placeholder="Min 8 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
-            </label>
-            <label class="field" style="margin: 0;">
-              <span style="font-size: 11px;">Confirm Password</span>
-              <input type="text" id="detail-confirm-password" name="confirm_password" required minlength="8" placeholder="Repeat password" autocomplete="off" style="font-family:monospace; font-weight:600;">
-            </label>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-sm btn-wide">
-            {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
-          </button>
-        </form>
-      </section>
-
-      <section class="card card-pad">
-        <div class="settings-heading"><span class="settings-glyph">{{ icon('users', 19) }}</span><div><h2>Client details</h2><p>The agreement behind the numbers.</p></div><button class="btn btn-sm btn-ghost" type="button" data-dialog="edit-client-dialog" aria-label="Edit client">{{ icon('edit', 14) }}Edit terms</button></div>
-        <div class="details-line"><span>Commission rule</span><strong>{{ rule }}</strong></div>
-        <div class="details-line"><span>Win rate</span><strong>{{ '%.0f'|format(s.wins / s.closed * 100) if s.closed else '0' }}%</strong></div>
-        <div class="details-line"><span>Client since</span><strong>{{ client.created_at|string|truncate(10, True, '') }}</strong></div>
-        {% if client.notes %}<div class="helper-box">{{ icon('file', 15) }}<span>{{ client.notes }}</span></div>{% endif %}
-        <div class="actions"><button class="btn btn-sm" type="button" data-dialog="edit-client-dialog">Edit details</button>{% if merge_clients %}<button class="btn btn-ghost btn-sm" type="button" data-dialog="merge-dialog">{{ icon('repeat', 13) }}Merge client</button>{% endif %}</div>
-      </section>
-      <section class="card card-pad">
-        <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
-        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
-        <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
-          {% if client.phone %}
-          {% set wa_clean_phone = client.phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
-          {% set wa_phone = ('91' ~ wa_clean_phone) if (wa_clean_phone|length == 10) else wa_clean_phone %}
-          <a class="btn btn-ghost btn-sm" style="flex:1; justify-content:center" href="https://wa.me/{{ wa_phone }}?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener noreferrer">{{ icon('send', 14) }}WhatsApp</a>
-          {% endif %}
-        </div>
-      </section>
-      {% if uploads %}
-      <section class="card card-pad"><h2>Source screenshots</h2><div class="activity-list" style="padding:0">{% for upload in uploads[:5] %}<div class="activity-row"><span class="activity-icon">{{ icon('image', 16) }}</span><div><strong>{{ upload.trade_count }} trade{{ 's' if upload.trade_count != 1 }}</strong><small>{{ upload.created_at }}</small></div><div class="image-links">{% for filename in (upload.filename or '').split(',') if filename %}<a class="image-link" href="{{ url_for('upload_file', name=filename) }}" target="_blank" rel="noopener noreferrer" aria-label="View screenshot {{ loop.index }}">{{ icon('eye', 13) }}</a>{% endfor %}</div></div>{% endfor %}</div></section>
-      {% endif %}
-    </div>
-  </div>
 </div>
 
 <!-- ===== TAB 1: TRADE LEDGER ===== -->
@@ -1121,10 +1155,10 @@
     <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
       <div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <h2>{{ icon('candlestick', 18) }} Stock Candlestick Charts &amp; Targets</h2>
+          <h2>{{ icon('candlestick', 18) }} Stock Candlestick Chart &amp; Targets</h2>
           <span class="badge" style="background: #e8f5e9; color: #1b5e20;">Live Indian Markets</span>
         </div>
-        <p class="muted">Live technical candlestick charts &amp; price targets for {{ client.name }}'s portfolio shares.</p>
+        <p class="muted">Live technical candlestick chart &amp; price targets for {{ client.name }}'s portfolio shares.</p>
       </div>
       <a href="{{ url_for('charts_view') }}" class="btn btn-sm btn-primary">
         {{ icon('external', 14) }} Open All Stock Charts ↗
@@ -1132,56 +1166,76 @@
     </div>
 
     {% if shares %}
-    <div style="padding: 16px; display: flex; flex-direction: column; gap: 20px;">
-      {% for sh in shares %}
-      <div style="border: 1px solid #e1e9de; border-radius: 10px; overflow: hidden; background: #ffffff;">
-        <div style="background: #f4f8f1; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e1e9de;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <strong style="font-size: 16px; color: #173d34;">{{ sh.stock }}</strong>
-            <span class="badge" style="background: #e0ebd7; color: #2e5a36;">{{ (sh.quantity|int) }} shares</span>
-            <span class="muted" style="font-size: 12px;">Avg Buy: {{ sh.buy_price|money if sh.buy_price else '—' }} · CMP: <strong>{{ sh.cmp|money if sh.cmp else '—' }}</strong></span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-primary btn-xs">
-              {{ icon('candlestick', 12) }} Full Technical Chart &amp; Targets ↗
-            </a>
-          </div>
-        </div>
-
-        {% set stock_key = sh.stock.strip().upper() %}
-        {% set tg_list = stock_targets.get(stock_key, []) %}
-        {% if tg_list %}
-        <div style="padding: 10px 16px; background: #fafcf8; border-bottom: 1px solid #f0f4ec; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <span style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase;">Active Targets:</span>
-          {% for t in tg_list %}
-          {% set tp = t.target_price|float %}
-          {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
-          {% set gain = (tp - sbp) * (sh.quantity|float) if sbp else 0 %}
-          {% set gain_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
-          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 6px; background: #ffffff; border: 1px solid #c8e6c9;">
-            <strong style="color: #1b5e20;">{{ t.label }}:</strong> {{ tp|money }}
-            <span class="{{ 'pos' if gain >= 0 else 'neg' }}" style="font-weight: 600; font-size: 11px;">({{ '+' if gain > 0 else '' }}{{ gain|money }}, {{ '+' if gain_pct > 0 else '' }}{{ '%.1f'|format(gain_pct) }}%)</span>
-          </span>
+    <div style="padding: 16px 20px;">
+      <!-- Stock Selector Pills -->
+      <div style="margin-bottom: 16px;">
+        <span style="font-size: 11px; font-weight: 700; color: #5b6d52; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+          Choose a Stock to View Chart:
+        </span>
+        <div class="chart-stock-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          {% for sh in shares %}
+          <button type="button" 
+                  class="btn btn-sm client-chart-pill {% if loop.first %}btn-primary active{% else %}btn-secondary{% endif %}"
+                  data-stock="{{ sh.stock }}"
+                  data-qty="{{ sh.quantity|int }}"
+                  data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
+                  data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
+                  onclick="selectAdminClientChartStock(this, '{{ sh.stock }}')">
+            {{ sh.stock }} ({{ sh.quantity|int }})
+          </button>
           {% endfor %}
         </div>
-        {% endif %}
+      </div>
 
-        <div style="height: 380px; width: 100%; position: relative;">
-          <iframe 
-            src="https://s.tradingview.com/widgetembed/?symbol=NSE%3A{{ sh.stock }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
-            style="width: 100%; height: 100%; border: none;" 
-            loading="lazy" 
-            title="TradingView chart for {{ sh.stock }}">
-          </iframe>
+      <!-- Active Stock Info & Targets Header -->
+      <div style="background: #f4f8f1; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <span id="admin-chart-active-symbol" style="font-size: 18px; font-weight: 800; color: #173d34;">{{ shares[0].stock }}</span>
+          <span class="muted" style="font-size: 13px; margin-left: 8px;">
+            Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
+          </span>
+        </div>
+
+        <div id="admin-chart-targets-container">
+          {% for sh in shares %}
+          {% set stock_key = sh.stock.strip().upper() %}
+          {% set tg_list = stock_targets.get(stock_key, []) %}
+          <div class="admin-stock-targets-row" id="admin-targets-row-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: flex;{% endif %} gap: 8px; align-items: center; flex-wrap: wrap;">
+            {% if tg_list %}
+              <span style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase;">Active Targets:</span>
+              {% for t in tg_list %}
+              {% set tp = t.target_price|float %}
+              {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
+              {% set gain = (tp - sbp) * (sh.quantity|float) if sbp else 0 %}
+              {% set gain_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+              <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #ffffff; border: 1px solid #c8e6c9;">
+                <strong style="color: #1b5e20;">{{ t.label }}:</strong> {{ tp|money }}
+                <span class="{{ 'pos' if gain >= 0 else 'neg' }}" style="font-weight: 600;">({{ '+' if gain > 0 else '' }}{{ gain|money }})</span>
+              </span>
+              {% endfor %}
+            {% else %}
+              <span class="muted" style="font-size: 12px;">No price targets set yet for {{ sh.stock }}.</span>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
       </div>
-      {% endfor %}
+
+      <!-- SINGLE TradingView Chart Frame -->
+      <div style="height: 500px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: #ffffff;">
+        <iframe id="admin-client-chart-iframe"
+          src="https://s.tradingview.com/widgetembed/?symbol=NSE%3A{{ shares[0].stock }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
+          style="width: 100%; height: 100%; border: none;" 
+          loading="lazy" 
+          title="TradingView chart">
+        </iframe>
+      </div>
     </div>
     {% else %}
       {{ empty_state('No holdings to display charts', 'Record client holdings first to display live candlestick charts here.', 'candlestick') }}
     {% endif %}
   </section>
-</div>
+</div></div>
 
   </div> <!-- Close .client-page-content -->
 </div> <!-- Close .client-page-layout -->
@@ -1306,6 +1360,40 @@ function generateStrongPassword(...targetIds) {
     navigator.clipboard.writeText(result);
   }
   return result;
+}
+
+
+function selectAdminClientChartStock(btn, stock) {
+  document.querySelectorAll('.client-chart-pill').forEach(b => {
+    b.classList.remove('btn-primary', 'active');
+    b.classList.add('btn-secondary');
+  });
+  if (btn) {
+    btn.classList.remove('btn-secondary');
+    btn.classList.add('btn-primary', 'active');
+    const qty = btn.getAttribute('data-qty');
+    const buy = btn.getAttribute('data-buy');
+    const cmp = btn.getAttribute('data-cmp');
+    const qEl = document.getElementById('admin-chart-active-qty');
+    const bEl = document.getElementById('admin-chart-active-buy');
+    const cEl = document.getElementById('admin-chart-active-cmp');
+    if (qEl && qty) qEl.textContent = qty;
+    if (bEl && buy) bEl.textContent = buy;
+    if (cEl && cmp) cEl.textContent = cmp;
+  }
+  const symEl = document.getElementById('admin-chart-active-symbol');
+  if (symEl) symEl.textContent = stock;
+
+  document.querySelectorAll('.admin-stock-targets-row').forEach(row => {
+    row.style.display = 'none';
+  });
+  const activeRow = document.getElementById('admin-targets-row-' + stock);
+  if (activeRow) activeRow.style.display = 'flex';
+
+  const iframe = document.getElementById('admin-client-chart-iframe');
+  if (iframe) {
+    iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=NSE%3A' + encodeURIComponent(stock) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
+  }
 }
 
 // ===== Client Page Tab Switching =====
