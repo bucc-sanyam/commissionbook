@@ -11,17 +11,22 @@
       <div class="portal-brand-text">
         <div style="display: flex; align-items: center; gap: 8px;">
           <strong style="font-size: 15px; color: #142a26; line-height: 1.2;">{{ client.name }}</strong>
-          <span class="portal-avatar" style="width: 22px; height: 22px; font-size: 11px; flex-shrink: 0;">{{ client.name[0]|upper }}</span>
+          <span class="portal-avatar" style="width: 22px; height: 22px; font-size: 11px; flex-shrink: 0;">{{
+            client.name[0]|upper }}</span>
         </div>
         <div class="portal-brand-meta" style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
           {% if client.username %}
-            <small style="font-weight: 700; color: #1b5e20; font-size: 11px;">@{{ client.username }}</small>
+          <small style="font-weight: 700; color: #1b5e20; font-size: 11px;">@{{ client.username }}</small>
           {% else %}
-            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('claim-username-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600;">
-              + Set @username
-            </button>
+          <button type="button" class="btn btn-ghost btn-xs"
+            onclick="document.getElementById('claim-username-dialog').showModal()"
+            style="font-size: 10px; padding: 1px 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600;">
+            + Set @username
+          </button>
           {% endif %}
-          <button type="button" class="btn btn-ghost btn-xs desktop-only portal-top-pwd-btn" onclick="document.getElementById('update-password-dialog').showModal()" style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
+          <button type="button" class="btn btn-ghost btn-xs desktop-only portal-top-pwd-btn"
+            onclick="document.getElementById('update-password-dialog').showModal()"
+            style="font-size: 10px; padding: 1px 5px; color: #435443; background: #f0f5ee; border: 1px solid #d4e2d2; border-radius: 4px; font-weight: 600;">
             {{ icon('lock', 10) }} Password
           </button>
         </div>
@@ -29,21 +34,27 @@
     </div>
     <div class="portal-user-actions">
       <!-- Web Push Notifications Button (Removed once activated) -->
-      <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle" onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications" title="Get notified when trade recommendations are posted" style="display: none; gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 6px 10px; font-size: 12px; font-weight: 600; flex-shrink: 0;">
+      <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle"
+        onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications"
+        title="Get notified when trade recommendations are posted"
+        style="display: none; gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 6px 10px; font-size: 12px; font-weight: 600; flex-shrink: 0;">
         <span class="push-icon-inactive">{{ icon('send', 13) }}</span>
         <span class="push-label"><span class="desktop-only">Enable </span>Alerts</span>
       </button>
 
       <!-- Hide Values / Privacy Toggle Button -->
-      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values" title="Hide or show portfolio values" style="gap: 5px; flex-shrink: 0; padding: 6px 10px;">
+      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values"
+        title="Hide or show portfolio values" style="gap: 5px; flex-shrink: 0; padding: 6px 10px;">
         <span class="privacy-icon-off">{{ icon('eye-off', 15) }}</span>
         <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 15) }}</span>
         <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
       </button>
 
-      <form method="post" action="{{ url_for('logout') }}" class="desktop-only portal-top-signout-form" style="margin: 0; flex-shrink: 0;">
+      <form method="post" action="{{ url_for('logout') }}" class="desktop-only portal-top-signout-form"
+        style="margin: 0; flex-shrink: 0;">
         {{ csrf() }}
-        <button type="submit" class="btn btn-ghost btn-sm portal-top-signout-btn" aria-label="Sign out" style="padding: 6px 8px;">
+        <button type="submit" class="btn btn-ghost btn-sm portal-top-signout-btn" aria-label="Sign out"
+          style="padding: 6px 8px;">
           {{ icon('logout', 15) }}<span>Sign out</span>
         </button>
       </form>
@@ -56,21 +67,26 @@
 
     {% if not client.password_changed %}
     <!-- First Login Password Update Banner -->
-    <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #fffbf0 0%, #fff3e0 100%); border: 1.5px solid #ffcc80; border-radius: 12px; padding: 16px 20px;">
+    <div class="card"
+      style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #fffbf0 0%, #fff3e0 100%); border: 1.5px solid #ffcc80; border-radius: 12px; padding: 16px 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
         <div style="display: flex; gap: 14px; align-items: center;">
           <span style="font-size: 26px; line-height: 1;">🔐</span>
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <strong style="font-size: 15px; color: #b76e00;">First Login: Update Your Password</strong>
-              <span class="badge" style="background: #e65100; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Required</span>
+              <span class="badge"
+                style="background: #e65100; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Required</span>
             </div>
             <p style="margin: 4px 0 0; font-size: 13px; color: #5d4037; line-height: 1.4;">
-              You are signed in with the default temporary password (<code>Client@1234</code>). Please set your personal password to protect your account.
+              You are signed in with the default temporary password (<code>Client@1234</code>). Please set your personal
+              password to protect your account.
             </p>
           </div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('update-password-dialog').showModal()" style="white-space: nowrap; background: #e65100; border-color: #e65100;">
+        <button type="button" class="btn btn-primary btn-sm"
+          onclick="document.getElementById('update-password-dialog').showModal()"
+          style="white-space: nowrap; background: #e65100; border-color: #e65100;">
           {{ icon('lock', 14) }} Set Personal Password
         </button>
       </div>
@@ -79,21 +95,26 @@
 
     {% if not client.username %}
     <!-- One-Time Username Setup Banner -->
-    <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #f0f7ee 0%, #e8f5e9 100%); border: 1.5px solid #a3d9a5; border-radius: 12px; padding: 16px 20px;">
+    <div class="card"
+      style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #f0f7ee 0%, #e8f5e9 100%); border: 1.5px solid #a3d9a5; border-radius: 12px; padding: 16px 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
         <div style="display: flex; gap: 14px; align-items: center;">
           <span style="font-size: 26px; line-height: 1;">✨</span>
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <strong style="font-size: 15px; color: #164237;">Set Your Permanent Username</strong>
-              <span class="badge" style="background: #1b5e20; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">One-time only</span>
+              <span class="badge"
+                style="background: #1b5e20; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">One-time
+                only</span>
             </div>
             <p style="margin: 4px 0 0; font-size: 13px; color: #37533b; line-height: 1.4;">
-              Create your unique login handle (e.g. <code>@batman</code>). Once set, it is permanently locked and only an administrator can modify it.
+              Create your unique login handle (e.g. <code>@batman</code>). Once set, it is permanently locked and only
+              an administrator can modify it.
             </p>
           </div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('claim-username-dialog').showModal()" style="white-space: nowrap;">
+        <button type="button" class="btn btn-primary btn-sm"
+          onclick="document.getElementById('claim-username-dialog').showModal()" style="white-space: nowrap;">
           {{ icon('user', 14) }} Choose Username
         </button>
       </div>
@@ -107,9 +128,11 @@
         <div class="metric-value" id="portal-portfolio-val">{{ total_holdings_current_value|money }}</div>
         <div class="metric-sub" id="portal-unrealized-sub">
           {% if total_unrealized_pnl >= 0 %}
-            <span class="pill pill-pos">{{ icon('trend', 13) }} +{{ total_unrealized_pnl|money }} (+{{ total_unrealized_pct|round(2) }}%)</span>
+          <span class="pill pill-pos">{{ icon('trend', 13) }} +{{ total_unrealized_pnl|money }} (+{{
+            total_unrealized_pct|round(2) }}%)</span>
           {% else %}
-            <span class="pill pill-neg">{{ icon('trend', 13) }} {{ total_unrealized_pnl|money }} ({{ total_unrealized_pct|round(2) }}%)</span>
+          <span class="pill pill-neg">{{ icon('trend', 13) }} {{ total_unrealized_pnl|money }} ({{
+            total_unrealized_pct|round(2) }}%)</span>
           {% endif %}
           <small class="muted">Total Unrealized P&amp;L</small>
         </div>
@@ -134,18 +157,21 @@
         <div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h2 style="margin: 0;">Your Current Holdings</h2>
-            <span id="portal-ticker-badge" class="ticker-badge ticker-live" title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
+            <span id="portal-ticker-badge" class="ticker-badge ticker-live"
+              title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
               <span class="ticker-pulse"></span>
               <span>Live 20s Ticker</span>
             </span>
           </div>
-          <p class="muted">Calculated automatically from your open trades · Live ticker updates every 20s (9:15 AM – 3:45 PM IST).</p>
+          <p class="muted">Calculated automatically from your open trades · Live ticker updates every 20s (9:15 AM –
+            3:45 PM IST).</p>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
           <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
             {{ icon('plus', 14) }} Add Trade
           </button>
-          <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}" class="btn btn-secondary btn-sm">
+          <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}"
+            class="btn btn-secondary btn-sm">
             {{ icon('upload', 14) }} Upload Trade Proof
           </a>
         </div>
@@ -168,21 +194,30 @@
           </thead>
           <tbody>
             {% for h in shares %}
-            <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}" class="holding-main-row {% if h.lots and h.lots|length > 1 %}has-sublots{% endif %}">
+            <tr data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}"
+              class="holding-main-row {% if h.lots and h.lots|length > 1 %}has-sublots{% endif %}">
               <td>
                 <div class="stock-sym-wrap" style="display: flex; align-items: center; gap: 8px;">
                   {% if h.lots and h.lots|length > 1 %}
-                  <button type="button" class="lots-toggle-btn icon-btn" data-target="portal-lots-{{ loop.index }}" aria-label="Toggle trade lots for {{ h.stock }}" title="View {{ h.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                  <button type="button" class="lots-toggle-btn icon-btn" data-target="portal-lots-{{ loop.index }}"
+                    aria-label="Toggle trade lots for {{ h.stock }}" title="View {{ h.lots|length }} open trades"
+                    style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
                     {{ icon('chevron-down', 14) }}
                   </button>
                   {% endif %}
                   <div>
                     <strong style="font-size: 13px;">{{ h.stock }}</strong>
                     {% if h.lots and h.lots|length > 1 %}
-                      <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ h.lots|length }} trades</span>
+                    <span class="lots-pill"
+                      style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{
+                      h.lots|length }} trades</span>
                     {% endif %}
-                    <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
-                      {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
+                    <span
+                      class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}"
+                      data-change="{{ h.stock }}"
+                      style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
+                      {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{
+                      (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}% today
                     </span>
                   </div>
                 </div>
@@ -190,37 +225,43 @@
               <td class="r tabular"><strong>{{ (h.quantity|int) if h.quantity else '—' }}</strong></td>
               <td class="r tabular">
                 <span title="Weighted Average Price">{{ h.buy_price|money if h.buy_price else '—' }}</span>
-                {% if h.lots and h.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
+                {% if h.lots and h.lots|length > 1 %}<small class="muted"
+                  style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
               </td>
               <td class="r tabular">
                 {% if h.cmp %}
-                  <span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</span>
-                  {% if h.price_updated_at %}
-                    <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{ h.price_updated_at[11:16] }} IST</small>
-                  {% endif %}
+                <span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money }}</span>
+                {% if h.price_updated_at %}
+                <small class="muted" style="display:block; font-size:10px;" data-updated="{{ h.stock }}">{{
+                  h.price_updated_at[11:16] }} IST</small>
+                {% endif %}
                 {% else %}
-                  <span class="live-price-val muted" data-cmp="{{ h.stock }}">—</span>
+                <span class="live-price-val muted" data-cmp="{{ h.stock }}">—</span>
                 {% endif %}
               </td>
               <td class="r tabular"><strong data-curval="{{ h.stock }}">{{ h.current_value|money }}</strong></td>
               <td class="r tabular">
                 <span class="tabular {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
                   {% if h.unrealized_pnl >= 0 %}
-                    +{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small>
+                  +{{ h.unrealized_pnl|money }} <small>(+{{ h.unrealized_pct|round(2) }}%)</small>
                   {% else %}
-                    {{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small>
+                  {{ h.unrealized_pnl|money }} <small>({{ h.unrealized_pct|round(2) }}%)</small>
                   {% endif %}
                 </span>
               </td>
               <td class="r date-cell muted">{{ h.added_on[:10] }}</td>
             </tr>
             {% if h.lots and h.lots|length > 1 %}
-            <tr class="holding-lots-subrow" id="portal-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+            <tr class="holding-lots-subrow" id="portal-lots-{{ loop.index }}"
+              style="display: none; background: #fafbf7;">
               <td colspan="7" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
-                <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                  {{ icon('book', 12) }} Open Trades for {{ h.stock }} &bull; Accumulated {{ h.quantity }} shares at average {{ h.buy_price|money }}
+                <div
+                  style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                  {{ icon('book', 12) }} Open Trades for {{ h.stock }} &bull; Accumulated {{ h.quantity }} shares at
+                  average {{ h.buy_price|money }}
                 </div>
-                <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+                <table class="lots-nested-table"
+                  style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
                   <thead>
                     <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
                       <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
@@ -237,7 +278,8 @@
                       <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
                       <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
                       <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
-                      <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
+                      <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id)
+                        }}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -253,17 +295,22 @@
       <!-- Mobile Expandable Holdings View (Zero Horizontal Scrolling) -->
       <div class="mobile-holdings-list" data-lazy-list="15">
         {% for h in shares %}
-        <details class="mobile-trade-card" data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}" data-buy="{{ h.buy_price or 0 }}">
+        <details class="mobile-trade-card" data-stock="{{ h.stock }}" data-qty="{{ h.quantity or 0 }}"
+          data-buy="{{ h.buy_price or 0 }}">
           <summary class="mobile-trade-summary">
             <div class="mts-left">
               <div class="mts-stock">
                 <strong>{{ h.stock }}</strong>
-                <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}" data-change="{{ h.stock }}" style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
-                  {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{ (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}%
+                <span class="daily-change {{ 'pos' if (h.price_change is defined and h.price_change > 0) else 'neg' }}"
+                  data-change="{{ h.stock }}"
+                  style="display: {{ 'inline-block' if (h.price_change is defined and h.price_change != 0) else 'none' }};">
+                  {{ '+' if (h.price_change is defined and h.price_change > 0) else '' }}{{
+                  (h.price_change_pct|round(2)) if h.price_change_pct is defined else 0 }}%
                 </span>
               </div>
               <div class="mts-dates">
-                <span class="tabular">{{ (h.quantity|int) if h.quantity else '—' }} shares</span> &bull; Added {{ h.added_on[:10] }}
+                <span class="tabular">{{ (h.quantity|int) if h.quantity else '—' }} shares</span> &bull; Added {{
+                h.added_on[:10] }}
               </div>
             </div>
             <div class="mts-right">
@@ -286,7 +333,8 @@
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">CMP (Current)</span>
-                <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp else '—' }}</span></strong>
+                <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ h.stock }}">{{ h.cmp|money if h.cmp
+                    else '—' }}</span></strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Current Value</span>
@@ -295,7 +343,8 @@
               <div class="mtd-item">
                 <span class="mtd-label">Unrealized P&amp;L</span>
                 <strong class="mtd-val {{ 'pos' if h.unrealized_pnl >= 0 else 'neg' }}" data-pnl="{{ h.stock }}">
-                  {{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }} ({{ h.unrealized_pct|round(2) }}%)
+                  {{ '+' if h.unrealized_pnl >= 0 else '' }}{{ h.unrealized_pnl|money }} ({{ h.unrealized_pct|round(2)
+                  }}%)
                 </strong>
               </div>
               <div class="mtd-item">
@@ -304,13 +353,16 @@
               </div>
             </div>
             {% if h.lots and h.lots|length > 1 %}
-            <div class="mobile-lots-breakdown" style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #d4ded2;">
+            <div class="mobile-lots-breakdown"
+              style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #d4ded2;">
               <span style="font-size: 11px; font-weight: 600; color: #44593c; display: block; margin-bottom: 6px;">
                 Open Trades Breakdown ({{ h.lots|length }} trades at avg {{ h.buy_price|money }}):
               </span>
               {% for lot in h.lots %}
-              <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #edf1e8;">
-                <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
+              <div
+                style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #edf1e8;">
+                <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money
+                  }}</span>
                 <strong class="tabular" style="color: #173d34;">{{ lot.total_cost|money }}</strong>
               </div>
               {% endfor %}
@@ -321,7 +373,8 @@
         {% endfor %}
       </div>
       {% else %}
-        {{ empty_state('No open holdings', 'Holdings are calculated automatically from your open trades. Click "Add Trade" above to record a trade.', 'trend') }}
+      {{ empty_state('No open holdings', 'Holdings are calculated automatically from your open trades. Click "Add Trade"
+      above to record a trade.', 'trend') }}
       {% endif %}
     </section>
 
@@ -363,9 +416,9 @@
               <td class="r tabular">{{ t.buy_price|money if t.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if t.sell_price %}
-                  {{ t.sell_price|money }}
+                {{ t.sell_price|money }}
                 {% else %}
-                  <span style="color: #b7791f; font-weight: 600;">Open</span>
+                <span style="color: #b7791f; font-weight: 600;">Open</span>
                 {% endif %}
               </td>
               <td class="r tabular {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
@@ -376,10 +429,16 @@
               <td class="r">
                 {% if t.upload_filename %}
                 <div style="display:inline-flex; align-items:center; gap:4px; justify-content:flex-end;">
-                  <a class="icon-btn" href="{{ url_for('upload_file', name=t.upload_filename.split(',')[0]) }}" target="_blank" rel="noopener noreferrer" title="View proof screenshot" style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
-                  <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+                  <a class="icon-btn" href="{{ url_for('upload_file', name=t.upload_filename.split(',')[0]) }}"
+                    target="_blank" rel="noopener noreferrer" title="View proof screenshot"
+                    style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
+                  <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}"
+                    style="display:inline-flex; margin:0;"
+                    onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
                     {{ csrf() }}
-                    <button class="icon-btn icon-btn-danger" type="submit" title="Delete screenshot proof" style="display:inline-flex; width:26px; height:26px; color:#c53030; cursor:pointer;" aria-label="Delete screenshot proof">{{ icon('trash', 13) }}</button>
+                    <button class="icon-btn icon-btn-danger" type="submit" title="Delete screenshot proof"
+                      style="display:inline-flex; width:26px; height:26px; color:#c53030; cursor:pointer;"
+                      aria-label="Delete screenshot proof">{{ icon('trash', 13) }}</button>
                   </form>
                 </div>
                 {% else %}
@@ -410,15 +469,15 @@
             </div>
             <div class="mts-right">
               {% if t.status == 'Closed' %}
-                <div class="mts-pnl {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
-                  <strong>{{ t.pnl|money }}</strong>
-                  <small>{{ '%+.2f'|format(t.pnl_pct) }}%</small>
-                </div>
+              <div class="mts-pnl {{ 'pos' if t.pnl > 0 else 'neg' if t.pnl < 0 else '' }}">
+                <strong>{{ t.pnl|money }}</strong>
+                <small>{{ '%+.2f'|format(t.pnl_pct) }}%</small>
+              </div>
               {% else %}
-                <div class="mts-pnl muted">
-                  <strong>Open</strong>
-                  <small class="tabular">{{ (t.quantity|int) if t.quantity else '—' }} shares</small>
-                </div>
+              <div class="mts-pnl muted">
+                <strong>Open</strong>
+                <small class="tabular">{{ (t.quantity|int) if t.quantity else '—' }} shares</small>
+              </div>
               {% endif %}
               <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
             </div>
@@ -437,9 +496,9 @@
                 <span class="mtd-label">Sell Price</span>
                 <strong class="mtd-val">
                   {% if t.sell_price %}
-                    {{ t.sell_price|money }}
+                  {{ t.sell_price|money }}
                   {% else %}
-                    <span style="color: #b7791f; font-weight: 700;">Open</span>
+                  <span style="color: #b7791f; font-weight: 700;">Open</span>
                   {% endif %}
                 </strong>
               </div>
@@ -455,23 +514,29 @@
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Trade Dates</span>
-                <strong class="mtd-val">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif %}</strong>
+                <strong class="mtd-val">{{ t.buy_date or '—' }} {% if t.sell_date %}→ {{ t.sell_date }}{% endif
+                  %}</strong>
               </div>
             </div>
 
             {% if t.upload_filename %}
-            <div class="mtd-proof" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+            <div class="mtd-proof"
+              style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <span class="muted" style="font-size:11px;">Proof:</span>
                 {% for fn in t.upload_filename.split(',') if fn %}
-                  <a class="btn btn-ghost btn-sm" href="{{ url_for('upload_file', name=fn) }}" target="_blank" rel="noopener noreferrer" style="font-size:11px; padding: 2px 8px;">
-                    {{ icon('image', 12) }} Screenshot
-                  </a>
+                <a class="btn btn-ghost btn-sm" href="{{ url_for('upload_file', name=fn) }}" target="_blank"
+                  rel="noopener noreferrer" style="font-size:11px; padding: 2px 8px;">
+                  {{ icon('image', 12) }} Screenshot
+                </a>
                 {% endfor %}
               </div>
-              <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+              <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}"
+                style="display:inline-flex; margin:0;"
+                onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
                 {{ csrf() }}
-                <button type="submit" class="btn btn-ghost btn-sm" style="color: #c53030; font-size:11px; padding: 2px 8px;" title="Delete proof screenshot">
+                <button type="submit" class="btn btn-ghost btn-sm"
+                  style="color: #c53030; font-size:11px; padding: 2px 8px;" title="Delete proof screenshot">
                   {{ icon('trash', 12) }} Remove Proof
                 </button>
               </form>
@@ -482,7 +547,7 @@
         {% endfor %}
       </div>
       {% else %}
-        {{ empty_state('No trades yet', 'Click "Add Trade" above to record your first trade in your ledger.', 'trend') }}
+      {{ empty_state('No trades yet', 'Click "Add Trade" above to record your first trade in your ledger.', 'trend') }}
       {% endif %}
     </section>
 
@@ -490,18 +555,22 @@
     <div class="portal-mobile-account-card mobile-only">
       <div class="pma-card-header">
         <div class="pma-user-info">
-          <span class="portal-avatar" style="width: 36px; height: 36px; font-size: 15px; font-weight: 700;">{{ client.name[0]|upper }}</span>
+          <span class="portal-avatar" style="width: 36px; height: 36px; font-size: 15px; font-weight: 700;">{{
+            client.name[0]|upper }}</span>
           <div>
             <div class="pma-name">{{ client.name }}</div>
             {% if client.username %}
-              <div class="pma-username">@{{ client.username }}</div>
+            <div class="pma-username">@{{ client.username }}</div>
             {% endif %}
           </div>
         </div>
-        <span class="badge" style="background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; font-size: 11px; padding: 3px 8px; font-weight: 600;">Active Account</span>
+        <span class="badge"
+          style="background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; font-size: 11px; padding: 3px 8px; font-weight: 600;">Active
+          Account</span>
       </div>
       <div class="pma-card-actions">
-        <button type="button" class="btn btn-secondary pma-btn" onclick="document.getElementById('update-password-dialog').showModal()">
+        <button type="button" class="btn btn-secondary pma-btn"
+          onclick="document.getElementById('update-password-dialog').showModal()">
           {{ icon('lock', 15) }}
           <span>Change Password</span>
         </button>
@@ -516,11 +585,15 @@
     </div>
 
     <!-- Client Profile Screen Disclaimer Footer with 'i' icon -->
-    <footer class="portal-disclaimer-footer" style="margin-top: 1.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
+    <footer class="portal-disclaimer-footer"
+      style="margin-top: 1.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
       <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
       <div>
-        <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading Advisory Disclaimer</strong>
-        Investments in securities market are subject to market risks. Read all trade and scheme documents carefully before trading. Trade recommendations provided in this portal are advisory in nature and do not guarantee profits. Real-time market valuations and portfolio ledger metrics are for private tracking purposes only.
+        <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading
+          Advisory Disclaimer</strong>
+        Investments in securities market are subject to market risks. Read all trade and scheme documents carefully
+        before trading. Trade recommendations provided in this portal are advisory in nature and do not guarantee
+        profits. Real-time market valuations and portfolio ledger metrics are for private tracking purposes only.
       </div>
     </footer>
   </main>
@@ -528,7 +601,8 @@
 
 <!-- CLIENT ADD TRADE DIALOG -->
 <dialog class="modal modal-md" id="add-trade-dialog">
-  <form method="post" action="{{ url_for('portal_trade_add') }}" enctype="multipart/form-data" class="modal-inner" id="add-trade-form">
+  <form method="post" action="{{ url_for('portal_trade_add') }}" enctype="multipart/form-data" class="modal-inner"
+    id="add-trade-form">
     {{ csrf() }}
     <input type="hidden" name="trade_id" id="trade-edit-id" value="">
     <div class="modal-heading">
@@ -538,21 +612,25 @@
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    
-    <div style="padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 12px; color: #166534; line-height: 1.45; margin-bottom: 12px;">
-      <strong>Buy or Sell (both are optional, at least one required):</strong> Fill Buy details to record a new position, Sell details to record an exit, or both for a completed trade. You can add any number of trades freely.
+
+    <div
+      style="padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 12px; color: #166534; line-height: 1.45; margin-bottom: 12px;">
+      <strong>Buy or Sell (both are optional, at least one required):</strong> Fill Buy details to record a new
+      position, Sell details to record an exit, or both for a completed trade. You can add any number of trades freely.
     </div>
 
     <div class="form-grid" style="display: flex; flex-direction: column; gap: 10px;">
       <label class="field" for="trade-stock-input" style="margin-bottom: 0;">
         <span class="field-title">Stock Symbol / Name <span class="field-req">*</span></span>
-        <input id="trade-stock-input" name="stock" class="stock-autocomplete-input" required placeholder="e.g. SBC, RELIANCE, TCS" autocomplete="off" style="text-transform: uppercase;">
+        <input id="trade-stock-input" name="stock" class="stock-autocomplete-input" required
+          placeholder="e.g. SBC, RELIANCE, TCS" autocomplete="off" style="text-transform: uppercase;">
       </label>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label class="field" for="trade-qty-input" style="margin-bottom: 0;">
           <span class="field-title">Quantity <span class="field-req">*</span></span>
-          <input id="trade-qty-input" type="number" name="quantity" step="1" min="1" required inputmode="numeric" placeholder="Shares count">
+          <input id="trade-qty-input" type="number" name="quantity" step="1" min="1" required inputmode="numeric"
+            placeholder="Shares count">
         </label>
         <label class="field" for="trade-notes" style="margin-bottom: 0;">
           <span class="field-title">Notes <span class="optional">(Optional)</span></span>
@@ -561,10 +639,12 @@
       </div>
 
       <!-- Buy Section -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <div
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
         <label class="field" for="trade-buy-price" style="margin-bottom: 0;">
           <span class="field-title">Buy Price (₹) <span class="optional">(Optional)</span></span>
-          <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if sell-only">
+          <input id="trade-buy-price" type="number" name="buy_price" step="any" min="0" inputmode="decimal"
+            placeholder="Leave blank if sell-only">
         </label>
         <label class="field" for="trade-buy-date" style="margin-bottom: 0;">
           <span class="field-title">Buy Date <span class="optional">(Defaults to today)</span></span>
@@ -573,10 +653,12 @@
       </div>
 
       <!-- Sell Section -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #fafbf9; border: 1px dashed #d5ded2; border-radius: 8px;">
+      <div
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #fafbf9; border: 1px dashed #d5ded2; border-radius: 8px;">
         <label class="field" for="trade-sell-price" style="margin-bottom: 0;">
           <span class="field-title">Sell Price (₹) <span class="optional">(Optional)</span></span>
-          <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal" placeholder="Leave blank if open holding">
+          <input id="trade-sell-price" type="number" name="sell_price" step="any" min="0" inputmode="decimal"
+            placeholder="Leave blank if open holding">
         </label>
         <label class="field" for="trade-sell-date" style="margin-bottom: 0;">
           <span class="field-title">Sell Date <span class="optional">(Defaults to today)</span></span>
@@ -589,20 +671,27 @@
         <span style="font-weight: 600; font-size: 12px; display: block; margin-bottom: 3px; color: #2d3748;">
           Trade Screenshot Proof <span class="optional">(Optional)</span>
         </span>
-        <div class="sell-upload-dropzone" id="trade-upload-dropzone" onclick="document.getElementById('trade-proof-file').click()" role="button" tabindex="0" style="padding: 10px; border-radius: 8px;">
-          <input type="file" id="trade-proof-file" name="proof_image" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleTradeProofSelect(this)">
+        <div class="sell-upload-dropzone" id="trade-upload-dropzone"
+          onclick="document.getElementById('trade-proof-file').click()" role="button" tabindex="0"
+          style="padding: 10px; border-radius: 8px;">
+          <input type="file" id="trade-proof-file" name="proof_image" accept="image/png,image/jpeg,image/webp"
+            style="display: none;" onchange="handleTradeProofSelect(this)">
           <div id="trade-dropzone-empty" style="text-align: center; padding: 6px;">
             <span style="color: #4a5568; display: inline-block;">{{ icon('upload', 18) }}</span>
             <div style="font-size: 12px; font-weight: 600; color: #2d3748;">Tap to attach broker screenshot</div>
             <small class="muted" style="font-size: 10px;">PNG, JPG, or WebP</small>
           </div>
           <div id="trade-dropzone-preview" style="display: none; padding: 6px 10px; align-items: center; gap: 10px;">
-            <img id="trade-preview-img" src="" alt="Proof preview" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0;">
+            <img id="trade-preview-img" src="" alt="Proof preview"
+              style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0;">
             <div style="flex: 1; min-width: 0;">
-              <div id="trade-file-name" style="font-size: 12px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">screenshot.png</div>
+              <div id="trade-file-name"
+                style="font-size: 12px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                screenshot.png</div>
               <div id="trade-file-size" class="muted" style="font-size: 10px;">0 KB</div>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeTradeProof();" style="color: #e53e3e; padding: 2px 6px;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeTradeProof();"
+              style="color: #e53e3e; padding: 2px 6px;">
               {{ icon('x', 14) }}
             </button>
           </div>
@@ -610,13 +699,17 @@
       </div>
 
       <!-- Deduct from Funds Checkbox/Button -->
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
-        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
-          <input type="checkbox" name="deduct_from_funds" value="1" id="portal-deduct-funds-checkbox" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #0f172a; cursor: pointer;">
+      <div
+        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
+        <label
+          style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+          <input type="checkbox" name="deduct_from_funds" value="1" id="portal-deduct-funds-checkbox"
+            style="width: 18px; height: 18px; margin-top: 2px; accent-color: #0f172a; cursor: pointer;">
           <div>
             <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Deduct from funds (Available Cash)</div>
             <div style="font-size: 11px; color: #64748b; line-height: 1.35; margin-top: 1px;">
-              Tick only if you want the purchase cost deducted from your Available Cash. Leave unticked to keep Available Cash intact and prevent it from going negative.
+              Tick only if you want the purchase cost deducted from your Available Cash. Leave unticked to keep
+              Available Cash intact and prevent it from going negative.
             </div>
           </div>
         </label>
@@ -641,11 +734,15 @@
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <p class="muted">Record a deposit or withdrawal in your funds ledger. Completed trade profits are credited directly upon closing.</p>
+    <p class="muted">Record a deposit or withdrawal in your funds ledger. Completed trade profits are credited directly
+      upon closing.</p>
 
-    <div class="sell-summary-box" style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+    <div class="sell-summary-box"
+      style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
       <div>
-        <span class="muted" style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block;">Available Cash</span>
+        <span class="muted"
+          style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block;">Available
+          Cash</span>
         <strong class="tabular" style="font-size: 18px; color: #1e8751;">{{ money_in_bank|money }}</strong>
       </div>
       <div style="text-align: right;">
@@ -656,13 +753,16 @@
 
     <!-- Action Selection: Add vs Remove -->
     <div style="margin-bottom: 12px;">
-      <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: #2d3748;">Action Type</label>
+      <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: #2d3748;">Action
+        Type</label>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <label style="display: flex; align-items: center; gap: 8px; border: 1px solid #c6e7cf; background: #f0faf2; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #167e45;">
+        <label
+          style="display: flex; align-items: center; gap: 8px; border: 1px solid #c6e7cf; background: #f0faf2; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #167e45;">
           <input type="radio" name="action" value="add" checked style="accent-color: #167e45;">
           + Deposit / Add Funds
         </label>
-        <label style="display: flex; align-items: center; gap: 8px; border: 1px solid #fed7d7; background: #fff5f5; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #c53030;">
+        <label
+          style="display: flex; align-items: center; gap: 8px; border: 1px solid #fed7d7; background: #fff5f5; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #c53030;">
           <input type="radio" name="action" value="remove" style="accent-color: #c53030;">
           - Withdrawal / Remove Funds
         </label>
@@ -672,7 +772,8 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
       <label class="field" for="funds-amount">
         Amount (₹) <span style="color:#e53e3e">*</span>
-        <input id="funds-amount" type="number" name="amount" step="0.01" min="0.01" required inputmode="decimal" placeholder="0.00">
+        <input id="funds-amount" type="number" name="amount" step="0.01" min="0.01" required inputmode="decimal"
+          placeholder="0.00">
       </label>
       <label class="field" for="funds-date">
         Date <span style="color:#e53e3e">*</span>
@@ -682,7 +783,8 @@
 
     <label class="field full" for="funds-notes" style="margin-top: 4px;">
       Reason / Note <span class="optional">(Optional)</span>
-      <input id="funds-notes" name="notes" maxlength="200" placeholder="e.g. Bank transfer, margin withdrawal, UPI top-up">
+      <input id="funds-notes" name="notes" maxlength="200"
+        placeholder="e.g. Bank transfer, margin withdrawal, UPI top-up">
     </label>
 
     <div class="modal-actions" style="margin-top: 1.25rem;">
@@ -704,20 +806,25 @@
       </div>
       <button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
     </div>
-    <div class="helper-box" style="margin: 10px 0 16px; background: #fff8e1; border: 1px solid #ffe082; color: #6d4c41;">
+    <div class="helper-box"
+      style="margin: 10px 0 16px; background: #fff8e1; border: 1px solid #ffe082; color: #6d4c41;">
       {{ icon('alert', 16) }}
       <span style="font-size: 12px; line-height: 1.4;">
-        <strong>Important:</strong> You can only set your username <strong>one time</strong>. After saving, it cannot be changed by you (only an administrator can modify it later).
+        <strong>Important:</strong> You can only set your username <strong>one time</strong>. After saving, it cannot be
+        changed by you (only an administrator can modify it later).
       </span>
     </div>
-    
+
     <label class="field full" for="client-new-username">
       Desired Username Handle
       <div style="display: flex; align-items: center; gap: 6px;">
         <span style="font-size: 17px; font-weight: 800; color: #2e4438;">@</span>
-        <input id="client-new-username" name="username" required minlength="3" maxlength="30" placeholder="e.g. batman" pattern="[a-zA-Z0-9_.]+" title="Letters, numbers, underscores and dots only" autocomplete="off" style="font-family: monospace; font-size: 15px; font-weight: 700; flex: 1;">
+        <input id="client-new-username" name="username" required minlength="3" maxlength="30" placeholder="e.g. batman"
+          pattern="[a-zA-Z0-9_.]+" title="Letters, numbers, underscores and dots only" autocomplete="off"
+          style="font-family: monospace; font-size: 15px; font-weight: 700; flex: 1;">
       </div>
-      <small class="muted" style="margin-top: 4px; display: block; font-size: 11px;">Min 3 characters. Allowed: letters, numbers, underscores, dots.</small>
+      <small class="muted" style="margin-top: 4px; display: block; font-size: 11px;">Min 3 characters. Allowed: letters,
+        numbers, underscores, dots.</small>
     </label>
 
     <div class="modal-actions" style="margin-top: 1.25rem;">
@@ -743,9 +850,9 @@
     </div>
     <p class="muted">
       {% if not client.password_changed %}
-        Create your own private password to replace the temporary default password (<code>Client@1234</code>).
+      Create your own private password to replace the temporary default password (<code>Client@1234</code>).
       {% else %}
-        Update the private password used to sign into your portfolio.
+      Update the private password used to sign into your portfolio.
       {% endif %}
     </p>
 
@@ -753,15 +860,19 @@
       <label class="field full">
         New Password
         <div class="password-wrap">
-          <input id="new-client-pwd" name="new_password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
-          <button type="button" class="icon-btn" data-toggle-password="new-client-pwd" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
+          <input id="new-client-pwd" name="new_password" type="password" required minlength="8"
+            autocomplete="new-password" placeholder="At least 8 characters">
+          <button type="button" class="icon-btn" data-toggle-password="new-client-pwd" aria-label="Show password"
+            aria-pressed="false">{{ icon('eye', 17) }}</button>
         </div>
       </label>
       <label class="field full">
         Confirm New Password
         <div class="password-wrap">
-          <input id="confirm-client-pwd" name="confirm_password" type="password" required minlength="8" autocomplete="new-password" placeholder="Confirm your new password">
-          <button type="button" class="icon-btn" data-toggle-password="confirm-client-pwd" aria-label="Show password" aria-pressed="false">{{ icon('eye', 17) }}</button>
+          <input id="confirm-client-pwd" name="confirm_password" type="password" required minlength="8"
+            autocomplete="new-password" placeholder="Confirm your new password">
+          <button type="button" class="icon-btn" data-toggle-password="confirm-client-pwd" aria-label="Show password"
+            aria-pressed="false">{{ icon('eye', 17) }}</button>
         </div>
       </label>
     </div>
@@ -777,55 +888,72 @@
 
 <!-- MANDATORY POPUP ADVISORY MODAL (NO CLOSE / CROSS BUTTON - MUST BE ACKNOWLEDGED) -->
 {% if undismissed_alerts %}
-<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog" data-mandatory="true" style="padding:0; overflow:hidden; border-radius:14px; border:2px solid #2e7d32; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+<dialog class="modal modal-md alert-popup-modal" id="popup-advisory-dialog" data-mandatory="true"
+  style="padding:0; overflow:hidden; border-radius:14px; border:2px solid #2e7d32; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
   <div class="modal-inner advisory-modal-content" style="padding: 1.5rem;">
-    <div class="advisory-top-banner" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #edf2e5;">
-      <div class="advisory-banner-badge" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#1e4620; font-size:13px; text-transform:uppercase; letter-spacing:0.05em;">
+    <div class="advisory-top-banner"
+      style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #edf2e5;">
+      <div class="advisory-banner-badge"
+        style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#1e4620; font-size:13px; text-transform:uppercase; letter-spacing:0.05em;">
         {{ icon('shield', 16) }} Official Trade Advisory
       </div>
-      <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:11px; font-weight:700;">Mandatory Acknowledgment</span>
+      <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:11px; font-weight:700;">Mandatory
+        Acknowledgment</span>
       <!-- NO CLOSE / CROSS BUTTON PER REQUIREMENT -->
     </div>
 
     {% for alert in undismissed_alerts %}
-    <div class="advisory-card-item {{ 'active-alert' if loop.first else 'hidden-alert' }}" id="alert-item-{{ alert.id }}">
-      <div class="advisory-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <span class="advisory-action-pill {{ 'pill-buy' if alert.action == 'BUY' else 'pill-sell' }}" style="font-size:16px; font-weight:800; padding:4px 14px; border-radius:6px;">
+    <div class="advisory-card-item {{ 'active-alert' if loop.first else 'hidden-alert' }}"
+      id="alert-item-{{ alert.id }}">
+      <div class="advisory-header-row"
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <span class="advisory-action-pill {{ 'pill-buy' if alert.action == 'BUY' else 'pill-sell' }}"
+          style="font-size:16px; font-weight:800; padding:4px 14px; border-radius:6px;">
           {{ alert.action }}
         </span>
-        <span class="advisory-stock-symbol" style="font-size:22px; font-weight:900; letter-spacing:0.02em;">{{ alert.stock }}</span>
+        <span class="advisory-stock-symbol" style="font-size:22px; font-weight:900; letter-spacing:0.02em;">{{
+          alert.stock }}</span>
       </div>
 
-      <div class="advisory-price-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:1.25rem; background:#f4f8f3; padding:12px; border-radius:8px;">
+      <div class="advisory-price-grid"
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:1.25rem; background:#f4f8f3; padding:12px; border-radius:8px;">
         <div class="advisory-price-block">
-          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">RECOMMENDED PRICE</small>
+          <small
+            style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">RECOMMENDED
+            PRICE</small>
           <strong style="font-size:16px;">{{ alert.price|money if alert.price else 'Market Price' }}</strong>
         </div>
         {% if alert.target_price %}
         <div class="advisory-price-block">
-          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">TARGET PRICE</small>
+          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">TARGET
+            PRICE</small>
           <strong class="pos" style="font-size:16px; color:#1e9752;">{{ alert.target_price|money }}</strong>
         </div>
         {% endif %}
         {% if alert.stop_loss %}
         <div class="advisory-price-block">
-          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">STOP LOSS</small>
+          <small style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">STOP
+            LOSS</small>
           <strong class="neg" style="font-size:16px; color:#d93025;">{{ alert.stop_loss|money }}</strong>
         </div>
         {% endif %}
       </div>
 
       {% if alert.message %}
-      <div class="advisory-message-box" style="margin-bottom:1rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
+      <div class="advisory-message-box"
+        style="margin-bottom:1rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
         <p style="margin:0;">{{ alert.message }}</p>
       </div>
       {% endif %}
 
       <!-- Disclaimer with 'i' icon on Acknowledgment Screen -->
-      <div class="advisory-disclaimer-notice" style="display:flex; gap:8px; align-items:flex-start; background:#fafcf8; border:1px solid #dce7db; border-radius:8px; padding:10px 12px; margin-bottom:1.15rem;">
+      <div class="advisory-disclaimer-notice"
+        style="display:flex; gap:8px; align-items:flex-start; background:#fafcf8; border:1px solid #dce7db; border-radius:8px; padding:10px 12px; margin-bottom:1.15rem;">
         <span style="color:#2e7d32; flex-shrink:0; margin-top:1px;">{{ icon('info', 16) }}</span>
         <p style="margin:0; font-size:11px; line-height:1.45; color:#435443;">
-          <strong>Trading &amp; Advisory Disclaimer:</strong> Stock market trading and securities investments involve substantial risk of loss. All price levels and recommendations are for advisory purposes only and do not guarantee returns. Clients must assess their risk appetite before execution.
+          <strong>Trading &amp; Advisory Disclaimer:</strong> Stock market trading and securities investments involve
+          substantial risk of loss. All price levels and recommendations are for advisory purposes only and do not
+          guarantee returns. Clients must assess their risk appetite before execution.
         </p>
       </div>
 
@@ -834,7 +962,9 @@
       </div>
 
       <div class="modal-actions" style="margin-top: 1rem;">
-        <button class="btn btn-primary btn-wide" id="btn-ack-{{ alert.id }}" type="button" onclick="acknowledgeAlert({{ alert.id }})" style="padding:14px; font-size:15px; font-weight:700; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">
+        <button class="btn btn-primary btn-wide" id="btn-ack-{{ alert.id }}" type="button"
+          onclick="acknowledgeAlert({{ alert.id }})"
+          style="padding:14px; font-size:15px; font-weight:700; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">
           {{ icon('check', 18) }} Acknowledge Trade Advisory
         </button>
       </div>
@@ -851,18 +981,18 @@
     if (isPrivacy) {
       document.body.classList.add('privacy-mode');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // Auto-show popup alert modal if there are undismissed alerts
-  window.addEventListener('DOMContentLoaded', function() {
+  window.addEventListener('DOMContentLoaded', function () {
     const popup = document.getElementById('popup-advisory-dialog');
     if (popup) {
       // Prevent Escape key from dismissing modal (modal cannot be removed until acknowledged)
-      popup.addEventListener('cancel', function(e) {
+      popup.addEventListener('cancel', function (e) {
         e.preventDefault();
       });
       // Prevent clicking outside / backdrop from dismissing modal
-      popup.addEventListener('click', function(e) {
+      popup.addEventListener('click', function (e) {
         if (e.target === popup) {
           e.preventDefault();
           e.stopPropagation();
@@ -902,7 +1032,7 @@
 
       const el = document.getElementById('alert-item-' + alertId);
       if (el) el.remove();
-      
+
       const remaining = document.querySelectorAll('.advisory-card-item');
       if (remaining.length === 0) {
         document.getElementById('popup-advisory-dialog')?.close();
@@ -936,7 +1066,7 @@
     if (sizeEl) sizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
       if (imgEl) imgEl.src = e.target.result;
       if (emptyBox) emptyBox.style.display = 'none';
       if (previewBox) previewBox.style.display = 'flex';
@@ -980,7 +1110,7 @@
   }
 
   // Auto-fill dates on input and enforce either buy or sell price
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const buyPriceInput = document.getElementById('trade-buy-price');
     const buyDateInput = document.getElementById('trade-buy-date');
     const sellPriceInput = document.getElementById('trade-sell-price');
@@ -988,7 +1118,7 @@
     const addTradeForm = document.getElementById('add-trade-form');
 
     if (buyPriceInput && buyDateInput) {
-      buyPriceInput.addEventListener('input', function() {
+      buyPriceInput.addEventListener('input', function () {
         if (buyPriceInput.value.trim() && !buyDateInput.value) {
           buyDateInput.value = "{{ today }}";
         }
@@ -996,7 +1126,7 @@
     }
 
     if (sellPriceInput && sellDateInput) {
-      sellPriceInput.addEventListener('input', function() {
+      sellPriceInput.addEventListener('input', function () {
         if (sellPriceInput.value.trim() && !sellDateInput.value) {
           sellDateInput.value = "{{ today }}";
         }
@@ -1004,7 +1134,7 @@
     }
 
     if (addTradeForm) {
-      addTradeForm.addEventListener('submit', function(e) {
+      addTradeForm.addEventListener('submit', function (e) {
         const bp = (buyPriceInput ? buyPriceInput.value : '').trim();
         const sp = (sellPriceInput ? sellPriceInput.value : '').trim();
         if (!bp && !sp) {
