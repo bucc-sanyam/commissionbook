@@ -419,12 +419,12 @@
           {% set tax_rate = 0.125 if is_ltcg else 0.20 %}
           {% set tax = profit * tax_rate if profit > 0 else 0 %}
 
-          {# Broker charges (delivery, Zerodha/Groww style) #}
+          {# Broker charges (delivery, Zerodha/CDSL style) #}
           {% set stt = sell_val * 0.001 %}
           {% set exch = sell_val * 0.0000345 %}
           {% set sebi = sell_val * 0.000001 %}
-          {% set dp = 15.34 %}
-          {% set gst = (exch + sebi + dp) * 0.18 %}
+          {% set dp = 15.93 %}  {# CDSL DP ₹13.5 + 18% GST = ₹15.93, GST already included #}
+          {% set gst = (exch + sebi) * 0.18 %}  {# GST only on exch + SEBI; DP already includes its GST #}
           {% set broker_total = stt + exch + sebi + dp + gst %}
 
           {% set net = profit - tax - broker_total - my_commission %}
@@ -480,11 +480,11 @@
               <span class="value neg">−{{ sebi|money }}</span>
             </div>
             <div class="breakup-row">
-              <span class="label">DP Charges <small style="color:#9eb09e;">(₹15.34/scrip/sell)</small></span>
+              <span class="label">DP Charges <small style="color:#9eb09e;">(₹13.5 CDSL + 18% GST = ₹15.93 incl. GST)</small></span>
               <span class="value neg">−{{ dp|money }}</span>
             </div>
             <div class="breakup-row">
-              <span class="label">GST on Charges <small style="color:#9eb09e;">(18% on exch+SEBI+DP)</small></span>
+              <span class="label">GST on Charges <small style="color:#9eb09e;">(18% on exch+SEBI only; DP GST already included)</small></span>
               <span class="value neg">−{{ gst|money }}</span>
             </div>
             <div class="breakup-row" style="background:#fef9ec;">
