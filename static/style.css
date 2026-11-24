@@ -6668,3 +6668,29 @@ body {
 }
 .pill-stcg { background: #fff3cd; color: #856404; }
 .pill-ltcg { background: #dcfce7; color: #166534; }
+
+/* Breakup info button (ⓘ tooltip trigger) */
+.breakup-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e8f0e4;
+  color: #3f7352;
+  border: 1px solid #c6dfc0;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  padding: 0;
+  line-height: 1;
+  vertical-align: middle;
+  transition: background 0.15s, color 0.15s;
+  white-space: normal;
+}
+.breakup-info-btn:hover {
+  background: #3f7352;
+  color: #fff;
+  border-color: #3f7352;
+}
