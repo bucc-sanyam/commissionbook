@@ -1,7 +1,7 @@
 # Graph Report - Commission  (2026-11-24)
 
 ## Corpus Check
-- 35 files · ~98,351 words
+- 35 files · ~98,865 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a34adb3e`
+- Built from commit: `f40a49fd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -194,8 +194,8 @@ Cohesion: 0.10
 Nodes (5): as(), on, os(), ut, wt()
 
 ### Community 39 - ".Oc"
-Cohesion: 0.21
-Nodes (4): ci(), hn(), ln(), tn()
+Cohesion: 0.19
+Nodes (5): ci(), hn(), ln(), rn(), tn()
 
 ### Community 41 - ".Jp"
 Cohesion: 0.27
@@ -249,7 +249,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Why does `sn()` connect `sn` to `lightweight-charts.js`, `.Oc`, `ht`, `Es`, `Ns`, `ci`, `nt`, `.Gn`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `vn` connect `f` to `pn`, `.l`, `lightweight-charts.js`, `.Oc`, `.p`, `.Ii`, `bn`, `ci`?**
+- **Why does `vn` connect `f` to `pn`, `.l`, `lightweight-charts.js`, `.Oc`, `.p`, `bn`, `ci`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **What connects `name`, `short_name`, `start_url` to the rest of the system?**
   _24 weakly-connected nodes found - possible documentation gaps or missing edges._

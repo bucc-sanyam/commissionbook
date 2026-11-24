@@ -5,7 +5,7 @@
 {% block shell %}
 <div class="client-portal-wrapper">
   <!-- Mobile Scrim -->
-  <div class="portal-mobile-scrim" id="portal-mobile-scrim" hidden></div>
+  <div class="portal-mobile-scrim" id="portal-mobile-scrim" onclick="closePortalSidebar()" hidden></div>
 
   <!-- Left Side Panel (Admin-style Docked / Drawer) -->
   <aside class="portal-sidebar" id="portal-sidebar" aria-label="Portal navigation">
@@ -24,6 +24,9 @@
         {% endif %}
         <div class="portal-sidebar-rule">{{ rule }}</div>
       </div>
+      <button type="button" class="portal-sidebar-close-btn" onclick="closePortalSidebar()" aria-label="Close navigation" style="margin-left: auto; color: #a3c4b5; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px; cursor: pointer; display: none;">
+        {{ icon('x', 16) }}
+      </button>
     </div>
 
     <p class="nav-label" style="color: #6d9383; font-size: 11px; margin: 14px 0 6px; font-weight: 700; letter-spacing: 0.5px;">PORTFOLIO MENU</p>
@@ -66,7 +69,7 @@
   <!-- Client Portal Topbar -->
   <header class="client-portal-topbar">
     <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="icon-btn mobile-portal-menu" id="portal-menu-toggle" type="button" aria-label="Open navigation" aria-controls="portal-sidebar">
+      <button class="icon-btn mobile-portal-menu" id="portal-menu-toggle" type="button" aria-label="Open navigation" aria-controls="portal-sidebar" onclick="togglePortalSidebar()">
         {{ icon('menu', 18) }}
       </button>
       <div class="portal-brand">
@@ -1560,39 +1563,45 @@
 
 <script>
   // ===== Client Portal Tab Switching =====
-  function switchPortalTab(btn, tabId) {
+  window.switchPortalTab = function(btn, tabId) {
     document.querySelectorAll('.portal-nav-btn, .client-sidebar-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
     if (btn) btn.classList.add('active');
     const panel = document.getElementById(tabId);
     if (panel) panel.classList.add('active');
     document.querySelectorAll('.portal-nav-btn[data-tab="' + tabId + '"], .client-sidebar-btn[data-tab="' + tabId + '"]').forEach(b => b.classList.add('active'));
-    closePortalSidebar();
+    window.closePortalSidebar();
     try {
       history.replaceState(null, '', '#' + tabId);
     } catch(e) {}
-  }
+  };
 
-  function togglePortalSidebar() {
+  window.togglePortalSidebar = function() {
     const sb = document.getElementById('portal-sidebar');
     const scrim = document.getElementById('portal-mobile-scrim');
     if (!sb) return;
     if (sb.classList.contains('open')) {
-      closePortalSidebar();
+      window.closePortalSidebar();
     } else {
       sb.classList.add('open');
-      if (scrim) scrim.hidden = false;
+      if (scrim) {
+        scrim.hidden = false;
+        scrim.style.display = 'block';
+      }
     }
-  }
+  };
 
-  function closePortalSidebar() {
+  window.closePortalSidebar = function() {
     const sb = document.getElementById('portal-sidebar');
     const scrim = document.getElementById('portal-mobile-scrim');
     if (sb) sb.classList.remove('open');
-    if (scrim) scrim.hidden = true;
-  }
+    if (scrim) {
+      scrim.hidden = true;
+      scrim.style.display = 'none';
+    }
+  };
 
-  function selectChartStock(btn, stock) {
+  window.selectChartStock = function(btn, stock) {
     document.querySelectorAll('.chart-stock-pill').forEach(b => {
       b.classList.remove('btn-primary', 'active');
       b.classList.add('btn-secondary');
@@ -1633,35 +1642,21 @@
     if (iframe) {
       iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=' + encodeURIComponent(tvSymbol) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
     }
-  }
-    const symEl = document.getElementById('chart-active-symbol');
-    if (symEl) symEl.textContent = stock;
-
-    document.querySelectorAll('.stock-target-pills-row').forEach(row => {
-      row.style.display = 'none';
-    });
-    const targetRow = document.getElementById('targets-row-' + stock);
-    if (targetRow) targetRow.style.display = 'flex';
-
-    const iframe = document.getElementById('portal-chart-iframe');
-    if (iframe) {
-      iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=NSE%3A' + encodeURIComponent(stock) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
-    }
-  }
+  };
 
   document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('portal-menu-toggle');
     const scrim = document.getElementById('portal-mobile-scrim');
-    toggleBtn?.addEventListener('click', togglePortalSidebar);
-    scrim?.addEventListener('click', closePortalSidebar);
+    if (toggleBtn) toggleBtn.addEventListener('click', window.togglePortalSidebar);
+    if (scrim) scrim.addEventListener('click', window.closePortalSidebar);
   });
 
   // Restore tab from URL hash on page load
   (function() {
     const hash = window.location.hash.replace('#', '');
     if (hash) {
-      const btn = document.querySelector('.client-sidebar-btn[data-tab="' + hash + '"]');
-      if (btn) switchPortalTab(btn, hash);
+      const btn = document.querySelector('.portal-nav-btn[data-tab="' + hash + '"], .client-sidebar-btn[data-tab="' + hash + '"]');
+      if (btn) window.switchPortalTab(btn, hash);
     }
   })();
 

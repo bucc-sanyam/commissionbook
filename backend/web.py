@@ -2807,6 +2807,34 @@ def create_app(config=None):
             flash("Could not delete target.", "error")
         return redirect(url_for("charts_view", stock=stock))
 
+    @app.route("/charts/targets/<int:tid>/update", methods=["POST"])
+    @login_required
+    def chart_update_target(tid):
+        db = get_db()
+        row = db.execute("SELECT stock, label, target_price FROM stock_price_targets WHERE id=?", (tid,)).fetchone()
+        if not row:
+            flash("Target not found.", "error")
+            return redirect(url_for("charts_view"))
+        stock = row["stock"]
+        new_price_raw = request.form.get("target_price", "").strip()
+        delta_raw = request.form.get("delta", "").strip()
+        try:
+            if delta_raw:
+                delta = float(delta_raw)
+                target_price = round(float(row["target_price"]) + delta, 2)
+                if target_price <= 0:
+                    flash("Target price must be positive.", "error")
+                    return redirect(url_for("charts_view", stock=stock))
+            else:
+                target_price = number(new_price_raw, "Target price", positive=True)
+            db.execute("UPDATE stock_price_targets SET target_price=? WHERE id=?", (target_price, tid))
+            db.commit()
+            flash(f"Target {row['label']} updated to ₹{target_price:.2f}.", "success")
+        except Exception as e:
+            current_app.logger.error("Error updating target: %s", e)
+            flash(f"Could not update target: {e}", "error")
+        return redirect(url_for("charts_view", stock=stock))
+
     @app.route("/api/stocks/<path:stock_name>/candles")
     def api_stock_candles(stock_name):
         if not session.get("admin") and not session.get("client_id"):
