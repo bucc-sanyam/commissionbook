@@ -205,7 +205,7 @@
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795543186.452286,
+    "mtime": 1795543658.4113498,
     "ast_hash": "a3238cf0bd586a7b15386bc15d9a9e15",
     "semantic_hash": ""
   },
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795543254.3020194,
-    "ast_hash": "09ffa3bf111915e3563a0cf6f2bb3145",
+    "mtime": 1795543933.064868,
+    "ast_hash": "be639e6623a4e915767c6a07028a47eb",
     "semantic_hash": ""
   },
   "templates/settings.html": {
