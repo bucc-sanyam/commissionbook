@@ -3583,6 +3583,29 @@ def create_app(config=None):
             db.execute("DELETE FROM trades WHERE id=?", (ct["id"],))
 
         set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
+
+        # Re-check open lots after FIFO work to decide whether to wipe client_shares entirely
+        remaining_open = db.execute(
+            """SELECT COALESCE(SUM(quantity), 0) as total
+               FROM trades
+               WHERE client_id = ?
+                 AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
+                 AND buy_price IS NOT NULL
+                 AND (sell_price IS NULL OR sell_price = 0)""",
+            (cid, raw_s, canonical_stock)
+        ).fetchone()
+        remaining_qty = dec(remaining_open["total"] or 0) if remaining_open else ZERO
+
+        if remaining_qty <= ZERO:
+            # No open lots remain — directly remove the client_shares entry so it doesn't
+            # linger due to alias-resolution edge cases in the general sync function.
+            db.execute(
+                """DELETE FROM client_shares
+                   WHERE client_id = ?
+                     AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))""",
+                (cid, raw_s, canonical_stock)
+            )
+
         # Re-sync profits and holdings
         sync_trade_profits_to_funds(db, cid)
         sync_client_holdings_from_trades(cid, db)

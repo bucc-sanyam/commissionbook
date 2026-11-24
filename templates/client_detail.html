@@ -96,6 +96,197 @@
 </section>
 {% endif %}
 
+<!-- Client holdings (shown at top of main content for quick access) -->
+  <section class="card">
+    <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
+    {% if shares %}
+    <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
+    {% for sh in shares %}
+      <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            {% if sh.lots and sh.lots|length > 1 %}
+            <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+              {{ icon('chevron-down', 14) }}
+            </button>
+            {% endif %}
+            <div>
+              <strong>{{ sh.stock }}</strong>
+              {% if sh.lots and sh.lots|length > 1 %}
+                <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+              {% endif %}
+            </div>
+          </div>
+        </td>
+        <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+        <td class="r tabular">
+          <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
+          {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
+        </td>
+        <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
+        <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
+        <td>
+          <div class="row-actions" style="justify-content: flex-end;">
+            <button class="icon-btn edit-holding-btn" type="button" 
+              data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+              data-stock="{{ sh.stock }}"
+              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+              data-buy-price="{{ sh.buy_price or '' }}"
+              aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
+            <button class="icon-btn sell-holding-btn" type="button" 
+              data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+              data-stock="{{ sh.stock }}"
+              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+              aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
+            <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
+          </div>
+        </td>
+      </tr>
+      {% if sh.lots and sh.lots|length > 1 %}
+      <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+        <td colspan="6" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
+          <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
+          </div>
+          <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+            <thead>
+              <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
+                <th style="padding: 6px 12px; text-align: right;">Quantity</th>
+                <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
+                <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
+                <th style="padding: 6px 12px; text-align: left;">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lot in sh.lots %}
+              <tr style="border-top: 1px solid #edf1e8;">
+                <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
+                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
+                <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
+                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
+                <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      {% endif %}
+    {% endfor %}</tbody></table></div>
+
+    <div class="mobile-detail-holdings-list">
+      {% for sh in shares %}
+      <div class="mobile-trade-card" style="padding: 12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+          <div>
+            <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
+            {% if sh.lots and sh.lots|length > 1 %}
+              <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+            {% endif %}
+          </div>
+          <strong class="tabular" style="font-size: 14px;">{{ sh.current_value|money }}</strong>
+        </div>
+        <div class="mtd-grid" style="margin-bottom: 10px;">
+          <div class="mtd-item">
+            <span class="mtd-label">Quantity</span>
+            <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Avg Buy Price</span>
+            <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">CMP (Current)</span>
+            <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
+          </div>
+          <div class="mtd-item">
+            <span class="mtd-label">Valuation</span>
+            <strong class="mtd-val">{{ sh.current_value|money }}</strong>
+          </div>
+        </div>
+        {% if sh.lots and sh.lots|length > 1 %}
+        <div class="mobile-lots-breakdown" style="margin-bottom: 10px; padding: 8px 10px; background: #fbfdf9; border: 1px solid #e8ede3; border-radius: 6px;">
+          <span style="font-size: 10px; font-weight: 700; color: #405738; text-transform: uppercase; display: block; margin-bottom: 4px;">
+            Open Trades Breakdown ({{ sh.lots|length }} trades):
+          </span>
+          {% for lot in sh.lots %}
+          <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #f0f4ec;">
+            <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
+            <strong class="tabular">{{ lot.total_cost|money }}</strong>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div style="display:flex; justify-content:flex-end; gap:6px; border-top:1px solid #edf4eb; padding-top:8px;">
+          <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
+            data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+            data-stock="{{ sh.stock }}"
+            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+            data-buy-price="{{ sh.buy_price or '' }}">
+            {{ icon('edit', 12) }} Edit
+          </button>
+          <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
+            data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+            data-stock="{{ sh.stock }}"
+            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
+            {{ icon('trend', 12) }} Sell
+          </button>
+          <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
+            {{ csrf() }}
+            <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete holding">{{ icon('trash', 13) }}</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
+    <dialog class="modal" id="dynamic-edit-holding-dialog">
+      <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">
+        {{ csrf() }}
+        <input type="hidden" name="back" value="1">
+        <div class="modal-heading">
+          <div><span class="eyebrow">UPDATE</span><h2 id="dynamic-edit-holding-title">Edit holding</h2></div>
+          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
+          <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
+          <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
+          <label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
+            <input name="deduct_from_funds" id="dynamic-edit-holding-deduct" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;">
+            <span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+          <button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="modal" id="dynamic-sell-holding-dialog">
+      <form method="post" id="dynamic-sell-holding-form" action="" class="modal-inner">
+        {{ csrf() }}
+        <input type="hidden" name="back" value="1">
+        <div class="modal-heading">
+          <div><span class="eyebrow">RECORD SALE</span><h2 id="dynamic-sell-holding-title">Sell holding</h2></div>
+          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
+        </div>
+        <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
+        <div class="form-grid">
+          <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
+          <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
+          <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
+          <button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button>
+        </div>
+      </form>
+    </dialog>
+    {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
+  </section>
+
 <section class="card">
   <div class="card-header"><div><h2>Their trade ledger</h2><p>{{ s.count }} trades · {{ s.open }} open positions · <span class="tabular" data-privacy-value>{{ s.invested_open|money }}</span> invested</p></div><span class="badge">{{ rule }}</span></div>
   {{ trade_table(trades, s, show_client=False) }}
@@ -315,195 +506,6 @@
   </section>
 </div>
 
-  <section class="card">
-    <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
-    {% if shares %}
-    <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
-    {% for sh in shares %}
-      <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
-        <td>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            {% if sh.lots and sh.lots|length > 1 %}
-            <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
-              {{ icon('chevron-down', 14) }}
-            </button>
-            {% endif %}
-            <div>
-              <strong>{{ sh.stock }}</strong>
-              {% if sh.lots and sh.lots|length > 1 %}
-                <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
-              {% endif %}
-            </div>
-          </div>
-        </td>
-        <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
-        <td class="r tabular">
-          <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
-          {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
-        </td>
-        <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
-        <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
-        <td>
-          <div class="row-actions" style="justify-content: flex-end;">
-            <button class="icon-btn edit-holding-btn" type="button" 
-              data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
-              data-stock="{{ sh.stock }}"
-              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-              data-buy-price="{{ sh.buy_price or '' }}"
-              aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
-            <button class="icon-btn sell-holding-btn" type="button" 
-              data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
-              data-stock="{{ sh.stock }}"
-              data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-              aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
-            <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
-          </div>
-        </td>
-      </tr>
-      {% if sh.lots and sh.lots|length > 1 %}
-      <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
-        <td colspan="6" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
-          <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-            {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
-          </div>
-          <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
-            <thead>
-              <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
-                <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
-                <th style="padding: 6px 12px; text-align: right;">Quantity</th>
-                <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
-                <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
-                <th style="padding: 6px 12px; text-align: left;">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for lot in sh.lots %}
-              <tr style="border-top: 1px solid #edf1e8;">
-                <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
-                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
-                <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
-                <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
-                <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </td>
-      </tr>
-      {% endif %}
-    {% endfor %}</tbody></table></div>
-
-    <div class="mobile-detail-holdings-list">
-      {% for sh in shares %}
-      <div class="mobile-trade-card" style="padding: 12px 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-          <div>
-            <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
-            {% if sh.lots and sh.lots|length > 1 %}
-              <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
-            {% endif %}
-          </div>
-          <strong class="tabular" style="font-size: 14px;">{{ sh.current_value|money }}</strong>
-        </div>
-        <div class="mtd-grid" style="margin-bottom: 10px;">
-          <div class="mtd-item">
-            <span class="mtd-label">Quantity</span>
-            <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">Avg Buy Price</span>
-            <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">CMP (Current)</span>
-            <strong class="mtd-val"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></strong>
-          </div>
-          <div class="mtd-item">
-            <span class="mtd-label">Valuation</span>
-            <strong class="mtd-val">{{ sh.current_value|money }}</strong>
-          </div>
-        </div>
-        {% if sh.lots and sh.lots|length > 1 %}
-        <div class="mobile-lots-breakdown" style="margin-bottom: 10px; padding: 8px 10px; background: #fbfdf9; border: 1px solid #e8ede3; border-radius: 6px;">
-          <span style="font-size: 10px; font-weight: 700; color: #405738; text-transform: uppercase; display: block; margin-bottom: 4px;">
-            Open Trades Breakdown ({{ sh.lots|length }} trades):
-          </span>
-          {% for lot in sh.lots %}
-          <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #f0f4ec;">
-            <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money }}</span>
-            <strong class="tabular">{{ lot.total_cost|money }}</strong>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-        <div style="display:flex; justify-content:flex-end; gap:6px; border-top:1px solid #edf4eb; padding-top:8px;">
-          <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
-            data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
-            data-stock="{{ sh.stock }}"
-            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
-            data-buy-price="{{ sh.buy_price or '' }}">
-            {{ icon('edit', 12) }} Edit
-          </button>
-          <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
-            data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
-            data-stock="{{ sh.stock }}"
-            data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
-            {{ icon('trend', 12) }} Sell
-          </button>
-          <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
-            {{ csrf() }}
-            <button class="icon-btn icon-btn-danger icon-btn-sm" aria-label="Delete holding">{{ icon('trash', 13) }}</button>
-          </form>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <!-- Reusable Consolidated Modals for Holdings (eliminates DOM bloat) -->
-    <dialog class="modal" id="dynamic-edit-holding-dialog">
-      <form method="post" id="dynamic-edit-holding-form" action="" class="modal-inner">
-        {{ csrf() }}
-        <input type="hidden" name="back" value="1">
-        <div class="modal-heading">
-          <div><span class="eyebrow">UPDATE</span><h2 id="dynamic-edit-holding-title">Edit holding</h2></div>
-          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
-        </div>
-        <div class="form-grid">
-          <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
-          <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
-          <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
-          <label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
-            <input name="deduct_from_funds" id="dynamic-edit-holding-deduct" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;">
-            <span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span>
-          </label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
-          <button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button>
-        </div>
-      </form>
-    </dialog>
-    <dialog class="modal" id="dynamic-sell-holding-dialog">
-      <form method="post" id="dynamic-sell-holding-form" action="" class="modal-inner">
-        {{ csrf() }}
-        <input type="hidden" name="back" value="1">
-        <div class="modal-heading">
-          <div><span class="eyebrow">RECORD SALE</span><h2 id="dynamic-sell-holding-title">Sell holding</h2></div>
-          <button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button>
-        </div>
-        <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
-        <div class="form-grid">
-          <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
-          <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
-          <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button>
-          <button class="btn btn-primary">{{ icon('check', 15) }}Record sale</button>
-        </div>
-      </form>
-    </dialog>
-    {% else %}{{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}{% endif %}
-  </section>
   <div class="stack">
     <!-- Client Portal Credentials Card -->
     <section class="card card-pad" id="portal-credentials-card">
