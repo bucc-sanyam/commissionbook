@@ -2722,6 +2722,36 @@ def create_app(config=None):
             except Exception as exc:
                 current_app.logger.warning("Error fetching trades for stock %s: %s", canonical_selected, exc)
 
+        stock_targets = []
+        if canonical_selected:
+            try:
+                raw_targets = db.execute(
+                    "SELECT * FROM stock_price_targets WHERE stock=? ORDER BY target_price ASC",
+                    (canonical_selected,)
+                ).fetchall()
+                stock_targets = [dict(t) for t in raw_targets]
+            except Exception as exc:
+                current_app.logger.warning("Error fetching stock targets: %s", exc)
+
+        # Compute per-client target gains for the selected stock
+        for ch in enriched_clients_holding:
+            ch_targets = []
+            for t in stock_targets:
+                tp = dec(t["target_price"])
+                bp = dec(ch.get("buy_price") or 0)
+                q = dec(ch.get("quantity") or 0)
+                gain = (tp - bp) * q
+                gain_pct = ((tp - bp) / bp * 100) if bp else ZERO
+                ch_targets.append({
+                    "id": t.get("id"),
+                    "label": t.get("label"),
+                    "target_price": tp,
+                    "notes": t.get("notes"),
+                    "gain": gain,
+                    "gain_pct": gain_pct,
+                })
+            ch["target_gains"] = ch_targets
+
         return render_template(
             "charts.html",
             stocks=stocks,
@@ -2729,8 +2759,53 @@ def create_app(config=None):
             selected_info=selected_info,
             clients_holding=enriched_clients_holding,
             stock_trades=stock_trades,
+            stock_targets=stock_targets,
             known_stocks=get_known_stocks(db),
         )
+
+    @app.route("/charts/targets/set", methods=["POST"])
+    @login_required
+    def chart_set_target():
+        db = get_db()
+        raw_stock = request.form.get("stock", "")
+        stock = resolve_canonical_stock(db, raw_stock) or raw_stock.strip().upper()
+        if not stock:
+            flash("Stock is required.", "error")
+            return redirect(url_for("charts_view"))
+        label = (request.form.get("label") or "T1").strip()[:20]
+        target_price_raw = request.form.get("target_price", "").strip()
+        notes_raw = request.form.get("notes", "").strip()[:200]
+        try:
+            target_price = number(target_price_raw, "Target price", positive=True)
+        except (ValidationError, Exception) as e:
+            flash(f"Invalid target price: {e}", "error")
+            return redirect(url_for("charts_view", stock=stock))
+        try:
+            db.execute(
+                "INSERT INTO stock_price_targets (stock, label, target_price, notes) VALUES (?, ?, ?, ?)",
+                (stock, label, target_price, notes_raw or None)
+            )
+            db.commit()
+            flash(f"Target {label} (₹{target_price}) added for {stock}.", "success")
+        except Exception as e:
+            current_app.logger.error("Error saving target: %s", e)
+            flash("Could not save target.", "error")
+        return redirect(url_for("charts_view", stock=stock))
+
+    @app.route("/charts/targets/<int:tid>/delete", methods=["POST"])
+    @login_required
+    def chart_delete_target(tid):
+        db = get_db()
+        row = db.execute("SELECT stock FROM stock_price_targets WHERE id=?", (tid,)).fetchone()
+        stock = row["stock"] if row else ""
+        try:
+            db.execute("DELETE FROM stock_price_targets WHERE id=?", (tid,))
+            db.commit()
+            flash("Target removed.", "success")
+        except Exception as e:
+            current_app.logger.error("Error deleting target: %s", e)
+            flash("Could not delete target.", "error")
+        return redirect(url_for("charts_view", stock=stock))
 
     @app.route("/api/stocks/<path:stock_name>/candles")
     @login_required
@@ -3235,6 +3310,15 @@ def create_app(config=None):
 
         pending_reconciliations = get_pending_holding_reconciliations(get_db(), cid)
 
+        all_targets = {}
+        try:
+            target_rows = get_db().execute("SELECT * FROM stock_price_targets ORDER BY target_price ASC").fetchall()
+            for tr in target_rows:
+                s_key = alias_map.get((tr["stock"] or "").strip().upper(), (tr["stock"] or "").strip().upper())
+                all_targets.setdefault(s_key, []).append(dict(tr))
+        except Exception:
+            all_targets = {}
+
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
             funds=funds, total_funds=total_funds, shares=shares, advisories=advisories,
@@ -3242,6 +3326,7 @@ def create_app(config=None):
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_token=payment_signer().dumps(cid),
             pending_reconciliations=pending_reconciliations,
+            stock_targets=all_targets,
         )
 
     @app.route("/clients/<int:cid>/set-username", methods=["POST"])
@@ -4219,6 +4304,16 @@ def create_app(config=None):
                     continue
             undismissed_alerts.append(a)
 
+        # Fetch price targets for client's held stocks
+        all_targets = {}
+        try:
+            target_rows = get_db().execute("SELECT * FROM stock_price_targets ORDER BY target_price ASC").fetchall()
+            for tr in target_rows:
+                s_key = alias_map.get((tr["stock"] or "").strip().upper(), (tr["stock"] or "").strip().upper())
+                all_targets.setdefault(s_key, []).append(dict(tr))
+        except Exception:
+            all_targets = {}
+
         return render_template(
             "portal.html",
             client=client,
@@ -4236,6 +4331,8 @@ def create_app(config=None):
             public_token=portal_token(),
             today=date.today().isoformat(),
             known_stocks=get_known_stocks(get_db()),
+            stock_targets=all_targets,
+            rule=rule_label(client["commission_type"], client["commission_rate"]),
         )
 
     @app.route("/portal/shares/new", methods=["POST"])

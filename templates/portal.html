@@ -121,53 +121,410 @@
     </div>
     {% endif %}
 
-    <!-- Portfolio Summary Metrics -->
-    <section class="portal-hero-metrics">
-      <div class="metric-card primary">
-        <span class="metric-label">CURRENT PORTFOLIO VALUE</span>
-        <div class="metric-value" id="portal-portfolio-val">{{ total_holdings_current_value|money }}</div>
-        <div class="metric-sub" id="portal-unrealized-sub">
-          {% if total_unrealized_pnl >= 0 %}
-          <span class="pill pill-pos">{{ icon('trend', 13) }} +{{ total_unrealized_pnl|money }} (+{{
-            total_unrealized_pct|round(2) }}%)</span>
-          {% else %}
-          <span class="pill pill-neg">{{ icon('trend', 13) }} {{ total_unrealized_pnl|money }} ({{
-            total_unrealized_pct|round(2) }}%)</span>
-          {% endif %}
-          <small class="muted">Total Unrealized P&amp;L</small>
+    <!-- ===== CLIENT PAGE SIDEBAR LAYOUT ===== -->
+    <div class="client-page-layout">
+      <!-- Client Portal Sidebar Navigation -->
+      <aside class="client-page-sidebar">
+        <div class="client-sidebar-heading">
+          <span class="eyebrow" style="font-size: 10px; color: #5b6d52; letter-spacing: 0.5px;">CLIENT PORTAL</span>
+          <h3 style="margin: 2px 0 0; font-size: 14px; color: #173d34;">{{ client.name }}</h3>
+          <div style="font-size: 11px; color: #64786a; margin-top: 2px;">Commission: <strong>{{ rule }}</strong></div>
         </div>
-      </div>
+        <nav class="client-sidebar-nav" role="tablist">
+          <button class="client-sidebar-btn active" role="tab" data-tab="portal-tab-overview" onclick="switchPortalTab(this, 'portal-tab-overview')">
+            <span class="btn-left">{{ icon('pie', 15) }} <span>Overview &amp; Advisory</span></span>
+          </button>
+          <button class="client-sidebar-btn" role="tab" data-tab="portal-tab-holdings" onclick="switchPortalTab(this, 'portal-tab-holdings')">
+            <span class="btn-left">{{ icon('trend', 15) }} <span>Current Holdings</span></span>
+            <span class="tiny-tag">{{ shares|length }}</span>
+          </button>
+          <button class="client-sidebar-btn" role="tab" data-tab="portal-tab-trades" onclick="switchPortalTab(this, 'portal-tab-trades')">
+            <span class="btn-left">{{ icon('book', 15) }} <span>Past Trades</span></span>
+            <span class="tiny-tag">{{ trades|length }}</span>
+          </button>
+          <button class="client-sidebar-btn" role="tab" data-tab="portal-tab-charts" onclick="switchPortalTab(this, 'portal-tab-charts')">
+            <span class="btn-left">{{ icon('candlestick', 15) }} <span>Stock Charts</span></span>
+          </button>
+        </nav>
+      </aside>
 
-      <div class="metric-card">
-        <span class="metric-label">TOTAL INVESTED</span>
-        <div class="metric-value">{{ total_holdings_invested|money }}</div>
-        <div class="metric-sub muted">Across {{ shares|length }} held stock{{ 's' if shares|length != 1 }}</div>
-      </div>
+      <!-- Client Portal Content Panes -->
+      <div class="client-page-content" style="min-width: 0;">
 
-      <div class="metric-card">
-        <span class="metric-label">REALISED P&amp;L (TRADES)</span>
-        <div class="metric-value {{ 'pos' if s.pnl >= 0 else 'neg' }}">{{ s.pnl|money }}</div>
-        <div class="metric-sub muted">{{ trades|length }} closed trade{{ 's' if trades|length != 1 }}</div>
-      </div>
-    </section>
-
-    <!-- 1. Current Holdings Section -->
-    <section class="card portal-card">
-      <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <h2 style="margin: 0;">Your Current Holdings</h2>
-            <span id="portal-ticker-badge" class="ticker-badge ticker-live"
-              title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
-              <span class="ticker-pulse"></span>
-              <span>Live 20s Ticker</span>
-            </span>
+        <!-- ===== TAB 1: OVERVIEW & ADVISORY SLAB (MAIN PAGE) ===== -->
+        <div class="client-tab-panel active" id="portal-tab-overview">
+          <!-- Losses Policy Notice Callout -->
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #16a34a; flex-shrink: 0;">{{ icon('info', 18) }}</span>
+            <div style="font-size: 12px; color: #166534; line-height: 1.45;">
+              <strong>Advisory Agreement ({{ rule }}):</strong> If any share incurs a loss, that loss is borne solely by you and is <strong>never subtracted from advisor commission</strong>. Advisor commission applies solely to profitable positions.
+            </div>
           </div>
-          <p class="muted">Calculated automatically from your open trades · Live ticker updates every 20s (9:15 AM –
-            3:45 PM IST).</p>
-        </div>
-        <div class="header-actions" style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+
+          <!-- Portfolio Summary Metrics -->
+          <section class="portal-hero-metrics" style="margin-top: 0;">
+            <div class="metric-card primary">
+              <span class="metric-label">CURRENT PORTFOLIO VALUE</span>
+              <div class="metric-value" id="portal-portfolio-val">{{ total_holdings_current_value|money }}</div>
+              <div class="metric-sub" id="portal-unrealized-sub">
+                {% if total_unrealized_pnl >= 0 %}
+                <span class="pill pill-pos">{{ icon('trend', 13) }} +{{ total_unrealized_pnl|money }} (+{{
+                  total_unrealized_pct|round(2) }}%)</span>
+                {% else %}
+                <span class="pill pill-neg">{{ icon('trend', 13) }} {{ total_unrealized_pnl|money }} ({{
+                  total_unrealized_pct|round(2) }}%)</span>
+                {% endif %}
+                <small class="muted">Total Unrealized P&amp;L</small>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-label">TOTAL INVESTED</span>
+              <div class="metric-value">{{ total_holdings_invested|money }}</div>
+              <div class="metric-sub muted">Across {{ shares|length }} held stock{{ 's' if shares|length != 1 }}</div>
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-label">REALISED P&amp;L (TRADES)</span>
+              <div class="metric-value {{ 'pos' if s.pnl >= 0 else 'neg' }}">{{ s.pnl|money }}</div>
+              <div class="metric-sub muted">{{ trades|length }} closed trade{{ 's' if trades|length != 1 }}</div>
+            </div>
+          </section>
+
+          <!-- What You Are Holding Summary Card -->
+          <section class="card portal-card" style="margin-top: 1.5rem;">
+            <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h2 style="margin: 0;">What You Are Holding</h2>
+                <p class="muted">Summary of shares currently in your Demat portfolio.</p>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="switchPortalTab(document.querySelector('.client-sidebar-btn[data-tab=\'portal-tab-holdings\']'), 'portal-tab-holdings')">
+                {{ icon('trend', 14) }} Detailed Holdings View &rarr;
+              </button>
+            </div>
+            {% if shares %}
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Stock</th>
+                    <th class="r">Quantity</th>
+                    <th class="r">Avg Buy Price</th>
+                    <th class="r">Current Price (CMP)</th>
+                    <th class="r">Current Value</th>
+                    <th class="r">Unrealized P&amp;L</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sh in shares %}
+                  {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
+                  <tr>
+                    <td><strong>{{ sh.stock }}</strong></td>
+                    <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+                    <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+                    <td class="r tabular"><strong>{{ sh.cmp|money if sh.cmp else '—' }}</strong></td>
+                    <td class="r tabular">{{ sh.current_value|money }}</td>
+                    <td class="r tabular">
+                      <span class="{{ 'pos' if profit >= 0 else 'neg' }}" style="font-weight: 600;">
+                        {{ '+' if profit > 0 else '' }}{{ profit|money }}
+                      </span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            {{ empty_state('No holdings yet', 'No shares currently recorded in your portfolio.', 'trend') }}
+            {% endif %}
+          </section>
+
+          <!-- Advisory Slab & Exit Price Breakup Card -->
+          {% if shares %}
+          <section class="card portal-card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <div>
+                <h2>Advisory Slab &amp; Exit Breakup</h2>
+                <p>Projected commission, taxes &amp; broker charges if all holdings were sold today at CMP.</p>
+              </div>
+              <span class="badge" style="background:#f4f8f1; color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
+            </div>
+
+            <!-- Section A: Commission Slab Summary -->
+            <div style="padding: 14px 18px 10px; border-bottom: 1px solid #edf2e5;">
+              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                {{ icon('trend', 13) }} Section A — Advisory Commission Slab
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+                <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+                  <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
+                </div>
+                <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+                  <span style="color:#64786a;">Commission Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
+                  <thead>
+                    <tr style="background:#f4f8f1; color:#5b6d52; font-size:11px; text-transform:uppercase;">
+                      <th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e1e9de;">Stock</th>
+                      <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Qty</th>
+                      <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Avg Buy</th>
+                      <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">CMP</th>
+                      <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Unrealised P&amp;L</th>
+                      <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Commission Owed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% set ns_total_comm = namespace(val=0) %}
+                    {% set ns_total_pnl = namespace(val=0) %}
+                    {% for sh in shares %}
+                    {% set comm_rate = (client.commission_rate or 10)|float %}
+                    {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
+                    {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
+                    {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
+                    {% if client.commission_type == 'turnover_pct' %}
+                      {% set my_commission = (buy_val + sell_val) * comm_rate / 100 %}
+                    {% elif client.commission_type == 'flat' %}
+                      {% set my_commission = comm_rate %}
+                    {% else %}
+                      {% set my_commission = (profit * comm_rate / 100) if profit > 0 else 0 %}
+                    {% endif %}
+                    {% set ns_total_comm.val = ns_total_comm.val + my_commission %}
+                    {% set ns_total_pnl.val = ns_total_pnl.val + profit %}
+                    <tr style="border-bottom:1px solid #f0f4ec;">
+                      <td style="padding:7px 10px;"><strong>{{ sh.stock }}</strong></td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|int }}</td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.cmp|money if sh.cmp else '—' }}</td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:600;" class="{{ 'pos' if profit >= 0 else 'neg' }}">
+                        {{ '+' if profit > 0 else '' }}{{ profit|money }}
+                      </td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:700; color:#1e4620;">
+                        {{ my_commission|money }}
+                        {% if profit <= 0 %}<small class="muted" style="display:block; font-size:10px; font-weight:400;">(Loss: ₹0 fee)</small>{% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f0fdf4; border-top:2px solid #bbf7d0;">
+                      <td colspan="4" style="padding:8px 10px; font-weight:700; font-size:12px; color:#166534;">Total</td>
+                      <td style="padding:8px 10px; text-align:right; font-weight:700; font-family:monospace;" class="{{ 'pos' if ns_total_pnl.val >= 0 else 'neg' }}">{{ '+' if ns_total_pnl.val > 0 else '' }}{{ ns_total_pnl.val|money }}</td>
+                      <td style="padding:8px 10px; text-align:right; font-weight:700; font-family:monospace; color:#166534;">{{ ns_total_comm.val|money }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Section B: Per-holding Exit Price Breakup -->
+            <div style="padding: 14px 18px 16px;">
+              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display:flex; align-items:center; gap:8px;">
+                {{ icon('pie', 13) }} Section B — Exit Price Breakup (If sold today at CMP)
+                <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of sell value&#10;• DP Charges: ₹15.34/scrip/day (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;• Stamp Duty: 0.015% of buy value (paid at purchase, shown as note)&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
+              </div>
+
+              {% for sh in shares %}
+              {% if sh.cmp and sh.buy_price %}
+              {% set comm_rate = (client.commission_rate or 10)|float %}
+              {% set qty = sh.quantity|float %}
+              {% set sell_val = qty * (sh.cmp|float) %}
+              {% set buy_val = qty * (sh.buy_price|float) %}
+              {% set profit = sell_val - buy_val %}
+
+              {% if client.commission_type == 'turnover_pct' %}
+                {% set my_commission = (buy_val + sell_val) * comm_rate / 100 %}
+              {% elif client.commission_type == 'flat' %}
+                {% set my_commission = comm_rate %}
+              {% else %}
+                {% set my_commission = (profit * comm_rate / 100) if profit > 0 else 0 %}
+              {% endif %}
+
+              {% set buy_date_str = sh.lots[0].added_on if sh.lots else sh.added_on %}
+              {% set buy_year = buy_date_str[:4]|int if buy_date_str else (today[:4]|int) %}
+              {% set today_year = today[:4]|int %}
+              {% set is_ltcg = buy_year <= (today_year - 1) %}
+              {% set tax_rate = 0.125 if is_ltcg else 0.20 %}
+              {% set tax = profit * tax_rate if profit > 0 else 0 %}
+
+              {% set stt = sell_val * 0.001 %}
+              {% set exch = sell_val * 0.0000345 %}
+              {% set sebi = sell_val * 0.000001 %}
+              {% set dp = 15.34 %}
+              {% set gst = (exch + sebi) * 0.18 %}
+              {% set broker_total = stt + exch + sebi + dp + gst %}
+
+              {% set net = profit - tax - broker_total - my_commission %}
+
+              <div class="breakup-stock-block">
+                <div class="breakup-stock-header">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <strong style="font-size:14px;">{{ sh.stock }}</strong>
+                    <span class="cap-gain-pill {{ 'pill-ltcg' if is_ltcg else 'pill-stcg' }}">
+                      {{ 'LTCG 12.5%' if is_ltcg else 'STCG 20%' }}
+                    </span>
+                    {% if buy_date_str %}
+                    <span style="font-size:11px; color:#64786a;">Held since {{ buy_date_str[:10] }}</span>
+                    {% endif %}
+                  </div>
+                  <div style="text-align:right; font-size:12px; color:#64786a;">
+                    {{ sh.quantity|int }} shares &bull; CMP {{ sh.cmp|money }}
+                  </div>
+                </div>
+
+                <div class="breakup-row">
+                  <span class="label">Gross Profit <small style="color:#9eb09e;">(CMP − Avg Buy) × Qty</small></span>
+                  <span class="value {{ 'pos' if profit >= 0 else 'neg' }}">{{ '+' if profit > 0 else '' }}{{ profit|money }}</span>
+                </div>
+
+                <hr class="breakup-divider">
+
+                <div class="breakup-row">
+                  <span class="label">
+                    Capital Gains Tax
+                    <span class="cap-gain-pill {{ 'pill-ltcg' if is_ltcg else 'pill-stcg' }}" style="margin-left:4px;">
+                      {{ 'LTCG 12.5%' if is_ltcg else 'STCG 20%' }}
+                    </span>
+                  </span>
+                  <span class="value neg">−{{ tax|money }}</span>
+                </div>
+
+                <hr class="breakup-divider">
+
+                <div class="breakup-row">
+                  <span class="label">STT <small style="color:#9eb09e;">(0.1% of sell value)</small></span>
+                  <span class="value neg">−{{ stt|money }}</span>
+                </div>
+                <div class="breakup-row">
+                  <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345%)</small></span>
+                  <span class="value neg">−{{ exch|money }}</span>
+                </div>
+                <div class="breakup-row">
+                  <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001%)</small></span>
+                  <span class="value neg">−{{ sebi|money }}</span>
+                </div>
+                <div class="breakup-row">
+                  <span class="label">DP Charges <small style="color:#9eb09e;">(₹9.50 Zerodha + ₹3.50 CDSL = ₹13 + 18% GST = ₹15.34/scrip)
+                    <button type="button" class="breakup-info-btn" title="DP (Depository Participant) charge is levied by CDSL each time shares leave your demat on a sell.&#10;&#10;Standard / Male primary holder: ₹9.50 (Zerodha) + ₹3.50 (CDSL) = ₹13 + 18% GST = ₹15.34&#10;Female primary holder: ₹9.50 (Zerodha) + ₹3.25 (CDSL) = ₹12.75 + 18% GST = ₹15.045&#10;&#10;Charged once per scrip per sell day, regardless of quantity. This is separate from the annual AMC (₹100–₹300/yr) you pay to maintain your demat account.">ⓘ</button>
+                  </small></span>
+                  <span class="value neg">−{{ dp|money }}</span>
+                </div>
+                <div class="breakup-row">
+                  <span class="label">GST on Charges <small style="color:#9eb09e;">(18% on exch+SEBI only; DP GST already included)</small></span>
+                  <span class="value neg">−{{ gst|money }}</span>
+                </div>
+                <div class="breakup-row" style="background:#fef9ec;">
+                  <span class="label" style="font-weight:600;">Total Broker Charges</span>
+                  <span class="value neg" style="font-weight:700;">−{{ broker_total|money }}</span>
+                </div>
+
+                <hr class="breakup-divider">
+
+                <div class="breakup-row" style="background:#f4f8f1;">
+                  <span class="label" style="font-weight:600;">
+                    Advisor Commission
+                    <small style="color:#9eb09e; font-weight:400;">({{ comm_rate }}% of profit)</small>
+                  </span>
+                  <span class="value" style="color:#1e4620; font-weight:700;">−{{ my_commission|money }}</span>
+                </div>
+
+                <div class="breakup-net-row">
+                  <span>Net Take-Home for You</span>
+                  <span class="{{ 'pos' if net >= 0 else 'neg' }}">{{ '+' if net > 0 else '' }}{{ net|money }}</span>
+                </div>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+
+            <!-- Section C: Target Potential Gains (Per Stock) -->
+            {% if stock_targets %}
+            <div style="padding: 14px 18px 16px; border-top: 1px solid #edf2e5;">
+              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  {{ icon('trend', 13) }} Section C — Target Potential Gains
+                  <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">Advisor Targets</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for sh in shares %}
+                {% set stock_key = sh.stock.strip().upper() %}
+                {% set tg_list = stock_targets.get(stock_key, []) %}
+                {% if tg_list and sh.quantity and sh.buy_price %}
+                <div style="background: #ffffff; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <strong style="font-size: 14px; color: #173d34;">{{ sh.stock }}</strong>
+                      <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    {% set sqty = sh.quantity|float %}
+                    {% set sbp = sh.buy_price|float %}
+                    {% for t in tg_list %}
+                    {% set tp = t.target_price|float %}
+                    {% set pot_gain = (tp - sbp) * sqty %}
+                    {% set pot_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+                    <div style="flex: 1; min-width: 170px; background: {{ '#f0fdf4' if pot_gain >= 0 else '#fff5f5' }}; border: 1px solid {{ '#bbf7d0' if pot_gain >= 0 else '#fecaca' }}; border-radius: 8px; padding: 10px 12px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 10px; font-weight: 700; color: {{ '#166534' if pot_gain >= 0 else '#991b1b' }}; text-transform: uppercase;">{{ t.label }}</span>
+                        <strong style="font-size: 14px; font-family: monospace; color: {{ '#15803d' if pot_gain >= 0 else '#dc2626' }};">{{ tp|money }}</strong>
+                      </div>
+                      {% if t.notes %}
+                      <div style="font-size: 10px; color: #64786a; margin-bottom: 4px;">{{ t.notes }}</div>
+                      {% endif %}
+                      <div style="font-size: 11px; border-top: 1px solid {{ '#d1fae5' if pot_gain >= 0 else '#fee2e2' }}; padding-top: 4px; margin-top: 4px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                          <span style="color: #64786a;">Potential Gain:</span>
+                          <strong class="{{ 'pos' if pot_gain >= 0 else 'neg' }}">{{ '+' if pot_gain > 0 else '' }}{{ pot_gain|money }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                          <span style="color: #64786a;">Projected Return:</span>
+                          <strong class="{{ 'pos' if pot_pct >= 0 else 'neg' }}">{{ '+' if pot_pct > 0 else '' }}{{ '%.1f'|format(pot_pct) }}%</strong>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </section>
+          {% endif %}
+        </div> <!-- Close portal-tab-overview -->
+
+        <!-- ===== TAB 2: CURRENT HOLDINGS ===== -->
+        <div class="client-tab-panel" id="portal-tab-holdings">
+          <!-- 1. Current Holdings Section -->
+          <section class="card portal-card">
+            <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <h2 style="margin: 0;">Your Current Holdings</h2>
+                  <span id="portal-ticker-badge" class="ticker-badge ticker-live"
+                    title="Indian Market Hours: 9:15 AM to 3:45 PM IST">
+                    <span class="ticker-pulse"></span>
+                    <span>Live 20s Ticker</span>
+                  </span>
+                </div>
+                <p class="muted">Calculated automatically from your open trades · Live ticker updates every 20s (9:15 AM –
+                  3:45 PM IST).</p>
+              </div>
+              <div class="header-actions" style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+                  {{ icon('plus', 14) }} Add Trade
+                </button>
+                <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}"
+                  class="btn btn-secondary btn-sm">
+                  {{ icon('upload', 14) }} Upload Trade Proof
+                </a>
+              </div>
+            </div>
             {{ icon('plus', 14) }} Add Trade
           </button>
           <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}"
@@ -377,9 +734,12 @@
       above to record a trade.', 'trend') }}
       {% endif %}
     </section>
+  </div> <!-- Close portal-tab-holdings -->
 
+  <!-- ===== TAB 3: PAST TRADES ===== -->
+  <div class="client-tab-panel" id="portal-tab-trades">
     <!-- 2. Trades Section -->
-    <section class="card portal-card" style="margin-top: 1.5rem;">
+    <section class="card portal-card" style="margin-top: 0;">
       <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
         <div>
           <h2>Trade Ledger History</h2>
@@ -550,6 +910,67 @@
       {{ empty_state('No trades yet', 'Click "Add Trade" above to record your first trade in your ledger.', 'trend') }}
       {% endif %}
     </section>
+  </div> <!-- Close portal-tab-trades -->
+
+  <!-- ===== TAB 4: STOCK CHARTS ===== -->
+  <div class="client-tab-panel" id="portal-tab-charts">
+    <section class="card portal-card">
+      <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2>{{ icon('candlestick', 18) }} Your Stock Candlestick Charts &amp; Targets</h2>
+          <p class="muted">Live interactive candlestick charts and advisor target levels for all stocks you hold.</p>
+        </div>
+      </div>
+
+      {% if shares %}
+      <div style="padding: 16px; display: flex; flex-direction: column; gap: 20px;">
+        {% for sh in shares %}
+        <div style="border: 1px solid #e1e9de; border-radius: 10px; overflow: hidden; background: #ffffff;">
+          <div style="background: #f4f8f1; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e1e9de;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <strong style="font-size: 16px; color: #173d34;">{{ sh.stock }}</strong>
+              <span class="badge" style="background: #e0ebd7; color: #2e5a36;">{{ (sh.quantity|int) }} shares</span>
+              <span class="muted" style="font-size: 12px;">Avg Buy: {{ sh.buy_price|money if sh.buy_price else '—' }} · CMP: <strong>{{ sh.cmp|money if sh.cmp else '—' }}</strong></span>
+            </div>
+          </div>
+
+          {% set stock_key = sh.stock.strip().upper() %}
+          {% set tg_list = stock_targets.get(stock_key, []) %}
+          {% if tg_list %}
+          <div style="padding: 10px 16px; background: #fafcf8; border-bottom: 1px solid #f0f4ec; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase;">Advisor Targets:</span>
+            {% for t in tg_list %}
+            {% set tp = t.target_price|float %}
+            {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
+            {% set gain = (tp - sbp) * (sh.quantity|float) if sbp else 0 %}
+            {% set gain_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 6px; background: #ffffff; border: 1px solid #c8e6c9;">
+              <strong style="color: #1b5e20;">{{ t.label }}:</strong> {{ tp|money }}
+              <span class="{{ 'pos' if gain >= 0 else 'neg' }}" style="font-weight: 600; font-size: 11px;">({{ '+' if gain > 0 else '' }}{{ gain|money }}, {{ '+' if gain_pct > 0 else '' }}{{ '%.1f'|format(gain_pct) }}%)</span>
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div style="height: 400px; width: 100%; position: relative;">
+            <iframe 
+              src="https://s.tradingview.com/widgetembed/?symbol=NSE%3A{{ sh.stock }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
+              style="width: 100%; height: 100%; border: none;" 
+              loading="lazy" 
+              title="TradingView chart for {{ sh.stock }}">
+            </iframe>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        {{ empty_state('No holdings to display charts', 'Once you have holdings in your portfolio, live candlestick charts and targets will appear here.', 'candlestick') }}
+      {% endif %}
+    </section>
+  </div> <!-- Close portal-tab-charts -->
+
+  </div> <!-- Close .client-page-content -->
+</div> <!-- Close .client-page-layout -->
 
     <!-- Mobile & App Footer Account & Session Controls -->
     <div class="portal-mobile-account-card mobile-only">
@@ -975,6 +1396,28 @@
 {% endif %}
 
 <script>
+  // ===== Client Portal Tab Switching =====
+  function switchPortalTab(btn, tabId) {
+    document.querySelectorAll('.client-sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById(tabId);
+    if (panel) panel.classList.add('active');
+    document.querySelectorAll('.client-sidebar-btn[data-tab="' + tabId + '"]').forEach(b => b.classList.add('active'));
+    try {
+      history.replaceState(null, '', '#' + tabId);
+    } catch(e) {}
+  }
+
+  // Restore tab from URL hash on page load
+  (function() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      const btn = document.querySelector('.client-sidebar-btn[data-tab="' + hash + '"]');
+      if (btn) switchPortalTab(btn, hash);
+    }
+  })();
+
   // Immediate sync for privacy mode if stored in localStorage
   try {
     const isPrivacy = localStorage.getItem('privacyMode') === 'true';

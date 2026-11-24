@@ -137,6 +137,15 @@ CREATE TABLE IF NOT EXISTS client_push_subscriptions (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_push_client ON client_push_subscriptions(client_id);
+CREATE TABLE IF NOT EXISTS stock_price_targets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stock TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT 'T1',
+    target_price NUMERIC NOT NULL,
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_spt_stock ON stock_price_targets(stock);
 """
 
 
@@ -234,6 +243,20 @@ def init_local(connection):
     connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_uploads_submission ON uploads(submission_id)")
     connection.execute("CREATE INDEX IF NOT EXISTS idx_uploads_client ON uploads(client_id)")
     connection.execute("CREATE INDEX IF NOT EXISTS idx_clients_name_ci ON clients(lower(name))")
+    try:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS stock_price_targets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stock TEXT NOT NULL,
+                label TEXT NOT NULL DEFAULT 'T1',
+                target_price NUMERIC NOT NULL,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_spt_stock ON stock_price_targets(stock)")
+    except Exception:
+        pass
     if backfill_upload_clients:
         connection.execute(
             """UPDATE uploads SET client_id=(
@@ -285,6 +308,15 @@ def get_db():
                         with connection.cursor() as cur:
                             cur.execute("ALTER TABLE public.trades ADD COLUMN IF NOT EXISTS deduct_from_funds INTEGER NOT NULL DEFAULT 0;")
                             cur.execute("ALTER TABLE public.client_shares ADD COLUMN IF NOT EXISTS deduct_from_funds INTEGER NOT NULL DEFAULT 0;")
+                            cur.execute("""CREATE TABLE IF NOT EXISTS public.stock_price_targets (
+                                id SERIAL PRIMARY KEY,
+                                stock TEXT NOT NULL,
+                                label TEXT NOT NULL DEFAULT 'T1',
+                                target_price NUMERIC NOT NULL,
+                                notes TEXT,
+                                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                            );""")
+                            cur.execute("CREATE INDEX IF NOT EXISTS idx_spt_stock ON public.stock_price_targets(stock);")
                         connection.commit()
                     except Exception:
                         connection.rollback()

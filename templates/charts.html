@@ -222,6 +222,9 @@
                   <th class="r">Avg Price</th>
                   <th class="r">Value</th>
                   <th class="r">Unrealized</th>
+                  {% if stock_targets %}
+                  <th>Potential Target Gains</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody>
@@ -241,6 +244,17 @@
                       {{ '+' if ch.unrealized_pnl >= 0 else '' }}{{ ch.unrealized_pnl|money }}
                     </span>
                   </td>
+                  {% if stock_targets %}
+                  <td style="font-size: 11px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      {% for tg in ch.target_gains %}
+                      <span class="badge" style="background: {{ '#e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9;' if tg.gain >= 0 else '#ffebee; color: #b71c1c; border: 1px solid #ffcdd2;' }} font-size: 10px; padding: 2px 6px;">
+                        <strong>{{ tg.label }}</strong> ({{ tg.target_price|money }}): <span class="tabular {{ 'pos' if tg.gain >= 0 else 'neg' }}">{{ '+' if tg.gain > 0 else '' }}{{ tg.gain|money }} ({{ '+' if tg.gain_pct > 0 else '' }}{{ '%.1f'|format(tg.gain_pct) }}%)</span>
+                      </span>
+                      {% endfor %}
+                    </div>
+                  </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>
@@ -309,6 +323,115 @@
           {% endif %}
         </section>
       </div>
+
+      <!-- Price Targets Management Card -->
+      <section class="card" style="margin-top: 16px;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 style="font-size: 16px; margin: 0;">{{ icon('trend', 15) }} Price Targets for {{ selected_info.symbol }}</h2>
+              <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">{{ stock_targets|length }} Target{{ 's' if stock_targets|length != 1 else '' }}</span>
+            </div>
+            <p class="muted" style="font-size: 11px; margin: 2px 0 0;">Set target price levels. These draw dashed price lines on the candlestick chart and show projected profits to clients in their portal.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="const f = document.getElementById('add-target-form-box'); f.style.display = f.style.display === 'none' ? 'block' : 'none';">
+            {{ icon('plus', 13) }} Add Target Level
+          </button>
+        </div>
+
+        <!-- Collapsible Add Target Form -->
+        <div id="add-target-form-box" style="display: none; padding: 14px 18px; border-bottom: 1px solid #edf1e8; background: #fafcf7;">
+          <form method="post" action="{{ url_for('chart_set_target') }}" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+            {{ csrf() }}
+            <input type="hidden" name="stock" value="{{ selected_info.symbol }}">
+            <label class="field" style="margin: 0; flex: 0 0 100px;">
+              <span style="font-size: 11px;">Target Label</span>
+              <input name="label" type="text" placeholder="T1" maxlength="20" value="T{{ (stock_targets|length + 1) }}" style="font-weight: 700; text-transform: uppercase;">
+            </label>
+            <label class="field" style="margin: 0; flex: 1; min-width: 140px;">
+              <span style="font-size: 11px;">Target Price (₹)</span>
+              <input name="target_price" type="number" step="0.01" min="0.01" required placeholder="e.g. 550.00" style="font-family: monospace; font-weight: 600;">
+            </label>
+            <label class="field" style="margin: 0; flex: 2; min-width: 200px;">
+              <span style="font-size: 11px;">Target Notes <span class="optional">Optional</span></span>
+              <input name="notes" type="text" maxlength="200" placeholder="e.g. Resistance breakout, Q3 result target">
+            </label>
+            <button class="btn btn-primary btn-sm" type="submit" style="margin-bottom: 1px;">
+              {{ icon('check', 13) }} Save Target
+            </button>
+          </form>
+        </div>
+
+        <!-- Targets Table -->
+        {% if stock_targets %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th class="r">Target Price</th>
+                {% if selected_info.current_price %}
+                <th class="r">vs CMP (Diff)</th>
+                <th class="r">Upside %</th>
+                {% endif %}
+                <th class="r">Total Client Gains (All Clients)</th>
+                <th>Notes</th>
+                <th class="r">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in stock_targets %}
+              {% set tp = t.target_price|float %}
+              {% set cmp = selected_info.current_price|float if selected_info.current_price else None %}
+              {% set diff = (tp - cmp) if cmp else None %}
+              {% set diff_pct = ((tp - cmp) / cmp * 100) if cmp and cmp > 0 else None %}
+              {% set ns_tot_gain = namespace(val=0) %}
+              {% for ch in clients_holding %}
+                {% set ns_tot_gain.val = ns_tot_gain.val + ((tp - (ch.buy_price|float)) * (ch.quantity|float)) %}
+              {% endfor %}
+              <tr>
+                <td>
+                  <span style="display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9;">
+                    {{ t.label }}
+                  </span>
+                </td>
+                <td class="r tabular"><strong>{{ tp|money }}</strong></td>
+                {% if cmp %}
+                <td class="r tabular">
+                  <span class="{{ 'pos' if diff >= 0 else 'neg' }}">
+                    {{ '+' if diff > 0 else '' }}{{ diff|money }}
+                  </span>
+                </td>
+                <td class="r tabular">
+                  <span class="{{ 'pos' if diff_pct >= 0 else 'neg' }}" style="font-weight: 700;">
+                    {{ '+' if diff_pct > 0 else '' }}{{ '%.1f'|format(diff_pct) }}%
+                  </span>
+                </td>
+                {% endif %}
+                <td class="r tabular">
+                  <span class="{{ 'pos' if ns_tot_gain.val >= 0 else 'neg' }}" style="font-weight: 700;">
+                    {{ '+' if ns_tot_gain.val > 0 else '' }}{{ ns_tot_gain.val|money }}
+                  </span>
+                  <small class="muted" style="display: block; font-size: 10px;">across {{ clients_holding|length }} client{{ 's' if clients_holding|length != 1 else '' }}</small>
+                </td>
+                <td class="muted" style="font-size: 11px;">{{ t.notes or '—' }}</td>
+                <td class="r">
+                  <form method="post" action="{{ url_for('chart_delete_target', tid=t.id) }}" data-confirm="Remove target {{ t.label }} ({{ tp|money }}) for {{ selected_info.symbol }}?" style="margin: 0; display: inline-block;">
+                    {{ csrf() }}
+                    <button class="icon-btn icon-btn-danger" aria-label="Delete target" title="Delete target">{{ icon('trash', 14) }}</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="padding: 20px 18px; text-align: center; color: #64786a; font-size: 13px;">
+          No price targets added yet for <strong>{{ selected_info.symbol }}</strong>. Click <strong>"Add Target Level"</strong> above to set T1, T2, etc.
+        </div>
+        {% endif %}
+      </section>
       {% endif %}
     </main>
   </div>
@@ -574,6 +697,28 @@ document.addEventListener("DOMContentLoaded", function() {
           if (candleSeries) candleSeries.setData(candleList);
           if (volumeSeries) volumeSeries.setData(volumeList);
           if (lwChart) lwChart.timeScale().fitContent();
+
+          // Render target price lines on chart
+          const targets = {{ stock_targets | tojson if stock_targets else '[]' }};
+          if (candleSeries && targets && targets.length) {
+            targets.forEach(function(t) {
+              const price = parseFloat(t.target_price);
+              if (!isNaN(price) && price > 0) {
+                try {
+                  candleSeries.createPriceLine({
+                    price: price,
+                    color: '#2e7d32',
+                    lineWidth: 2,
+                    lineStyle: 2, // Dashed
+                    axisLabelVisible: true,
+                    title: (t.label || 'Target') + ' (₹' + price.toFixed(2) + ')' + (t.notes ? ' · ' + t.notes : ''),
+                  });
+                } catch(e) {
+                  console.warn("Could not create price line:", e);
+                }
+              }
+            });
+          }
 
           updateLegend(data.candles[data.candles.length - 1]);
         } else {

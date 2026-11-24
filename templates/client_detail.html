@@ -96,25 +96,53 @@
 </section>
 {% endif %}
 
-<!-- ===== CLIENT PAGE TAB BAR ===== -->
-<div class="client-page-tabs" role="tablist">
-  <button class="client-tab-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
-    {{ icon('pie', 14) }} Overview
-  </button>
-  <button class="client-tab-btn" role="tab" data-tab="tab-ledger" onclick="switchClientTab(this, 'tab-ledger')">
-    {{ icon('book', 14) }} Trade Ledger
-  </button>
-  <button class="client-tab-btn" role="tab" data-tab="tab-advisories" onclick="switchClientTab(this, 'tab-advisories')">
-    {{ icon('send', 14) }} Advisories
-    {% if advisories %}<span style="background:#3f7352;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;">{{ advisories|length }}</span>{% endif %}
-  </button>
-  <button class="client-tab-btn" role="tab" data-tab="tab-payments" onclick="switchClientTab(this, 'tab-payments')">
-    {{ icon('wallet', 14) }} Payments &amp; Funds
-  </button>
-</div>
+<!-- ===== CLIENT PAGE SIDEBAR LAYOUT ===== -->
+<div class="client-page-layout">
+  <!-- Client Page Sidebar Navigation -->
+  <aside class="client-page-sidebar">
+    <div class="client-sidebar-heading">
+      <span class="eyebrow" style="font-size: 10px; color: #5b6d52; letter-spacing: 0.5px;">CLIENT MENU</span>
+      <h3 style="margin: 2px 0 0; font-size: 14px; color: #173d34;">{{ client.name }}</h3>
+    </div>
+    <nav class="client-sidebar-nav" role="tablist">
+      <button class="client-sidebar-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
+        <span class="btn-left">{{ icon('pie', 15) }} <span>Overview &amp; Slab</span></span>
+      </button>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-holdings" onclick="switchClientTab(this, 'tab-holdings')">
+        <span class="btn-left">{{ icon('trend', 15) }} <span>Holdings</span></span>
+        <span class="tiny-tag">{{ shares|length }}</span>
+      </button>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-ledger" onclick="switchClientTab(this, 'tab-ledger')">
+        <span class="btn-left">{{ icon('book', 15) }} <span>Past Trades</span></span>
+        <span class="tiny-tag">{{ s.count }}</span>
+      </button>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-charts" onclick="switchClientTab(this, 'tab-charts')">
+        <span class="btn-left">{{ icon('candlestick', 15) }} <span>Stock Charts</span></span>
+      </button>
+      <div style="border-top: 1px solid #edf1e8; margin: 6px 0; padding-top: 6px;"></div>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisories" onclick="switchClientTab(this, 'tab-advisories')">
+        <span class="btn-left">{{ icon('send', 15) }} <span>Advisories</span></span>
+        {% if advisories %}<span class="tiny-tag" style="background: #e8f4fd; color: #0366d6;">{{ advisories|length }}</span>{% endif %}
+      </button>
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-payments" onclick="switchClientTab(this, 'tab-payments')">
+        <span class="btn-left">{{ icon('wallet', 15) }} <span>Payments &amp; Funds</span></span>
+      </button>
+    </nav>
+  </aside>
 
-<!-- ===== TAB 0: OVERVIEW ===== -->
+  <!-- Client Page Main Content Panes -->
+  <div class="client-page-content" style="min-width: 0;">
+
+<!-- ===== TAB 0: OVERVIEW & ADVISORY SLAB (MAIN PAGE) ===== -->
 <div class="client-tab-panel active" id="tab-overview">
+  <!-- Losses Policy Notice Callout -->
+  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+    <span style="color: #16a34a; flex-shrink: 0;">{{ icon('info', 18) }}</span>
+    <div style="font-size: 12px; color: #166534; line-height: 1.45;">
+      <strong>Commission Agreement:</strong> {{ rule }}. <strong>Losses Policy:</strong> If a client incurs a loss in any share, the loss is borne solely by the client and is <strong>never subtracted from advisor commission</strong>. Commission is calculated exclusively on profitable trades.
+    </div>
+  </div>
+
   <div class="detail-grid">
     <!-- LEFT: Holdings + Advisory Slab -->
     <div>
@@ -540,6 +568,71 @@
             * Stamp duty (0.015% of buy value) already paid at purchase time and is excluded from net.
           </p>
         </div>
+
+        <!-- Section C: Target Potential Gains (Per Stock) -->
+        {% if stock_targets %}
+        <div style="padding: 14px 18px 16px; border-top: 1px solid #edf2e5;">
+          <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              {{ icon('trend', 13) }} Section C — Target Potential Gains
+              <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">Technical Analysis Targets</span>
+            </div>
+            <a href="{{ url_for('charts_view') }}" class="btn btn-ghost btn-xs" style="color: #2e7d32;">
+              {{ icon('candlestick', 12) }} Manage Targets ↗
+            </a>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for sh in shares %}
+            {% set stock_key = sh.stock.strip().upper() %}
+            {% set tg_list = stock_targets.get(stock_key, []) %}
+            {% if tg_list and sh.quantity and sh.buy_price %}
+            <div style="background: #ffffff; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="font-size: 14px; color: #173d34;">{{ sh.stock }}</strong>
+                  <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
+                </div>
+                <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-ghost btn-xs" style="color: #2e7d32;">
+                  {{ icon('candlestick', 12) }} Chart ↗
+                </a>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% set sqty = sh.quantity|float %}
+                {% set sbp = sh.buy_price|float %}
+                {% set comm_rate = (client.commission_rate or 10)|float %}
+                {% for t in tg_list %}
+                {% set tp = t.target_price|float %}
+                {% set pot_gain = (tp - sbp) * sqty %}
+                {% set pot_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+                {% set pot_comm = (pot_gain * comm_rate / 100) if pot_gain > 0 else 0 %}
+                <div style="flex: 1; min-width: 170px; background: {{ '#f0fdf4' if pot_gain >= 0 else '#fff5f5' }}; border: 1px solid {{ '#bbf7d0' if pot_gain >= 0 else '#fecaca' }}; border-radius: 8px; padding: 10px 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 10px; font-weight: 700; color: {{ '#166534' if pot_gain >= 0 else '#991b1b' }}; text-transform: uppercase;">{{ t.label }}</span>
+                    <strong style="font-size: 14px; font-family: monospace; color: {{ '#15803d' if pot_gain >= 0 else '#dc2626' }};">{{ tp|money }}</strong>
+                  </div>
+                  {% if t.notes %}
+                  <div style="font-size: 10px; color: #64786a; margin-bottom: 4px;">{{ t.notes }}</div>
+                  {% endif %}
+                  <div style="font-size: 11px; border-top: 1px solid {{ '#d1fae5' if pot_gain >= 0 else '#fee2e2' }}; padding-top: 4px; margin-top: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                      <span style="color: #64786a;">Potential Gain:</span>
+                      <strong class="{{ 'pos' if pot_gain >= 0 else 'neg' }}">{{ '+' if pot_gain > 0 else '' }}{{ pot_gain|money }} ({{ '+' if pot_pct > 0 else '' }}{{ '%.1f'|format(pot_pct) }}%)</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="color: #64786a;">Advisor Commission:</span>
+                      <strong style="color: #1e4620;">{{ pot_comm|money }}</strong>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </section>
       {% endif %}
     </div>
@@ -888,6 +981,211 @@
   </div>
 </div>
 
+<!-- ===== TAB: HOLDINGS (DEDICATED FULL VIEW) ===== -->
+<div class="client-tab-panel" id="tab-holdings">
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2>{{ icon('trend', 16) }} Client Holdings Ledger</h2>
+        <p>Full breakdown of active stock positions and trade lots held by {{ client.name }}.</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-sm btn-primary" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }} Add holding</button>
+      </div>
+    </div>
+    {% if shares %}
+    <div class="desktop-detail-holdings-table table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Stock</th>
+            <th class="r">Quantity</th>
+            <th class="r">Buy price</th>
+            <th class="r">CMP</th>
+            <th class="r">Current value</th>
+            <th class="r">Unrealized P&amp;L</th>
+            {% if stock_targets %}
+            <th>Active Targets</th>
+            {% endif %}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for sh in shares %}
+          <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                {% if sh.lots and sh.lots|length > 1 %}
+                <button type="button" class="lots-toggle-btn icon-btn" data-target="holdings-tab-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                  {{ icon('chevron-down', 14) }}
+                </button>
+                {% endif %}
+                <div>
+                  <strong>{{ sh.stock }}</strong>
+                  {% if sh.lots and sh.lots|length > 1 %}
+                    <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+            <td class="r tabular">
+              <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
+              {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
+            </td>
+            <td class="r tabular"><span class="live-price-val" data-cmp="{{ sh.stock }}">{{ sh.cmp|money if sh.cmp else '—' }}</span></td>
+            <td class="r tabular"><strong>{{ sh.current_value|money }}</strong></td>
+            <td class="r tabular">
+              <span class="{{ 'pos' if (sh.unrealized_pnl and sh.unrealized_pnl >= 0) else 'neg' }}">
+                {{ '+' if (sh.unrealized_pnl and sh.unrealized_pnl > 0) else '' }}{{ sh.unrealized_pnl|money if sh.unrealized_pnl else '—' }}
+              </span>
+            </td>
+            {% if stock_targets %}
+            {% set stock_key = sh.stock.strip().upper() %}
+            {% set tg_list = stock_targets.get(stock_key, []) %}
+            <td style="font-size: 11px;">
+              {% if tg_list %}
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                {% for t in tg_list %}
+                <span class="badge" style="background: #e8f5e9; color: #1b5e20; font-size: 10px; padding: 1px 6px; border: 1px solid #c8e6c9;">
+                  <strong>{{ t.label }}:</strong> {{ t.target_price|money }}
+                </span>
+                {% endfor %}
+              </div>
+              {% else %}
+                <span class="muted" style="font-size: 11px;">—</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td>
+              <div class="row-actions" style="justify-content: flex-end;">
+                <button class="icon-btn edit-holding-btn" type="button" 
+                  data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
+                  data-stock="{{ sh.stock }}"
+                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-buy-price="{{ sh.buy_price or '' }}"
+                  aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
+                <button class="icon-btn sell-holding-btn" type="button" 
+                  data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
+                  data-stock="{{ sh.stock }}"
+                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
+                <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
+              </div>
+            </td>
+          </tr>
+          {% if sh.lots and sh.lots|length > 1 %}
+          <tr class="holding-lots-subrow" id="holdings-tab-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+            <td colspan="7" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
+              <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
+              </div>
+              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+                <thead>
+                  <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                    <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
+                    <th style="padding: 6px 12px; text-align: right;">Quantity</th>
+                    <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
+                    <th style="padding: 6px 12px; text-align: right;">Cost Basis</th>
+                    <th style="padding: 6px 12px; text-align: left;">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for lot in sh.lots %}
+                  <tr style="border-top: 1px solid #edf1e8;">
+                    <td style="padding: 6px 12px; color: #555;">{{ lot.added_on or '—' }}</td>
+                    <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.quantity }}</td>
+                    <td class="r tabular" style="padding: 6px 12px;">{{ lot.buy_price|money }}</td>
+                    <td class="r tabular" style="padding: 6px 12px; font-weight: 600;">{{ lot.total_cost|money }}</td>
+                    <td style="padding: 6px 12px; color: #888; font-size: 10px;">{{ lot.notes or ('Trade #' ~ lot.id) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      {{ empty_state('No holdings recorded', 'Track the specific shares this client owns.', 'trend', compact=True) }}
+    {% endif %}
+  </section>
+</div>
+
+<!-- ===== TAB: STOCK CHARTS (TECHNICAL CHARTS & TARGETS) ===== -->
+<div class="client-tab-panel" id="tab-charts">
+  <section class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h2>{{ icon('candlestick', 18) }} Stock Candlestick Charts &amp; Targets</h2>
+          <span class="badge" style="background: #e8f5e9; color: #1b5e20;">Live Indian Markets</span>
+        </div>
+        <p class="muted">Live technical candlestick charts &amp; price targets for {{ client.name }}'s portfolio shares.</p>
+      </div>
+      <a href="{{ url_for('charts_view') }}" class="btn btn-sm btn-primary">
+        {{ icon('external', 14) }} Open All Stock Charts ↗
+      </a>
+    </div>
+
+    {% if shares %}
+    <div style="padding: 16px; display: flex; flex-direction: column; gap: 20px;">
+      {% for sh in shares %}
+      <div style="border: 1px solid #e1e9de; border-radius: 10px; overflow: hidden; background: #ffffff;">
+        <div style="background: #f4f8f1; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e1e9de;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <strong style="font-size: 16px; color: #173d34;">{{ sh.stock }}</strong>
+            <span class="badge" style="background: #e0ebd7; color: #2e5a36;">{{ (sh.quantity|int) }} shares</span>
+            <span class="muted" style="font-size: 12px;">Avg Buy: {{ sh.buy_price|money if sh.buy_price else '—' }} · CMP: <strong>{{ sh.cmp|money if sh.cmp else '—' }}</strong></span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-primary btn-xs">
+              {{ icon('candlestick', 12) }} Full Technical Chart &amp; Targets ↗
+            </a>
+          </div>
+        </div>
+
+        {% set stock_key = sh.stock.strip().upper() %}
+        {% set tg_list = stock_targets.get(stock_key, []) %}
+        {% if tg_list %}
+        <div style="padding: 10px 16px; background: #fafcf8; border-bottom: 1px solid #f0f4ec; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase;">Active Targets:</span>
+          {% for t in tg_list %}
+          {% set tp = t.target_price|float %}
+          {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
+          {% set gain = (tp - sbp) * (sh.quantity|float) if sbp else 0 %}
+          {% set gain_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 6px; background: #ffffff; border: 1px solid #c8e6c9;">
+            <strong style="color: #1b5e20;">{{ t.label }}:</strong> {{ tp|money }}
+            <span class="{{ 'pos' if gain >= 0 else 'neg' }}" style="font-weight: 600; font-size: 11px;">({{ '+' if gain > 0 else '' }}{{ gain|money }}, {{ '+' if gain_pct > 0 else '' }}{{ '%.1f'|format(gain_pct) }}%)</span>
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="height: 380px; width: 100%; position: relative;">
+          <iframe 
+            src="https://s.tradingview.com/widgetembed/?symbol=NSE%3A{{ sh.stock }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
+            style="width: 100%; height: 100%; border: none;" 
+            loading="lazy" 
+            title="TradingView chart for {{ sh.stock }}">
+          </iframe>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      {{ empty_state('No holdings to display charts', 'Record client holdings first to display live candlestick charts here.', 'candlestick') }}
+    {% endif %}
+  </section>
+</div>
+
+  </div> <!-- Close .client-page-content -->
+</div> <!-- Close .client-page-layout -->
+
 <footer class="client-detail-disclaimer-footer" style="margin-top: 2rem; padding: 14px 18px; border-top: 1px solid var(--border-light, #e1e9de); display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1.5rem;">
   <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
   <div>
@@ -1012,13 +1310,15 @@ function generateStrongPassword(...targetIds) {
 
 // ===== Client Page Tab Switching =====
 function switchClientTab(btn, tabId) {
-  // Deactivate all tabs and panels
-  document.querySelectorAll('.client-tab-btn').forEach(b => b.classList.remove('active'));
+  // Deactivate all sidebar buttons and panels
+  document.querySelectorAll('.client-sidebar-btn, .client-tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
   // Activate selected
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   const panel = document.getElementById(tabId);
   if (panel) panel.classList.add('active');
+  // Sync any other button referencing this tab
+  document.querySelectorAll('.client-sidebar-btn[data-tab="' + tabId + '"], .client-tab-btn[data-tab="' + tabId + '"]').forEach(b => b.classList.add('active'));
   // Persist tab in URL hash without scroll jump
   try {
     history.replaceState(null, '', '#' + tabId);
@@ -1029,7 +1329,7 @@ function switchClientTab(btn, tabId) {
 (function() {
   const hash = window.location.hash.replace('#', '');
   if (hash) {
-    const btn = document.querySelector('.client-tab-btn[data-tab="' + hash + '"]');
+    const btn = document.querySelector('.client-sidebar-btn[data-tab="' + hash + '"], .client-tab-btn[data-tab="' + hash + '"]');
     if (btn) switchClientTab(btn, hash);
   }
 })();

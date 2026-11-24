@@ -4,6 +4,48 @@
   "graph": {},
   "nodes": [
     {
+      "label": "post-commit",
+      "file_type": "code",
+      "source_file": ".githooks/post-commit",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "_origin": "ast",
+      "id": "githooks_post_commit",
+      "community": 70,
+      "norm_label": "post-commit"
+    },
+    {
+      "label": "post-commit script",
+      "file_type": "code",
+      "source_file": ".githooks/post-commit",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "_origin": "ast",
+      "id": "githooks_post_commit__entry",
+      "community": 70,
+      "norm_label": "post-commit script"
+    },
+    {
+      "label": "SYNC_IN_PROGRESS",
+      "file_type": "code",
+      "source_file": ".githooks/post-commit",
+      "source_location": "L8",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "_origin": "ast",
+      "id": "githooks_post_commit_sync_in_progress",
+      "community": 70,
+      "norm_label": "sync_in_progress"
+    },
+    {
       "label": "index.py",
       "file_type": "code",
       "source_file": "api/index.py",
@@ -67,7 +109,7 @@
       "label": "_params()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L143",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "backend_database_params",
       "community": 17,
@@ -77,7 +119,7 @@
       "label": "_row()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L147",
+      "source_location": "L156",
       "_origin": "ast",
       "id": "backend_database_row",
       "community": 17,
@@ -87,7 +129,7 @@
       "label": "Result",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L157",
+      "source_location": "L166",
       "_origin": "ast",
       "id": "backend_database_result",
       "community": 17,
@@ -97,7 +139,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L158",
+      "source_location": "L167",
       "_origin": "ast",
       "id": "backend_database_result_init",
       "community": 17,
@@ -107,7 +149,7 @@
       "label": ".rowcount()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L162",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "backend_database_result_rowcount",
       "community": 17,
@@ -117,7 +159,7 @@
       "label": ".fetchone()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L165",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "backend_database_result_fetchone",
       "community": 17,
@@ -127,7 +169,7 @@
       "label": ".fetchall()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L168",
+      "source_location": "L177",
       "_origin": "ast",
       "id": "backend_database_result_fetchall",
       "community": 17,
@@ -137,7 +179,7 @@
       "label": "Database",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L172",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "backend_database_database",
       "community": 17,
@@ -147,7 +189,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L173",
+      "source_location": "L182",
       "_origin": "ast",
       "id": "backend_database_database_init",
       "community": 17,
@@ -157,7 +199,7 @@
       "label": ".execute()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L177",
+      "source_location": "L186",
       "_origin": "ast",
       "id": "backend_database_database_execute",
       "community": 17,
@@ -167,7 +209,7 @@
       "label": ".commit()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L183",
+      "source_location": "L192",
       "_origin": "ast",
       "id": "backend_database_database_commit",
       "community": 17,
@@ -177,7 +219,7 @@
       "label": ".rollback()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L186",
+      "source_location": "L195",
       "_origin": "ast",
       "id": "backend_database_database_rollback",
       "community": 17,
@@ -187,7 +229,7 @@
       "label": ".close()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L192",
+      "source_location": "L201",
       "_origin": "ast",
       "id": "backend_database_database_close",
       "community": 17,
@@ -197,7 +239,7 @@
       "label": "init_local()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L196",
+      "source_location": "L205",
       "_origin": "ast",
       "id": "backend_database_init_local",
       "community": 17,
@@ -207,7 +249,7 @@
       "label": "get_db()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L255",
+      "source_location": "L278",
       "_origin": "ast",
       "id": "backend_database_get_db",
       "community": 17,
@@ -217,7 +259,7 @@
       "label": "complete_request()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L306",
+      "source_location": "L338",
       "_origin": "ast",
       "id": "backend_database_complete_request",
       "community": 17,
@@ -227,7 +269,7 @@
       "label": "close_db()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L316",
+      "source_location": "L348",
       "_origin": "ast",
       "id": "backend_database_close_db",
       "community": 17,
@@ -237,7 +279,7 @@
       "label": "install_database()",
       "file_type": "code",
       "source_file": "backend/database.py",
-      "source_location": "L326",
+      "source_location": "L358",
       "_origin": "ast",
       "id": "backend_database_install_database",
       "community": 17,
@@ -2010,7 +2052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u",
-      "community": 18,
+      "community": 52,
       "norm_label": "u()"
     },
     {
@@ -2020,7 +2062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_c",
-      "community": 38,
+      "community": 22,
       "norm_label": "c()"
     },
     {
@@ -2030,7 +2072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_d",
-      "community": 50,
+      "community": 2,
       "norm_label": "d()"
     },
     {
@@ -2040,7 +2082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_f",
-      "community": 50,
+      "community": 35,
       "norm_label": "f()"
     },
     {
@@ -2050,7 +2092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_v",
-      "community": 50,
+      "community": 6,
       "norm_label": "v()"
     },
     {
@@ -2090,7 +2132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_y",
-      "community": 18,
+      "community": 46,
       "norm_label": "y()"
     },
     {
@@ -2100,7 +2142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k",
-      "community": 45,
+      "community": 67,
       "norm_label": "k"
     },
     {
@@ -2110,7 +2152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_constructor",
-      "community": 45,
+      "community": 67,
       "norm_label": ".constructor()"
     },
     {
@@ -2140,7 +2182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_p",
-      "community": 11,
+      "community": 67,
       "norm_label": ".p()"
     },
     {
@@ -2150,7 +2192,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_m",
-      "community": 45,
+      "community": 35,
       "norm_label": ".m()"
     },
     {
@@ -2160,7 +2202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_s",
-      "community": 45,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -2190,7 +2232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_r",
-      "community": 66,
+      "community": 22,
       "norm_label": "r()"
     },
     {
@@ -2220,7 +2262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_z",
-      "community": 18,
+      "community": 66,
       "norm_label": "z()"
     },
     {
@@ -2250,7 +2292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_w",
-      "community": 10,
+      "community": 66,
       "norm_label": ".w()"
     },
     {
@@ -2260,7 +2302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_u",
-      "community": 10,
+      "community": 66,
       "norm_label": ".u()"
     },
     {
@@ -2290,7 +2332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_i",
-      "community": 34,
+      "community": 65,
       "norm_label": "i"
     },
     {
@@ -2300,7 +2342,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_i_constructor",
-      "community": 34,
+      "community": 65,
       "norm_label": ".constructor()"
     },
     {
@@ -2310,7 +2352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_i_x",
-      "community": 34,
+      "community": 65,
       "norm_label": ".x()"
     },
     {
@@ -2320,7 +2362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_i_k",
-      "community": 34,
+      "community": 65,
       "norm_label": ".k()"
     },
     {
@@ -2450,7 +2492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_j_st",
-      "community": 43,
+      "community": 51,
       "norm_label": ".st()"
     },
     {
@@ -2460,7 +2502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_h",
-      "community": 44,
+      "community": 66,
       "norm_label": "h"
     },
     {
@@ -2470,7 +2512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_h_k",
-      "community": 44,
+      "community": 66,
       "norm_label": ".k()"
     },
     {
@@ -2490,7 +2532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u_constructor",
-      "community": 18,
+      "community": 52,
       "norm_label": ".constructor()"
     },
     {
@@ -2500,7 +2542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u_gt",
-      "community": 18,
+      "community": 52,
       "norm_label": ".gt()"
     },
     {
@@ -2520,7 +2562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u_st",
-      "community": 50,
+      "community": 52,
       "norm_label": ".st()"
     },
     {
@@ -2540,7 +2582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_x",
-      "community": 18,
+      "community": 66,
       "norm_label": "x()"
     },
     {
@@ -2640,7 +2682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_q_et",
-      "community": 46,
+      "community": 4,
       "norm_label": ".et()"
     },
     {
@@ -2720,7 +2762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tt",
-      "community": 18,
+      "community": 46,
       "norm_label": "tt"
     },
     {
@@ -2730,7 +2772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tt_constructor",
-      "community": 18,
+      "community": 46,
       "norm_label": ".constructor()"
     },
     {
@@ -2740,7 +2782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tt_ii",
-      "community": 18,
+      "community": 46,
       "norm_label": ".ii()"
     },
     {
@@ -2780,7 +2822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_nt_k",
-      "community": 18,
+      "community": 28,
       "norm_label": ".k()"
     },
     {
@@ -2860,7 +2902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_zi",
-      "community": 36,
+      "community": 2,
       "norm_label": ".zi()"
     },
     {
@@ -2870,7 +2912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_gi",
-      "community": 36,
+      "community": 2,
       "norm_label": ".gi()"
     },
     {
@@ -2940,7 +2982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_constructor",
-      "community": 43,
+      "community": 8,
       "norm_label": ".constructor()"
     },
     {
@@ -3020,7 +3062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_kt",
-      "community": 53,
+      "community": 8,
       "norm_label": ".kt()"
     },
     {
@@ -3030,7 +3072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_zt",
-      "community": 53,
+      "community": 12,
       "norm_label": ".zt()"
     },
     {
@@ -3110,7 +3152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_on",
-      "community": 32,
+      "community": 53,
       "norm_label": ".on()"
     },
     {
@@ -3120,7 +3162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_an",
-      "community": 66,
+      "community": 22,
       "norm_label": ".an()"
     },
     {
@@ -3140,7 +3182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_bn",
-      "community": 66,
+      "community": 22,
       "norm_label": ".bn()"
     },
     {
@@ -3160,7 +3202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt",
-      "community": 39,
+      "community": 2,
       "norm_label": "lt()"
     },
     {
@@ -3220,7 +3262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_n",
-      "community": 29,
+      "community": 30,
       "norm_label": ".$n()"
     },
     {
@@ -3280,7 +3322,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_qn",
-      "community": 29,
+      "community": 50,
       "norm_label": ".qn()"
     },
     {
@@ -3320,7 +3362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_ns",
-      "community": 29,
+      "community": 30,
       "norm_label": ".ns()"
     },
     {
@@ -3390,7 +3432,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ct",
-      "community": 32,
+      "community": 53,
       "norm_label": "ct"
     },
     {
@@ -3400,7 +3442,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ct_constructor",
-      "community": 32,
+      "community": 53,
       "norm_label": ".constructor()"
     },
     {
@@ -3410,7 +3452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ct_format",
-      "community": 32,
+      "community": 53,
       "norm_label": ".format()"
     },
     {
@@ -3460,7 +3502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ft",
-      "community": 42,
+      "community": 46,
       "norm_label": "ft()"
     },
     {
@@ -3470,7 +3512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pt",
-      "community": 6,
+      "community": 46,
       "norm_label": "pt()"
     },
     {
@@ -3480,7 +3522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mt",
-      "community": 6,
+      "community": 46,
       "norm_label": "mt()"
     },
     {
@@ -3490,7 +3532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bt",
-      "community": 6,
+      "community": 46,
       "norm_label": "bt()"
     },
     {
@@ -3570,7 +3612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yt_bs",
-      "community": 67,
+      "community": 10,
       "norm_label": ".bs()"
     },
     {
@@ -3610,7 +3652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tt_it",
-      "community": 18,
+      "community": 46,
       "norm_label": ".it()"
     },
     {
@@ -3620,7 +3662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tt_z",
-      "community": 18,
+      "community": 46,
       "norm_label": ".z()"
     },
     {
@@ -3630,7 +3672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pt_ds",
-      "community": 6,
+      "community": 46,
       "norm_label": ".ds()"
     },
     {
@@ -3810,7 +3852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_constructor",
-      "community": 39,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -3820,7 +3862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_it",
-      "community": 39,
+      "community": 2,
       "norm_label": ".it()"
     },
     {
@@ -3840,7 +3882,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_oe",
-      "community": 39,
+      "community": 2,
       "norm_label": ".oe()"
     },
     {
@@ -3880,7 +3922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ft_constructor",
-      "community": 42,
+      "community": 46,
       "norm_label": ".constructor()"
     },
     {
@@ -3900,7 +3942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ft_gs",
-      "community": 42,
+      "community": 46,
       "norm_label": ".gs()"
     },
     {
@@ -3930,7 +3972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt",
-      "community": 71,
+      "community": 6,
       "norm_label": "jt"
     },
     {
@@ -3940,7 +3982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt_constructor",
-      "community": 71,
+      "community": 6,
       "norm_label": ".constructor()"
     },
     {
@@ -3950,7 +3992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt_ds",
-      "community": 71,
+      "community": 6,
       "norm_label": ".ds()"
     },
     {
@@ -3970,7 +4012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_gs",
-      "community": 8,
+      "community": 51,
       "norm_label": ".gs()"
     },
     {
@@ -4070,7 +4112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt",
-      "community": 68,
+      "community": 28,
       "norm_label": "qt"
     },
     {
@@ -4080,7 +4122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_constructor",
-      "community": 68,
+      "community": 28,
       "norm_label": ".constructor()"
     },
     {
@@ -4090,7 +4132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_k",
-      "community": 68,
+      "community": 28,
       "norm_label": ".k()"
     },
     {
@@ -4100,7 +4142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yt_constructor",
-      "community": 43,
+      "community": 59,
       "norm_label": ".constructor()"
     },
     {
@@ -4190,7 +4232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zt_ne",
-      "community": 42,
+      "community": 9,
       "norm_label": ".ne()"
     },
     {
@@ -4200,7 +4242,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zt_gs",
-      "community": 43,
+      "community": 9,
       "norm_label": ".gs()"
     },
     {
@@ -4230,7 +4272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_ir",
-      "community": 68,
+      "community": 28,
       "norm_label": ".ir()"
     },
     {
@@ -4240,7 +4282,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_si",
-      "community": 68,
+      "community": 28,
       "norm_label": ".si()"
     },
     {
@@ -4250,7 +4292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_xi",
-      "community": 68,
+      "community": 28,
       "norm_label": ".xi()"
     },
     {
@@ -4260,7 +4302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qt_nr",
-      "community": 68,
+      "community": 28,
       "norm_label": ".nr()"
     },
     {
@@ -4310,7 +4352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii",
-      "community": 50,
+      "community": 25,
       "norm_label": "ii"
     },
     {
@@ -4320,7 +4362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii_constructor",
-      "community": 50,
+      "community": 25,
       "norm_label": ".constructor()"
     },
     {
@@ -4340,7 +4382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ni",
-      "community": 18,
+      "community": 52,
       "norm_label": "ni"
     },
     {
@@ -4350,7 +4392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ni_constructor",
-      "community": 18,
+      "community": 52,
       "norm_label": ".constructor()"
     },
     {
@@ -4360,7 +4402,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ni_it",
-      "community": 18,
+      "community": 52,
       "norm_label": ".it()"
     },
     {
@@ -4370,7 +4412,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ni_br",
-      "community": 18,
+      "community": 52,
       "norm_label": ".br()"
     },
     {
@@ -4380,7 +4422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ni_z",
-      "community": 18,
+      "community": 52,
       "norm_label": ".z()"
     },
     {
@@ -4460,7 +4502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri",
-      "community": 46,
+      "community": 4,
       "norm_label": "ri"
     },
     {
@@ -4470,7 +4512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_constructor",
-      "community": 46,
+      "community": 4,
       "norm_label": ".constructor()"
     },
     {
@@ -4490,7 +4532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_he",
-      "community": 46,
+      "community": 4,
       "norm_label": ".he()"
     },
     {
@@ -4500,7 +4542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_z",
-      "community": 46,
+      "community": 4,
       "norm_label": ".z()"
     },
     {
@@ -4550,7 +4592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_jr",
-      "community": 37,
+      "community": 53,
       "norm_label": ".jr()"
     },
     {
@@ -4560,7 +4602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_hr",
-      "community": 37,
+      "community": 53,
       "norm_label": ".hr()"
     },
     {
@@ -4660,7 +4702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci",
-      "community": 1,
+      "community": 39,
       "norm_label": "ci()"
     },
     {
@@ -4670,7 +4712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di",
-      "community": 70,
+      "community": 6,
       "norm_label": "di()"
     },
     {
@@ -4740,7 +4782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_ar",
-      "community": 18,
+      "community": 66,
       "norm_label": ".ar()"
     },
     {
@@ -4950,7 +4992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ki_sh",
-      "community": 1,
+      "community": 39,
       "norm_label": ".sh()"
     },
     {
@@ -4960,7 +5002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ki_yh",
-      "community": 1,
+      "community": 39,
       "norm_label": ".yh()"
     },
     {
@@ -4970,7 +5012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ki_kh",
-      "community": 1,
+      "community": 43,
       "norm_label": ".kh()"
     },
     {
@@ -4990,7 +5032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ki_ts",
-      "community": 1,
+      "community": 39,
       "norm_label": ".ts()"
     },
     {
@@ -5040,7 +5082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_constructor",
-      "community": 1,
+      "community": 39,
       "norm_label": ".constructor()"
     },
     {
@@ -5050,7 +5092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_ah",
-      "community": 1,
+      "community": 39,
       "norm_label": ".ah()"
     },
     {
@@ -5060,7 +5102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_bh",
-      "community": 1,
+      "community": 39,
       "norm_label": ".bh()"
     },
     {
@@ -5070,7 +5112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_ph",
-      "community": 1,
+      "community": 39,
       "norm_label": ".ph()"
     },
     {
@@ -5080,7 +5122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_rh",
-      "community": 1,
+      "community": 39,
       "norm_label": ".rh()"
     },
     {
@@ -5110,7 +5152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pi_ii",
-      "community": 43,
+      "community": 51,
       "norm_label": ".ii()"
     },
     {
@@ -5130,7 +5172,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_nh",
-      "community": 37,
+      "community": 53,
       "norm_label": ".nh()"
     },
     {
@@ -5140,7 +5182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_w",
-      "community": 46,
+      "community": 4,
       "norm_label": ".w()"
     },
     {
@@ -5150,7 +5192,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_wh",
-      "community": 46,
+      "community": 4,
       "norm_label": ".wh()"
     },
     {
@@ -5160,7 +5202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_jh",
-      "community": 46,
+      "community": 4,
       "norm_label": ".jh()"
     },
     {
@@ -5170,7 +5212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_hh",
-      "community": 46,
+      "community": 4,
       "norm_label": ".hh()"
     },
     {
@@ -5180,7 +5222,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_gt",
-      "community": 46,
+      "community": 4,
       "norm_label": ".gt()"
     },
     {
@@ -5190,7 +5232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_zh",
-      "community": 43,
+      "community": 51,
       "norm_label": ".zh()"
     },
     {
@@ -5200,7 +5242,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di_constructor",
-      "community": 70,
+      "community": 6,
       "norm_label": ".constructor()"
     },
     {
@@ -5210,7 +5252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di_qt",
-      "community": 70,
+      "community": 6,
       "norm_label": ".qt()"
     },
     {
@@ -5220,7 +5262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ai_constructor",
-      "community": 31,
+      "community": 38,
       "norm_label": ".constructor()"
     },
     {
@@ -5460,7 +5502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii_k",
-      "community": 50,
+      "community": 25,
       "norm_label": ".k()"
     },
     {
@@ -5470,7 +5512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii_g",
-      "community": 41,
+      "community": 68,
       "norm_label": ".g()"
     },
     {
@@ -5570,7 +5612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_cl",
-      "community": 19,
+      "community": 23,
       "norm_label": ".cl()"
     },
     {
@@ -5660,7 +5702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_hi",
-      "community": 13,
+      "community": 18,
       "norm_label": "hi()"
     },
     {
@@ -5780,7 +5822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_jl",
-      "community": 25,
+      "community": 32,
       "norm_label": ".jl()"
     },
     {
@@ -5790,7 +5832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_ql",
-      "community": 25,
+      "community": 32,
       "norm_label": ".ql()"
     },
     {
@@ -5800,7 +5842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_xh",
-      "community": 31,
+      "community": 38,
       "norm_label": ".xh()"
     },
     {
@@ -5860,7 +5902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_pn",
-      "community": 0,
+      "community": 18,
       "norm_label": ".pn()"
     },
     {
@@ -5900,7 +5942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_oa",
-      "community": 65,
+      "community": 12,
       "norm_label": ".oa()"
     },
     {
@@ -5920,7 +5962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_rn",
-      "community": 46,
+      "community": 4,
       "norm_label": ".rn()"
     },
     {
@@ -5940,7 +5982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_rl",
-      "community": 1,
+      "community": 39,
       "norm_label": ".rl()"
     },
     {
@@ -5950,7 +5992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_ua",
-      "community": 1,
+      "community": 23,
       "norm_label": ".ua()"
     },
     {
@@ -5980,7 +6022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_at",
-      "community": 50,
+      "community": 23,
       "norm_label": ".at()"
     },
     {
@@ -6010,7 +6052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_tt",
-      "community": 43,
+      "community": 51,
       "norm_label": ".tt()"
     },
     {
@@ -6030,7 +6072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_wa",
-      "community": 19,
+      "community": 23,
       "norm_label": ".wa()"
     },
     {
@@ -6060,7 +6102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_ea",
-      "community": 46,
+      "community": 2,
       "norm_label": ".ea()"
     },
     {
@@ -6070,7 +6112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_a",
-      "community": 31,
+      "community": 38,
       "norm_label": "._a()"
     },
     {
@@ -6190,7 +6232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zi_xt",
-      "community": 4,
+      "community": 10,
       "norm_label": ".xt()"
     },
     {
@@ -6210,7 +6252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gi_wh",
-      "community": 0,
+      "community": 50,
       "norm_label": ".wh()"
     },
     {
@@ -6220,7 +6262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_tn",
-      "community": 1,
+      "community": 39,
       "norm_label": "tn()"
     },
     {
@@ -6230,7 +6272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_nn",
-      "community": 43,
+      "community": 51,
       "norm_label": "nn()"
     },
     {
@@ -6250,7 +6292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_en",
-      "community": 1,
+      "community": 43,
       "norm_label": "en()"
     },
     {
@@ -6260,7 +6302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_rn",
-      "community": 1,
+      "community": 39,
       "norm_label": "rn()"
     },
     {
@@ -6270,7 +6312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_hn",
-      "community": 1,
+      "community": 39,
       "norm_label": "hn()"
     },
     {
@@ -6280,7 +6322,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ln",
-      "community": 1,
+      "community": 39,
       "norm_label": "ln()"
     },
     {
@@ -6320,7 +6362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_on_ha",
-      "community": 34,
+      "community": 33,
       "norm_label": ".ha()"
     },
     {
@@ -6380,7 +6422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_un",
-      "community": 36,
+      "community": 2,
       "norm_label": "un()"
     },
     {
@@ -6410,7 +6452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_xa",
-      "community": 46,
+      "community": 2,
       "norm_label": ".xa()"
     },
     {
@@ -6440,7 +6482,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ko",
-      "community": 1,
+      "community": 43,
       "norm_label": ".ko()"
     },
     {
@@ -6450,7 +6492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ja",
-      "community": 1,
+      "community": 43,
       "norm_label": ".ja()"
     },
     {
@@ -6540,7 +6582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ao",
-      "community": 1,
+      "community": 43,
       "norm_label": ".ao()"
     },
     {
@@ -6550,7 +6592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ah",
-      "community": 1,
+      "community": 43,
       "norm_label": ".ah()"
     },
     {
@@ -6580,7 +6622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_eo",
-      "community": 1,
+      "community": 43,
       "norm_label": ".eo()"
     },
     {
@@ -6590,7 +6632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ot",
-      "community": 43,
+      "community": 51,
       "norm_label": ".ot()"
     },
     {
@@ -6600,7 +6642,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_qs",
-      "community": 1,
+      "community": 43,
       "norm_label": ".qs()"
     },
     {
@@ -6610,7 +6652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_me",
-      "community": 1,
+      "community": 43,
       "norm_label": ".me()"
     },
     {
@@ -6650,7 +6692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_no",
-      "community": 36,
+      "community": 2,
       "norm_label": ".no()"
     },
     {
@@ -6680,7 +6722,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_pt",
-      "community": 43,
+      "community": 51,
       "norm_label": ".pt()"
     },
     {
@@ -6690,7 +6732,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_to",
-      "community": 1,
+      "community": 43,
       "norm_label": ".to()"
     },
     {
@@ -6700,7 +6742,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ia",
-      "community": 1,
+      "community": 51,
       "norm_label": ".ia()"
     },
     {
@@ -6710,7 +6752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_o",
-      "community": 25,
+      "community": 67,
       "norm_label": ".$o()"
     },
     {
@@ -6750,7 +6792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_xo",
-      "community": 1,
+      "community": 43,
       "norm_label": ".xo()"
     },
     {
@@ -6760,7 +6802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_zo",
-      "community": 1,
+      "community": 39,
       "norm_label": ".zo()"
     },
     {
@@ -6860,7 +6902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_bo",
-      "community": 1,
+      "community": 43,
       "norm_label": ".bo()"
     },
     {
@@ -6870,7 +6912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_vo",
-      "community": 1,
+      "community": 43,
       "norm_label": ".vo()"
     },
     {
@@ -6880,7 +6922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_mo",
-      "community": 1,
+      "community": 43,
       "norm_label": ".mo()"
     },
     {
@@ -6900,7 +6942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_i",
-      "community": 1,
+      "community": 39,
       "norm_label": ".i_()"
     },
     {
@@ -6910,7 +6952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_io",
-      "community": 1,
+      "community": 43,
       "norm_label": ".io()"
     },
     {
@@ -6960,7 +7002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_constructor",
-      "community": 50,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -6970,7 +7012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_c",
-      "community": 50,
+      "community": 2,
       "norm_label": ".c_()"
     },
     {
@@ -6990,7 +7032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_s",
-      "community": 25,
+      "community": 29,
       "norm_label": ".s()"
     },
     {
@@ -7010,7 +7052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_p",
-      "community": 0,
+      "community": 2,
       "norm_label": ".p_()"
     },
     {
@@ -7040,7 +7082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_et",
-      "community": 1,
+      "community": 43,
       "norm_label": ".et()"
     },
     {
@@ -7090,7 +7132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_fo",
-      "community": 39,
+      "community": 2,
       "norm_label": ".fo()"
     },
     {
@@ -7130,7 +7172,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_k",
-      "community": 0,
+      "community": 2,
       "norm_label": ".k_()"
     },
     {
@@ -7140,7 +7182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_t",
-      "community": 0,
+      "community": 2,
       "norm_label": ".t_()"
     },
     {
@@ -7170,7 +7212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_vn",
-      "community": 43,
+      "community": 2,
       "norm_label": ".vn()"
     },
     {
@@ -7210,7 +7252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_no",
-      "community": 36,
+      "community": 2,
       "norm_label": ".no()"
     },
     {
@@ -7250,7 +7292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_g",
-      "community": 36,
+      "community": 2,
       "norm_label": ".g_()"
     },
     {
@@ -7310,7 +7352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_constructor",
-      "community": 38,
+      "community": 22,
       "norm_label": ".constructor()"
     },
     {
@@ -7380,7 +7422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn",
-      "community": 19,
+      "community": 2,
       "norm_label": "gn"
     },
     {
@@ -7390,7 +7432,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_constructor",
-      "community": 19,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -7400,7 +7442,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_x",
-      "community": 19,
+      "community": 2,
       "norm_label": ".x_()"
     },
     {
@@ -7410,7 +7452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_k",
-      "community": 19,
+      "community": 2,
       "norm_label": ".k_()"
     },
     {
@@ -7420,7 +7462,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_g",
-      "community": 19,
+      "community": 2,
       "norm_label": ".g_()"
     },
     {
@@ -7430,7 +7472,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_z",
-      "community": 19,
+      "community": 2,
       "norm_label": ".z_()"
     },
     {
@@ -7440,7 +7482,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_q",
-      "community": 19,
+      "community": 2,
       "norm_label": ".q_()"
     },
     {
@@ -7480,7 +7522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_xn",
-      "community": 52,
+      "community": 22,
       "norm_label": "xn()"
     },
     {
@@ -7530,7 +7572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_mn",
-      "community": 0,
+      "community": 8,
       "norm_label": ".mn()"
     },
     {
@@ -7570,7 +7612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ya",
-      "community": 32,
+      "community": 0,
       "norm_label": ".ya()"
     },
     {
@@ -7760,7 +7802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_qo",
-      "community": 50,
+      "community": 10,
       "norm_label": ".qo()"
     },
     {
@@ -7850,7 +7892,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_gu",
-      "community": 0,
+      "community": 11,
       "norm_label": ".gu()"
     },
     {
@@ -7870,7 +7912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_tc",
-      "community": 0,
+      "community": 29,
       "norm_label": ".tc()"
     },
     {
@@ -8180,7 +8222,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_kn_xt",
-      "community": 34,
+      "community": 50,
       "norm_label": ".xt()"
     },
     {
@@ -8310,7 +8352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_bc",
-      "community": 11,
+      "community": 41,
       "norm_label": ".bc()"
     },
     {
@@ -8320,7 +8362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_vc",
-      "community": 12,
+      "community": 32,
       "norm_label": ".vc()"
     },
     {
@@ -8350,7 +8392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ec",
-      "community": 39,
+      "community": 2,
       "norm_label": ".ec()"
     },
     {
@@ -8360,7 +8402,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ic",
-      "community": 39,
+      "community": 2,
       "norm_label": ".ic()"
     },
     {
@@ -8400,7 +8442,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_fc",
-      "community": 53,
+      "community": 14,
       "norm_label": ".fc()"
     },
     {
@@ -8420,7 +8462,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_jc",
-      "community": 43,
+      "community": 2,
       "norm_label": ".jc()"
     },
     {
@@ -8460,7 +8502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_c",
-      "community": 14,
+      "community": 32,
       "norm_label": ".c_()"
     },
     {
@@ -8470,7 +8512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_t",
-      "community": 14,
+      "community": 32,
       "norm_label": ".t_()"
     },
     {
@@ -8480,7 +8522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_p",
-      "community": 1,
+      "community": 14,
       "norm_label": ".p_()"
     },
     {
@@ -8500,7 +8542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_d",
-      "community": 14,
+      "community": 50,
       "norm_label": ".d_()"
     },
     {
@@ -8510,7 +8552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_a",
-      "community": 14,
+      "community": 25,
       "norm_label": ".a_()"
     },
     {
@@ -8530,7 +8572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_qc",
-      "community": 43,
+      "community": 14,
       "norm_label": ".qc()"
     },
     {
@@ -8560,7 +8602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_yc",
-      "community": 12,
+      "community": 14,
       "norm_label": ".yc()"
     },
     {
@@ -8580,7 +8622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_kc",
-      "community": 29,
+      "community": 50,
       "norm_label": ".kc()"
     },
     {
@@ -8590,7 +8632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_mt",
-      "community": 67,
+      "community": 10,
       "norm_label": ".mt()"
     },
     {
@@ -8600,7 +8642,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_td",
-      "community": 65,
+      "community": 14,
       "norm_label": ".td()"
     },
     {
@@ -8610,7 +8652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ql",
-      "community": 14,
+      "community": 32,
       "norm_label": ".ql()"
     },
     {
@@ -8660,7 +8702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_s",
-      "community": 11,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -8710,7 +8752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hd",
-      "community": 32,
+      "community": 67,
       "norm_label": ".hd()"
     },
     {
@@ -8720,7 +8762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hl",
-      "community": 32,
+      "community": 2,
       "norm_label": ".hl()"
     },
     {
@@ -8740,7 +8782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ld",
-      "community": 30,
+      "community": 50,
       "norm_label": ".ld()"
     },
     {
@@ -8750,7 +8792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_zn",
-      "community": 14,
+      "community": 50,
       "norm_label": ".zn()"
     },
     {
@@ -8780,7 +8822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_xn",
-      "community": 29,
+      "community": 50,
       "norm_label": ".xn()"
     },
     {
@@ -8800,7 +8842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ad",
-      "community": 39,
+      "community": 14,
       "norm_label": ".ad()"
     },
     {
@@ -8810,7 +8852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_od",
-      "community": 41,
+      "community": 68,
       "norm_label": ".od()"
     },
     {
@@ -8820,7 +8862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_q",
-      "community": 41,
+      "community": 68,
       "norm_label": ".q()"
     },
     {
@@ -8830,7 +8872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_zt",
-      "community": 45,
+      "community": 67,
       "norm_label": ".zt()"
     },
     {
@@ -8840,7 +8882,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hc",
-      "community": 14,
+      "community": 32,
       "norm_label": ".hc()"
     },
     {
@@ -8860,7 +8902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_oc",
-      "community": 14,
+      "community": 50,
       "norm_label": ".oc()"
     },
     {
@@ -8870,7 +8912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_rd",
-      "community": 39,
+      "community": 14,
       "norm_label": ".rd()"
     },
     {
@@ -8920,7 +8962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ln_constructor",
-      "community": 1,
+      "community": 39,
       "norm_label": ".constructor()"
     },
     {
@@ -8940,7 +8982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn",
-      "community": 6,
+      "community": 0,
       "norm_label": "fn"
     },
     {
@@ -8950,7 +8992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn_constructor",
-      "community": 6,
+      "community": 30,
       "norm_label": ".constructor()"
     },
     {
@@ -8960,7 +9002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn_f",
-      "community": 6,
+      "community": 0,
       "norm_label": ".f_()"
     },
     {
@@ -8980,7 +9022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qn",
-      "community": 66,
+      "community": 22,
       "norm_label": "qn()"
     },
     {
@@ -8990,7 +9032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn",
-      "community": 52,
+      "community": 22,
       "norm_label": "zn"
     },
     {
@@ -9000,7 +9042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_options",
-      "community": 52,
+      "community": 22,
       "norm_label": ".options()"
     },
     {
@@ -9010,7 +9052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_setoptions",
-      "community": 52,
+      "community": 22,
       "norm_label": ".setoptions()"
     },
     {
@@ -9020,7 +9062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_preprocessdata",
-      "community": 30,
+      "community": 22,
       "norm_label": ".preprocessdata()"
     },
     {
@@ -9030,7 +9072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_createconvertertointernalobj",
-      "community": 66,
+      "community": 22,
       "norm_label": ".createconvertertointernalobj()"
     },
     {
@@ -9050,7 +9092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_cachekey",
-      "community": 52,
+      "community": 22,
       "norm_label": ".cachekey()"
     },
     {
@@ -9060,7 +9102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_converthorzitemtointernal",
-      "community": 66,
+      "community": 22,
       "norm_label": ".converthorzitemtointernal()"
     },
     {
@@ -9070,7 +9112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_updateformatter",
-      "community": 52,
+      "community": 22,
       "norm_label": ".updateformatter()"
     },
     {
@@ -9080,7 +9122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_formathorzitem",
-      "community": 52,
+      "community": 22,
       "norm_label": ".formathorzitem()"
     },
     {
@@ -9090,7 +9132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_formattickmark",
-      "community": 52,
+      "community": 22,
       "norm_label": ".formattickmark()"
     },
     {
@@ -9100,7 +9142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_maxtickmarkweight",
-      "community": 52,
+      "community": 22,
       "norm_label": ".maxtickmarkweight()"
     },
     {
@@ -9110,7 +9152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_fillweightsforpoints",
-      "community": 52,
+      "community": 30,
       "norm_label": ".fillweightsforpoints()"
     },
     {
@@ -9120,7 +9162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_td",
-      "community": 52,
+      "community": 22,
       "norm_label": ".td()"
     },
     {
@@ -9140,7 +9182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ss",
-      "community": 29,
+      "community": 50,
       "norm_label": "ss()"
     },
     {
@@ -9170,7 +9212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ls",
-      "community": 33,
+      "community": 35,
       "norm_label": "ls()"
     },
     {
@@ -9190,7 +9232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os",
-      "community": 35,
+      "community": 33,
       "norm_label": "os()"
     },
     {
@@ -9570,7 +9612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_xs",
-      "community": 65,
+      "community": 12,
       "norm_label": "xs()"
     },
     {
@@ -9580,7 +9622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ys",
-      "community": 50,
+      "community": 2,
       "norm_label": "ys()"
     },
     {
@@ -9610,7 +9652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_s",
-      "community": 11,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -9620,7 +9662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_jv",
-      "community": 41,
+      "community": 68,
       "norm_label": ".jv()"
     },
     {
@@ -9650,7 +9692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_v",
-      "community": 25,
+      "community": 35,
       "norm_label": ".$v()"
     },
     {
@@ -9660,7 +9702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_yv",
-      "community": 25,
+      "community": 29,
       "norm_label": ".yv()"
     },
     {
@@ -9680,7 +9722,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ji",
-      "community": 25,
+      "community": 67,
       "norm_label": ".ji()"
     },
     {
@@ -9710,7 +9752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_zv",
-      "community": 10,
+      "community": 25,
       "norm_label": ".zv()"
     },
     {
@@ -9730,7 +9772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ep",
-      "community": 35,
+      "community": 18,
       "norm_label": ".ep()"
     },
     {
@@ -9760,7 +9802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ev",
-      "community": 25,
+      "community": 32,
       "norm_label": ".ev()"
     },
     {
@@ -9770,7 +9812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_iv",
-      "community": 25,
+      "community": 32,
       "norm_label": ".iv()"
     },
     {
@@ -9890,7 +9932,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ao",
-      "community": 25,
+      "community": 14,
       "norm_label": ".ao()"
     },
     {
@@ -9900,7 +9942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_uv",
-      "community": 18,
+      "community": 66,
       "norm_label": ".uv()"
     },
     {
@@ -9920,7 +9962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_constructor",
-      "community": 67,
+      "community": 29,
       "norm_label": ".constructor()"
     },
     {
@@ -9930,7 +9972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_s",
-      "community": 11,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -9960,7 +10002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_jv",
-      "community": 41,
+      "community": 68,
       "norm_label": ".jv()"
     },
     {
@@ -9990,7 +10032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_v",
-      "community": 53,
+      "community": 12,
       "norm_label": ".v_()"
     },
     {
@@ -10120,7 +10162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_sv",
-      "community": 12,
+      "community": 30,
       "norm_label": ".sv()"
     },
     {
@@ -10140,7 +10182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_gf",
-      "community": 53,
+      "community": 12,
       "norm_label": ".gf()"
     },
     {
@@ -10160,7 +10202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_uf",
-      "community": 12,
+      "community": 10,
       "norm_label": ".uf()"
     },
     {
@@ -10170,7 +10212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_br",
-      "community": 65,
+      "community": 12,
       "norm_label": ".br()"
     },
     {
@@ -10190,7 +10232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_yv",
-      "community": 12,
+      "community": 29,
       "norm_label": ".yv()"
     },
     {
@@ -10220,7 +10262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_ep",
-      "community": 12,
+      "community": 14,
       "norm_label": ".ep()"
     },
     {
@@ -10270,7 +10312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_mp",
-      "community": 11,
+      "community": 67,
       "norm_label": ".mp()"
     },
     {
@@ -10380,7 +10422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_np",
-      "community": 65,
+      "community": 12,
       "norm_label": ".np()"
     },
     {
@@ -10390,7 +10432,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_lp",
-      "community": 53,
+      "community": 12,
       "norm_label": ".lp()"
     },
     {
@@ -10410,7 +10452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_ip",
-      "community": 12,
+      "community": 50,
       "norm_label": ".ip()"
     },
     {
@@ -10450,7 +10492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_s",
-      "community": 35,
+      "community": 33,
       "norm_label": ".s()"
     },
     {
@@ -10460,7 +10502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_jv",
-      "community": 35,
+      "community": 33,
       "norm_label": ".jv()"
     },
     {
@@ -10470,7 +10512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_p",
-      "community": 35,
+      "community": 33,
       "norm_label": ".$p()"
     },
     {
@@ -10490,7 +10532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_zv",
-      "community": 10,
+      "community": 33,
       "norm_label": ".zv()"
     },
     {
@@ -10500,7 +10542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_sp",
-      "community": 35,
+      "community": 33,
       "norm_label": ".sp()"
     },
     {
@@ -10510,7 +10552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_ep",
-      "community": 35,
+      "community": 18,
       "norm_label": ".ep()"
     },
     {
@@ -10520,7 +10562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_ve",
-      "community": 35,
+      "community": 33,
       "norm_label": ".ve()"
     },
     {
@@ -10560,7 +10602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_jv",
-      "community": 11,
+      "community": 67,
       "norm_label": ".jv()"
     },
     {
@@ -10740,7 +10782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_gt",
-      "community": 37,
+      "community": 53,
       "norm_label": ".gt()"
     },
     {
@@ -10750,7 +10792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_sp",
-      "community": 35,
+      "community": 18,
       "norm_label": ".sp()"
     },
     {
@@ -10760,7 +10802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_ep",
-      "community": 35,
+      "community": 18,
       "norm_label": ".ep()"
     },
     {
@@ -10780,7 +10822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_km",
-      "community": 41,
+      "community": 10,
       "norm_label": ".km()"
     },
     {
@@ -10910,7 +10952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_qt",
-      "community": 25,
+      "community": 32,
       "norm_label": ".qt()"
     },
     {
@@ -10950,7 +10992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_s",
-      "community": 11,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -10990,7 +11032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_fp",
-      "community": 11,
+      "community": 67,
       "norm_label": ".fp()"
     },
     {
@@ -11000,7 +11042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_wp",
-      "community": 11,
+      "community": 67,
       "norm_label": ".wp()"
     },
     {
@@ -11140,7 +11182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_fb",
-      "community": 29,
+      "community": 11,
       "norm_label": ".fb()"
     },
     {
@@ -11170,7 +11212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_sc",
-      "community": 29,
+      "community": 50,
       "norm_label": ".sc()"
     },
     {
@@ -11190,7 +11232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_ym",
-      "community": 11,
+      "community": 67,
       "norm_label": ".ym()"
     },
     {
@@ -11540,7 +11582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we",
-      "community": 39,
+      "community": 2,
       "norm_label": "we"
     },
     {
@@ -11550,7 +11592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_constructor",
-      "community": 39,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -11560,7 +11602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_applyoptions",
-      "community": 39,
+      "community": 2,
       "norm_label": ".applyoptions()"
     },
     {
@@ -11570,7 +11612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_options",
-      "community": 39,
+      "community": 2,
       "norm_label": ".options()"
     },
     {
@@ -11580,7 +11622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_width",
-      "community": 39,
+      "community": 2,
       "norm_label": ".width()"
     },
     {
@@ -11590,7 +11632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_li",
-      "community": 39,
+      "community": 2,
       "norm_label": ".li()"
     },
     {
@@ -11690,7 +11732,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_se_pricetocoordinate",
-      "community": 3,
+      "community": 51,
       "norm_label": ".pricetocoordinate()"
     },
     {
@@ -11900,7 +11942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_constructor",
-      "community": 67,
+      "community": 10,
       "norm_label": ".constructor()"
     },
     {
@@ -11910,7 +11952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_s",
-      "community": 11,
+      "community": 67,
       "norm_label": ".s()"
     },
     {
@@ -11980,7 +12022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_setvisiblelogicalrange",
-      "community": 38,
+      "community": 22,
       "norm_label": ".setvisiblelogicalrange()"
     },
     {
@@ -12210,7 +12252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_remove",
-      "community": 11,
+      "community": 67,
       "norm_label": ".remove()"
     },
     {
@@ -12420,7 +12462,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_options",
-      "community": 66,
+      "community": 22,
       "norm_label": ".options()"
     },
     {
@@ -12530,7 +12572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pe",
-      "community": 66,
+      "community": 22,
       "norm_label": "pe()"
     },
     {
@@ -13666,6 +13708,26 @@
   ],
   "links": [
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".githooks/post-commit",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "githooks_post_commit",
+      "target": "githooks_post_commit__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "source_file": ".githooks/post-commit",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "githooks_post_commit",
+      "target": "githooks_post_commit_sync_in_progress",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -13722,7 +13784,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L316",
+      "source_location": "L348",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_close_db",
@@ -13732,7 +13794,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L306",
+      "source_location": "L338",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_complete_request",
@@ -13742,7 +13804,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L172",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_database",
@@ -13752,7 +13814,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L255",
+      "source_location": "L278",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_get_db",
@@ -13762,7 +13824,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L196",
+      "source_location": "L205",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_init_local",
@@ -13772,7 +13834,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L326",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_install_database",
@@ -13782,7 +13844,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L143",
+      "source_location": "L152",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_params",
@@ -13792,7 +13854,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L157",
+      "source_location": "L166",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_result",
@@ -13802,7 +13864,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L147",
+      "source_location": "L156",
       "weight": 1.0,
       "source": "backend_database",
       "target": "backend_database_row",
@@ -13857,7 +13919,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L181",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "backend_database_database_execute",
       "target": "backend_database_params",
@@ -13868,7 +13930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L169",
+      "source_location": "L178",
       "weight": 1.0,
       "source": "backend_database_result_fetchall",
       "target": "backend_database_row",
@@ -13879,7 +13941,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L166",
+      "source_location": "L175",
       "weight": 1.0,
       "source": "backend_database_result_fetchone",
       "target": "backend_database_row",
@@ -13890,7 +13952,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L180",
+      "source_location": "L189",
       "weight": 1.0,
       "source": "backend_database_database_execute",
       "target": "backend_database_result",
@@ -13900,7 +13962,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L168",
+      "source_location": "L177",
       "weight": 1.0,
       "source": "backend_database_result",
       "target": "backend_database_result_fetchall",
@@ -13910,7 +13972,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L165",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "backend_database_result",
       "target": "backend_database_result_fetchone",
@@ -13920,7 +13982,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L158",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "backend_database_result",
       "target": "backend_database_result_init",
@@ -13930,7 +13992,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L162",
+      "source_location": "L171",
       "weight": 1.0,
       "source": "backend_database_result",
       "target": "backend_database_result_rowcount",
@@ -13940,7 +14002,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L192",
+      "source_location": "L201",
       "weight": 1.0,
       "source": "backend_database_database",
       "target": "backend_database_database_close",
@@ -13950,30 +14012,10 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L183",
+      "source_location": "L192",
       "weight": 1.0,
       "source": "backend_database_database",
       "target": "backend_database_database_commit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L177",
-      "weight": 1.0,
-      "source": "backend_database_database",
-      "target": "backend_database_database_execute",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L173",
-      "weight": 1.0,
-      "source": "backend_database_database",
-      "target": "backend_database_database_init",
       "confidence_score": 1.0
     },
     {
@@ -13983,105 +14025,26 @@
       "source_location": "L186",
       "weight": 1.0,
       "source": "backend_database_database",
-      "target": "backend_database_database_rollback",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L291",
-      "weight": 1.0,
-      "source": "backend_database_get_db",
-      "target": "backend_database_database",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L286",
-      "weight": 1.0,
-      "source": "backend_database_get_db",
       "target": "backend_database_database_execute",
       "confidence_score": 1.0
     },
     {
-      "relation": "calls",
-      "context": "call",
+      "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L198",
+      "source_location": "L182",
       "weight": 1.0,
-      "source": "backend_database_init_local",
-      "target": "backend_database_database_execute",
+      "source": "backend_database_database",
+      "target": "backend_database_database_init",
       "confidence_score": 1.0
     },
     {
-      "relation": "calls",
-      "context": "call",
+      "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L310",
+      "source_location": "L195",
       "weight": 1.0,
-      "source": "backend_database_complete_request",
-      "target": "backend_database_database_commit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L288",
-      "weight": 1.0,
-      "source": "backend_database_get_db",
-      "target": "backend_database_database_commit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L248",
-      "weight": 1.0,
-      "source": "backend_database_init_local",
-      "target": "backend_database_database_commit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L320",
-      "weight": 1.0,
-      "source": "backend_database_close_db",
-      "target": "backend_database_database_rollback",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L312",
-      "weight": 1.0,
-      "source": "backend_database_complete_request",
-      "target": "backend_database_database_rollback",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/database.py",
-      "source_location": "L267",
-      "weight": 1.0,
-      "source": "backend_database_get_db",
+      "source": "backend_database_database",
       "target": "backend_database_database_rollback",
       "confidence_score": 1.0
     },
@@ -14092,6 +14055,105 @@
       "source_file": "backend/database.py",
       "source_location": "L323",
       "weight": 1.0,
+      "source": "backend_database_get_db",
+      "target": "backend_database_database",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L309",
+      "weight": 1.0,
+      "source": "backend_database_get_db",
+      "target": "backend_database_database_execute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L207",
+      "weight": 1.0,
+      "source": "backend_database_init_local",
+      "target": "backend_database_database_execute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L342",
+      "weight": 1.0,
+      "source": "backend_database_complete_request",
+      "target": "backend_database_database_commit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L320",
+      "weight": 1.0,
+      "source": "backend_database_get_db",
+      "target": "backend_database_database_commit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "backend_database_init_local",
+      "target": "backend_database_database_commit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L352",
+      "weight": 1.0,
+      "source": "backend_database_close_db",
+      "target": "backend_database_database_rollback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L344",
+      "weight": 1.0,
+      "source": "backend_database_complete_request",
+      "target": "backend_database_database_rollback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L290",
+      "weight": 1.0,
+      "source": "backend_database_get_db",
+      "target": "backend_database_database_rollback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/database.py",
+      "source_location": "L355",
+      "weight": 1.0,
       "source": "backend_database_close_db",
       "target": "backend_database_database_close",
       "confidence_score": 1.0
@@ -14101,7 +14163,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/database.py",
-      "source_location": "L301",
+      "source_location": "L333",
       "weight": 1.0,
       "source": "backend_database_get_db",
       "target": "backend_database_init_local",
@@ -14409,7 +14471,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "backend/database.py",
-      "source_location": "L328",
+      "source_location": "L360",
       "weight": 1.0,
       "source": "backend_database_install_database",
       "target": "backend_database_complete_request",
@@ -14420,7 +14482,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "backend/database.py",
-      "source_location": "L329",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "backend_database_install_database",
       "target": "backend_database_close_db",
@@ -14681,7 +14743,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4412",
+      "source_location": "L4532",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_fetch_stock_quote",
@@ -14811,7 +14873,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2808",
+      "source_location": "L2883",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_is_market_hours",
@@ -14930,7 +14992,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2786",
+      "source_location": "L2861",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_update_all_stock_prices",
@@ -15059,7 +15121,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2741",
+      "source_location": "L2816",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_fetch_stock_candles",
@@ -15131,7 +15193,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4998",
+      "source_location": "L5118",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_dailypricescheduler",
@@ -15321,7 +15383,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3903",
+      "source_location": "L4011",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_csrf_token",
@@ -15742,7 +15804,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4342",
+      "source_location": "L4462",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_validate_image",
@@ -15863,7 +15925,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3720",
+      "source_location": "L3828",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_safe_path",
@@ -16481,7 +16543,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4053",
+      "source_location": "L4161",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_transfer_inspect_local",
@@ -16492,7 +16554,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4055",
+      "source_location": "L4163",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_transfer_inspect_local",
@@ -16514,7 +16576,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4053",
+      "source_location": "L4161",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_transfer_migrate_local",
@@ -16525,7 +16587,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4057",
+      "source_location": "L4165",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_transfer_migrate_local",
@@ -16878,7 +16940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3660",
+      "source_location": "L3768",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_text",
@@ -17087,7 +17149,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3937",
+      "source_location": "L4045",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_submission_uuid",
@@ -17142,7 +17204,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3747",
+      "source_location": "L3855",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_rule_values",
@@ -18621,7 +18683,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3877",
+      "source_location": "L3985",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "trade_parser_parse_text",
@@ -49746,5 +49808,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5b201859fd8fff0c3f75d90a966137e3dba6edf9"
+  "built_at_commit": "6df784a696a0e8ef53772987caa198b979fbf4aa"
 }

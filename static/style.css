@@ -6694,3 +6694,109 @@ body {
   color: #fff;
   border-color: #3f7352;
 }
+
+/* Client Page Sidebar Navigation Layout */
+.client-page-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .client-page-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.client-page-sidebar {
+  background: #ffffff;
+  border: 1px solid var(--line, #e1e9de);
+  border-radius: 12px;
+  padding: 12px;
+  position: sticky;
+  top: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.client-sidebar-heading {
+  padding: 6px 10px 12px;
+  border-bottom: 1px solid #edf2e8;
+  margin-bottom: 10px;
+}
+
+.client-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.client-sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #405738;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.client-sidebar-btn:hover {
+  background: #f4f8f1;
+  color: #173d34;
+}
+
+.client-sidebar-btn.active {
+  background: #173d34;
+  color: #ffffff;
+  border-color: #173d34;
+}
+
+.client-sidebar-btn.active .tiny-tag {
+  background: rgba(255,255,255,0.2);
+  color: #ffffff;
+}
+
+.client-sidebar-btn .btn-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .client-page-sidebar {
+    position: static;
+    padding: 8px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .client-sidebar-heading {
+    display: none;
+  }
+  .client-sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .client-sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .client-sidebar-btn {
+    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+    width: auto;
+  }
+}
