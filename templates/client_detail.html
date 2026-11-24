@@ -1160,23 +1160,31 @@
         </div>
         <p class="muted">Live technical candlestick chart &amp; price targets for {{ client.name }}'s portfolio shares.</p>
       </div>
-      <a href="{{ url_for('charts_view') }}" class="btn btn-sm btn-primary">
-        {{ icon('external', 14) }} Open All Stock Charts ↗
-      </a>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <a id="admin-chart-tv-direct-link" href="https://in.tradingview.com/chart/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}" 
+           target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm"
+           title="Open full technical chart on TradingView in a new tab">
+          {{ icon('external', 13) }} Open on TradingView.com ↗
+        </a>
+        <a href="{{ url_for('charts_view') }}" class="btn btn-sm btn-primary">
+          {{ icon('candlestick', 14) }} All Stock Charts ↗
+        </a>
+      </div>
     </div>
 
     {% if shares %}
     <div style="padding: 16px 20px;">
-      <!-- Stock Selector Pills -->
+      <!-- 1. Stock Selector Pills -->
       <div style="margin-bottom: 16px;">
         <span style="font-size: 11px; font-weight: 700; color: #5b6d52; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
-          Choose a Stock to View Chart:
+          Choose a Stock to View Chart &amp; Targets:
         </span>
         <div class="chart-stock-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
           {% for sh in shares %}
           <button type="button" 
                   class="btn btn-sm client-chart-pill {% if loop.first %}btn-primary active{% else %}btn-secondary{% endif %}"
                   data-stock="{{ sh.stock }}"
+                  data-tv-symbol="{{ sh.tv_symbol or ('NSE:' ~ sh.stock) }}"
                   data-qty="{{ sh.quantity|int }}"
                   data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
                   data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
@@ -1187,44 +1195,116 @@
         </div>
       </div>
 
-      <!-- Active Stock Info & Targets Header -->
+      <!-- 2. Active Stock Info Header -->
       <div style="background: #f4f8f1; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
           <span id="admin-chart-active-symbol" style="font-size: 18px; font-weight: 800; color: #173d34;">{{ shares[0].stock }}</span>
           <span class="muted" style="font-size: 13px; margin-left: 8px;">
-            Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
+            Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
           </span>
-        </div>
-
-        <div id="admin-chart-targets-container">
-          {% for sh in shares %}
-          {% set stock_key = sh.stock.strip().upper() %}
-          {% set tg_list = stock_targets.get(stock_key, []) %}
-          <div class="admin-stock-targets-row" id="admin-targets-row-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: flex;{% endif %} gap: 8px; align-items: center; flex-wrap: wrap;">
-            {% if tg_list %}
-              <span style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase;">Active Targets:</span>
-              {% for t in tg_list %}
-              {% set tp = t.target_price|float %}
-              {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
-              {% set gain = (tp - sbp) * (sh.quantity|float) if sbp else 0 %}
-              {% set gain_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
-              <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #ffffff; border: 1px solid #c8e6c9;">
-                <strong style="color: #1b5e20;">{{ t.label }}:</strong> {{ tp|money }}
-                <span class="{{ 'pos' if gain >= 0 else 'neg' }}" style="font-weight: 600;">({{ '+' if gain > 0 else '' }}{{ gain|money }})</span>
-              </span>
-              {% endfor %}
-            {% else %}
-              <span class="muted" style="font-size: 12px;">No price targets set yet for {{ sh.stock }}.</span>
-            {% endif %}
-          </div>
-          {% endfor %}
         </div>
       </div>
 
-      <!-- SINGLE TradingView Chart Frame -->
-      <div style="height: 500px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: #ffffff;">
+      <!-- 3. Prominent, Big, Table-Like Targets Card (Issue 2) -->
+      <div id="admin-targets-tables-container" style="margin-bottom: 20px;">
+        {% for sh in shares %}
+        {% set stock_key = sh.stock.strip().upper() %}
+        {% set tg_list = stock_targets.get(stock_key, []) %}
+        <div class="admin-targets-table-block" id="admin-targets-table-block-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: block;{% endif %}">
+          {% if tg_list %}
+          <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🎯</span>
+                <strong style="font-size: 13px; color: #14532d; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Advisory Price Targets &amp; Projected Client Profit for {{ sh.stock }}
+                </strong>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-ghost btn-xs" style="color: #2e7d32; font-weight: 600;">
+                  {{ icon('candlestick', 12) }} Edit Targets on Charts Page ↗
+                </a>
+                <span class="badge" style="background: #166534; color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 9px;">
+                  {{ tg_list|length }} Targets
+                </span>
+              </div>
+            </div>
+            <div class="table-wrap" style="margin: 0;">
+              <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                  <tr style="background: #fafcf8; color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 12px 16px; text-align: left;">Target</th>
+                    <th class="r" style="padding: 12px 16px;">Target Price</th>
+                    <th class="r" style="padding: 12px 16px;">Gain / Share</th>
+                    <th class="r" style="padding: 12px 16px;">Upside from CMP</th>
+                    <th class="r" style="padding: 12px 16px; background: #f0fdf4; color: #166534; font-weight: 700;">Total Potential Profit</th>
+                    <th class="r" style="padding: 12px 16px;">Expected Return %</th>
+                    <th style="padding: 12px 16px; text-align: left;">Advisory Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% set sqty = sh.quantity|float if sh.quantity else 0 %}
+                  {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
+                  {% set scmp = sh.cmp|float if sh.cmp else sbp %}
+                  {% for t in tg_list %}
+                  {% set tp = t.target_price|float %}
+                  {% set gain_per_sh = (tp - sbp) if sbp else 0 %}
+                  {% set upside_from_cmp = ((tp - scmp) / scmp * 100) if scmp else 0 %}
+                  {% set tot_gain = gain_per_sh * sqty %}
+                  {% set ret_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+                  <tr style="border-bottom: 1px solid #edf2e8; height: 50px;">
+                    <td style="padding: 12px 16px;">
+                      <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 6px;">
+                        {{ t.label }}
+                      </span>
+                    </td>
+                    <td class="r tabular" style="padding: 12px 16px;">
+                      <strong style="font-size: 16px; color: #15803d; font-family: monospace;">{{ tp|money }}</strong>
+                    </td>
+                    <td class="r tabular" style="padding: 12px 16px; font-family: monospace; font-size: 14px;">
+                      <span class="{{ 'pos' if gain_per_sh >= 0 else 'neg' }}" style="font-weight: 600;">
+                        {{ '+' if gain_per_sh > 0 else '' }}{{ gain_per_sh|money }}
+                      </span>
+                    </td>
+                    <td class="r tabular" style="padding: 12px 16px; font-family: monospace; font-size: 14px;">
+                      <span class="{{ 'pos' if upside_from_cmp >= 0 else 'neg' }}" style="font-weight: 600;">
+                        {{ '+' if upside_from_cmp > 0 else '' }}{{ '%.1f'|format(upside_from_cmp) }}%
+                      </span>
+                    </td>
+                    <td class="r tabular" style="padding: 12px 16px; background: #f0fdf4;">
+                      <strong style="font-size: 17px; font-weight: 800; color: {{ '#16a34a' if tot_gain >= 0 else '#dc2626' }};">
+                        {{ '+' if tot_gain > 0 else '' }}{{ tot_gain|money }}
+                      </strong>
+                    </td>
+                    <td class="r tabular" style="padding: 12px 16px;">
+                      <span class="badge {{ 'badge-pos' if ret_pct >= 0 else 'badge-neg' }}" style="font-size: 12px; font-weight: 700;">
+                        {{ '+' if ret_pct > 0 else '' }}{{ '%.1f'|format(ret_pct) }}%
+                      </span>
+                    </td>
+                    <td style="padding: 12px 16px; color: #556b4f; font-size: 13px;">
+                      {{ t.notes or '—' }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% else %}
+          <div style="background: #fafcf8; border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
+            <span style="font-size: 22px; display: block; margin-bottom: 4px;">📈</span>
+            <strong style="color: #173d34; font-size: 14px;">No targets set yet for {{ sh.stock }}</strong>
+            <p style="margin: 4px 0 0; color: #64786a; font-size: 12px;">Add price targets on the Charts page to view client potential gains.</p>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- 4. Interactive Candlestick Chart Frame -->
+      <div style="height: 520px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
         <iframe id="admin-client-chart-iframe"
-          src="https://s.tradingview.com/widgetembed/?symbol=NSE%3A{{ shares[0].stock }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
+          src="https://s.tradingview.com/widgetembed/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
           style="width: 100%; height: 100%; border: none;" 
           loading="lazy" 
           title="TradingView chart">
@@ -1235,7 +1315,8 @@
       {{ empty_state('No holdings to display charts', 'Record client holdings first to display live candlestick charts here.', 'candlestick') }}
     {% endif %}
   </section>
-</div></div>
+</div>
+
 
   </div> <!-- Close .client-page-content -->
 </div> <!-- Close .client-page-layout -->
@@ -1368,12 +1449,14 @@ function selectAdminClientChartStock(btn, stock) {
     b.classList.remove('btn-primary', 'active');
     b.classList.add('btn-secondary');
   });
+  let tvSymbol = 'NSE:' + stock;
   if (btn) {
     btn.classList.remove('btn-secondary');
     btn.classList.add('btn-primary', 'active');
     const qty = btn.getAttribute('data-qty');
     const buy = btn.getAttribute('data-buy');
     const cmp = btn.getAttribute('data-cmp');
+    tvSymbol = btn.getAttribute('data-tv-symbol') || ('NSE:' + stock);
     const qEl = document.getElementById('admin-chart-active-qty');
     const bEl = document.getElementById('admin-chart-active-buy');
     const cEl = document.getElementById('admin-chart-active-cmp');
@@ -1381,6 +1464,28 @@ function selectAdminClientChartStock(btn, stock) {
     if (bEl && buy) bEl.textContent = buy;
     if (cEl && cmp) cEl.textContent = cmp;
   }
+  const symEl = document.getElementById('admin-chart-active-symbol');
+  if (symEl) symEl.textContent = stock;
+
+  // Show targets table block for this stock, hide others
+  document.querySelectorAll('.admin-targets-table-block').forEach(row => {
+    row.style.display = 'none';
+  });
+  const activeBlock = document.getElementById('admin-targets-table-block-' + stock);
+  if (activeBlock) activeBlock.style.display = 'block';
+
+  // Update direct link
+  const link = document.getElementById('admin-chart-tv-direct-link');
+  if (link) {
+    link.href = 'https://in.tradingview.com/chart/?symbol=' + encodeURIComponent(tvSymbol);
+  }
+
+  // Update TradingView iframe with verified symbol
+  const iframe = document.getElementById('admin-client-chart-iframe');
+  if (iframe) {
+    iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=' + encodeURIComponent(tvSymbol) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
+  }
+}
   const symEl = document.getElementById('admin-chart-active-symbol');
   if (symEl) symEl.textContent = stock;
 

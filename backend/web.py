@@ -2808,8 +2808,9 @@ def create_app(config=None):
         return redirect(url_for("charts_view", stock=stock))
 
     @app.route("/api/stocks/<path:stock_name>/candles")
-    @login_required
     def api_stock_candles(stock_name):
+        if not session.get("admin") and not session.get("client_id"):
+            abort(401, description="Authentication required.")
         db = get_db()
         range_str = request.args.get("range", "1mo").strip()
         interval = request.args.get("interval", "1d").strip()
@@ -3265,6 +3266,22 @@ def create_app(config=None):
                     price_change=ZERO,
                     price_change_pct=ZERO,
                 )
+            tv_map = {
+                "TECHNOCRAF": "BSE:544864",
+                "TECHNOCRAFT": "BSE:544864",
+                "TECHNOCRAFT VENTURES": "BSE:544864",
+                "TIIL": "NSE:TIIL",
+                "V2 RETAIL": "NSE:V2RETAIL",
+                "V2": "NSE:V2RETAIL",
+                "V2RETAIL": "NSE:V2RETAIL",
+                "BLS": "NSE:BLS",
+                "BLS POLYMERS": "NSE:BLSPOLY",
+                "BLSPOLY": "NSE:BLSPOLY",
+                "SBC": "NSE:SBC",
+                "SBC EXPORTS": "NSE:SBC",
+            }
+            stk_up = (item.get("stock") or "").strip().upper()
+            item["tv_symbol"] = tv_map.get(stk_up, f"NSE:{stk_up}")
             shares.append(item)
 
         summary["money_in_bank"] = total_funds - deducted_holdings_cost
@@ -4261,6 +4278,21 @@ def create_app(config=None):
                     price_updated_at=None,
                 )
                 total_holdings_current_value += cost
+            tv_map = {
+                "TECHNOCRAF": "BSE:544864",
+                "TECHNOCRAFT": "BSE:544864",
+                "TECHNOCRAFT VENTURES": "BSE:544864",
+                "TIIL": "NSE:TIIL",
+                "V2 RETAIL": "NSE:V2RETAIL",
+                "V2": "NSE:V2RETAIL",
+                "V2RETAIL": "NSE:V2RETAIL",
+                "BLS": "NSE:BLS",
+                "BLS POLYMERS": "NSE:BLSPOLY",
+                "BLSPOLY": "NSE:BLSPOLY",
+                "SBC": "NSE:SBC",
+                "SBC EXPORTS": "NSE:SBC",
+            }
+            s_dict["tv_symbol"] = tv_map.get(stock_key, f"NSE:{stock_key}")
             enriched_shares.append(s_dict)
 
         total_unrealized_pnl = total_holdings_current_value - total_holdings_invested
