@@ -250,7 +250,7 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795544695.8816352,
+    "mtime": 1795545764.62241,
     "ast_hash": "c37914c70ae3b38b68d5722ef7e1d44e",
     "semantic_hash": ""
   },
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795525724.746577,
-    "ast_hash": "ce898d5a55cfb83b29f39ee07182ca04",
+    "mtime": 1795545735.4287343,
+    "ast_hash": "9f2feaf3f3e9972fcf1bd1427830efc3",
     "semantic_hash": ""
   },
   ".githooks/post-commit": {

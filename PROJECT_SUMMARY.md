@@ -83,16 +83,39 @@ Commission/
 
 ### Commission Rules
 Supported commission models per client:
-1. **Profit Share:** Percentage of positive realised profit on closed trades. Losses strictly carry 0 commission.
+1. **Profit Share:** Percentage of positive realised profit on closed trades. Losses strictly carry 0 commission (client bears trading losses; losses are never subtracted from advisor commission).
 2. **Turnover Fee:** Percentage of total turnover (Buy Value + Sell Value) applied only to profitable closed trades.
 3. **Flat Fee:** Fixed monetary fee per closed profitable trade.
 4. **Override:** Optional per-trade manual fee override that takes precedence over client defaults.
+5. **Advisory Agreement Display Gating:** Advisory contract agreement tile is conditionally shown only to clients with commission set strictly below 35% (`eff_rate < 35%`).
+
+### Trading Charges & Exit Price Breakup
+Comprehensive transaction cost breakup for client demat sales:
+- **Capital Gains Tax:** STCG (20% if held < 365 days) or LTCG (12.5% if held >= 365 days).
+- **STT (Securities Transaction Tax):** 0.1% of delivery sell turnover.
+- **Exchange Turnover Charges:** 0.00345% of turnover.
+- **SEBI Charges:** 0.0001% of turnover (₹10 per crore).
+- **DP Charges:** Demat transaction fee per scrip per day based on demat account holder gender:
+  - Standard / Male primary holder: ₹15.34 (₹9.50 broker + ₹3.50 CDSL + 18% GST).
+  - Female primary holder: ₹15.045 (₹9.50 broker + ₹3.25 CDSL + 18% GST, reflecting the CDSL female investor concession).
+- **GST on Charges:** 18% applied to exchange transaction and SEBI fees.
+- **Net Take-Home Calculation:** `Gross Profit - Capital Gains Tax - Total Broker Charges - Advisor Commission`.
+
+### Stock Price Targets & Candlestick Charts
+- **Admin Target Management:** Set multi-level price targets (T1, T2, etc.) for any tracked stock (`stock_price_targets` table). Targets feature inline `▲ +5` / `▼ -5` stepper updates (`/charts/targets/<id>/update`) and calculate projected profits across all clients holding that scrip.
+- **Lightweight Candlestick Charts:** Both Admin and Client Portal use TradingView Lightweight Charts (`static/lightweight-charts.js`) with backend candles (`/api/stocks/<stock>/candles` via Yahoo Finance) instead of restricted external iframes.
+  - Interactive candlestick chart with volume histogram, live hover HUD (O, H, L, C, Vol).
+  - Timeframe toggles (5D, 1M, 3M, 6M, 1Y).
+  - Vertical price scale click-and-drag scaling, double-click reset, and `+` / `−` / `↺ Auto` toolbar controls.
+  - Dashed green target price lines drawn dynamically on the chart.
+- **Client Projected Profits Table:** Dedicated table in Client Portal calculating upside % from CMP, gain per share, total potential returns, and advisory notes for each target level.
 
 ### Portfolio & Holding Dynamics
 - **FIFO Deductions:** When an open position is sold or partially closed, shares are deducted on a First-In-First-Out (FIFO) basis (`apply_sale_fifo`).
 - **Cumulative Holdings:** Aggregated per client and ticker symbol, calculating average purchase price and unrealized P&L against live market prices.
 - **Deduct from Funds (Available Cash):** Optional toggle on buy trades to subtract purchase cost directly from the client's available cash fund balance, preventing negative drift when unchecked.
 - **Trade Reconciliation:** Bulk trade reconciliation module that detects duplicate entries and matches trade confirmations against open holdings before committing.
+- **Client Portal App Shell:** Docked dark navigation sidebar on desktop with a full mobile drawer (`#portal-sidebar`) and tabbed interface (Overview, Current Holdings, Past Trades, Stock Charts, Advisory & Charges). Clean minimal breadcrumb topbar with privacy mode toggle.
 
 ---
 
