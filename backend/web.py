@@ -5158,6 +5158,34 @@ def create_app(config=None):
                     continue
             undismissed_alerts.append(a)
 
+        # Today's Trade (IST calendar day only, expires at 12:00 AM IST midnight)
+        now_ist = now_utc.astimezone(IST)
+        today_ist_date = now_ist.date()
+        today_label = now_ist.strftime("%d %b %Y")
+        raw_todays_alerts = get_db().execute(
+            """
+            SELECT a.*, COALESCE(v.acknowledged, 0) as acknowledged
+            FROM client_alerts a
+            LEFT JOIN client_alert_views v ON v.alert_id=a.id AND v.client_id=?
+            WHERE (a.client_id=? OR a.client_id IS NULL)
+            ORDER BY a.created_at DESC, a.id DESC
+            """,
+            (cid, cid),
+        ).fetchall()
+        todays_trades_alerts = []
+        for a in raw_todays_alerts:
+            created_dt = parse_utc_datetime(a.get("created_at"))
+            created_ist = created_dt.astimezone(IST) if created_dt else None
+            if not created_ist or created_ist.date() != today_ist_date:
+                continue
+            if a["action"] == "SELL" and a["client_id"] is None:
+                a_stock = alias_map.get((a.get("stock") or "").strip().upper(), (a.get("stock") or "").strip().upper())
+                if a_stock not in held_canonical_stocks and not a.get("acknowledged"):
+                    continue
+            ad = dict(a)
+            ad["sent_time_ist"] = format_ist(a.get("created_at"), "time")
+            todays_trades_alerts.append(ad)
+
         # Fetch price targets for client's held stocks
         all_targets = {}
         try:
@@ -5187,6 +5215,8 @@ def create_app(config=None):
             total_unrealized_pnl=total_unrealized_pnl,
             total_unrealized_pct=total_unrealized_pct,
             undismissed_alerts=undismissed_alerts,
+            todays_trades_alerts=todays_trades_alerts,
+            today_label=today_label,
             public_token=portal_token(),
             today=date.today().isoformat(),
             known_stocks=get_known_stocks(get_db()),

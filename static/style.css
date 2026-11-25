@@ -847,10 +847,9 @@ code {
 }
 
 .kpi-featured {
-  background: linear-gradient(115deg, #1b4237, #285745);
-  color: #f3f8ed;
-  border-color: #27533e;
-  box-shadow: 0 7px 16px #1e4b3a11;
+  background: var(--card, #ffffff);
+  color: var(--ink, #1d1b1e);
+  border-color: var(--line, #e6e2da);
 }
 
 .kpi-featured::after {
@@ -858,26 +857,30 @@ code {
   position: absolute;
   width: 180px;
   height: 180px;
-  border: 1px solid #cce7b410;
+  border: 1px solid rgba(33, 89, 53, 0.06);
   border-radius: 50%;
   right: -90px;
   bottom: -130px;
-  box-shadow: 0 0 0 19px #cce7b406, 0 0 0 39px #cce7b406;
+  box-shadow: 0 0 0 19px rgba(33, 89, 53, 0.03), 0 0 0 39px rgba(33, 89, 53, 0.02);
   pointer-events: none;
 }
 
 .kpi-featured .kpi-label {
-  color: #c1d4bb;
+  color: var(--muted, #5e7064);
+}
+
+.kpi-featured .kpi-value {
+  color: var(--ink, #1d1b1e);
 }
 
 .kpi-featured .kpi-icon {
-  background: #ffffff0e;
-  color: #d8edbd;
+  background: #eef5eb;
+  color: #1b5e20;
 }
 
 .kpi-featured .kpi-bottom,
 .kpi-featured .kpi-bottom .icon {
-  color: #a6c59b;
+  color: var(--muted, #5e7064);
 }
 
 .kpi-amber .kpi-icon {
@@ -3335,16 +3338,16 @@ pre.ocr-text {
 }
 
 .kpi-featured .kpi-label {
-  color: #ccddc5;
+  color: var(--muted, #5e7064);
 }
 
 .kpi-featured .kpi-bottom,
 .kpi-featured .kpi-bottom .icon {
-  color: #bdd6ac;
+  color: var(--muted, #5e7064);
 }
 
 .kpi-featured .stat-pill {
-  color: #d4edbd;
+  color: #1b5e20;
 }
 
 .sidebar .nav-label,
