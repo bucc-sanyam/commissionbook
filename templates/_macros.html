@@ -54,15 +54,17 @@
 <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true">{{ paths.get(name, paths['file'])|safe }}</svg>
 {%- endmacro %}
 
-{% macro brand() -%}
-<img class="brand-mark" src="{{ url_for('static', filename='aldervain-mark.png') }}" width="34" height="34" alt="">
-<span class="brand-name">Aldervain</span>
+{% macro brand(show_mark=True) -%}
+{% if show_mark %}
+<img class="brand-mark" src="{{ url_for('static', filename='alder-tree-mark.png') }}" width="34" height="34" alt="">
+{% endif %}
+<span class="brand-name">Alder &amp; Vane</span>
 {%- endmacro %}
 
 {% macro brand_story() -%}
 <details class="brand-story">
-  <summary>Why Aldervain?</summary>
-  <p>The name Aldervain draws on the roots of an alder tree and the direction shown by a weather vane.</p>
+  <summary>Why Alder &amp; Vane?</summary>
+  <p>The name Alder &amp; Vane draws on the roots of an alder tree and the direction shown by a weather vane.</p>
   <p>Commission Book began as a place to record trades and fees. As the ledger grew to
     include holdings, portfolio values and client statements, we wanted a name that
     reflected both the record you keep and the decisions it helps you make.</p>
@@ -253,7 +255,7 @@
       <div class="mtd-actions" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e7efe5; flex-wrap: wrap;">
         {% if selectable %}
         <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; margin-right:auto; cursor:pointer;">
-          <input type="checkbox" class="rowchk" name="ids" value="{{ t.id }}" form="bulkForm">
+          <input type="checkbox" data-trade-select="{{ t.id }}">
           <span>Select</span>
         </label>
         {% endif %}

@@ -1,4 +1,4 @@
-// Aldervain Web Push Service Worker
+// Alder & Vane Web Push Service Worker
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -17,13 +17,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const title = data.title || 'Aldervain Alert';
+  const title = data.title || 'Alder & Vane Alert';
   const targetUrl = data.url || (data.data && data.data.url) || '/portal';
 
   const options = {
     body: data.body || 'New trade recommendation or portfolio update.',
-    icon: data.icon || '/static/aldervain-icon-192.png',
-    badge: data.badge || '/static/aldervain-icon-192.png',
+    icon: data.icon || '/static/icon-192.png?v=tree',
+    badge: data.badge || '/static/icon-192.png?v=tree',
     tag: data.tag || ('trade-alert-' + Date.now()),
     renotify: true,
     requireInteraction: true,

@@ -1,18 +1,22 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, brand, brand_story, csrf with context %}
+{% from "_macros.html" import icon, brand, csrf with context %}
 {% block title %}{{ 'Set up your workspace' if first_run else 'Welcome · Sign in' }}{% endblock %}
 {% block body_class %}auth-body{% endblock %}
 {% block shell %}
 <main class="auth-layout" id="main">
   <section class="auth-story">
-    <a class="brand" href="{{ url_for('login') }}" aria-label="Aldervain">{{ brand() }}</a>
-    <div class="auth-story-main"><h1>Portfolio &amp; trade ledger</h1></div>
+    <a class="brand" href="{{ url_for('login') }}" aria-label="Alder &amp; Vane">{{ brand(show_mark=False) }}</a>
+    <img class="auth-tree" src="{{ url_for('static', filename='alder-tree.webp') }}" alt="An engraved alder tree with veined leaves and exposed roots" width="1152" height="768">
+    <div class="auth-story-main">
+      <h1>The alder and the vane.</h1>
+      <p>The alder takes root at the water’s edge. The vane turns with the wind. We borrowed their names for a simple book of trades and fees. Today, that ledger follows each trade through to the holdings in your portfolio.</p>
+    </div>
   </section>
 
   <section class="auth-form-panel">
     <div class="auth-card">
       <!-- View Selector Tabs -->
-      <nav class="auth-tabs" role="tablist" aria-label="Sign-in options">
+      <nav class="auth-tabs" aria-label="Sign-in options">
         <button type="button" class="auth-tab-btn active" id="tab-client-btn" onclick="showView('client')">
           {{ icon('users', 14) }}<span>Client Portal</span>
         </button>
@@ -26,9 +30,8 @@
 
       <!-- CLIENT LOGIN VIEW -->
       <div class="auth-form" id="client-view">
-        <span class="eyebrow">CLIENT ACCESS</span>
-        <h2>Welcome to your portfolio.</h2>
-        <p>Sign in with your registered phone, email, or client ID to view your holdings, current prices, and advisory alerts.</p>
+        <h2>Your portfolio</h2>
+        <p>Sign in to see your holdings, trades and advisory alerts.</p>
         {% include "_flashes.html" %}
 
         <form method="post" action="{{ url_for('login') }}" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn && !btn.classList.contains('is-loading')) { btn.classList.add('is-loading'); btn.innerHTML = '<span class=\'spinner-circle\'></span> Signing in...'; }">
@@ -37,7 +40,7 @@
           
           <label class="field" for="client-identifier">
             Phone number, email or username
-            <input id="client-identifier" name="identifier" required autofocus placeholder="e.g. 9876543210 or your username" autocomplete="username">
+            <input id="client-identifier" name="identifier" required placeholder="e.g. 9876543210 or your username" autocomplete="username">
           </label>
           
           <label class="field" for="client-password">
@@ -105,7 +108,6 @@
           </button>
         </form>
       </div>
-      {{ brand_story() }}
     </div>
 
     <script>
@@ -115,6 +117,7 @@
           const btn = document.getElementById('tab-' + v + '-btn');
           if (el) el.style.display = (v === view) ? 'block' : 'none';
           if (btn) {
+            btn.setAttribute('aria-pressed', String(v === view));
             if (v === view) {
               btn.classList.add('active');
             } else {

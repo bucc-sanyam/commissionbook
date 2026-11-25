@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <div class="stock-list-items" id="stock-list-container" style="max-height: 680px; overflow-y: auto;">
+      <div class="stock-list-items" id="stock-list-container" >
         {% for s in stocks %}
         <a href="{{ url_for('charts_view', stock=s.symbol) }}" 
            class="stock-list-item {{ 'active' if s.symbol == selected_stock else '' }}"
@@ -69,13 +69,13 @@
     </aside>
 
     <!-- Main Column: Candlestick Chart and Position Breakdown -->
-    <main class="charts-main">
+    <div class="charts-main">
       {% if selected_info %}
       <!-- Stock Title & Key KPIs Card -->
       <section class="card" style="margin-bottom: 16px; padding: 18px 22px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
           <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 4px;">
               <h2 style="margin: 0; font-size: 24px; color: var(--ink);">{{ selected_info.symbol }}</h2>
               <span class="exchange-pill" style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #e0ebd7; color: #2e5a36;">{{ selected_info.exchange }}:{{ selected_info.ticker }}</span>
               {% if selected_info.total_quantity > 0 %}
@@ -84,7 +84,7 @@
                 </span>
               {% endif %}
             </div>
-            <div style="display: flex; align-items: baseline; gap: 10px;">
+            <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px;">
               {% if selected_info.current_price %}
                 <span style="font-size: 26px; font-weight: 700; color: var(--ink);" class="tabular">{{ selected_info.current_price|money }}</span>
                 <span class="tabular {{ 'pos' if selected_info.change > 0 else 'neg' if selected_info.change < 0 else 'muted' }}" style="font-size: 14px; font-weight: 600;">
@@ -143,7 +143,7 @@
       <!-- Candlestick Chart Container Card -->
       <section class="card" id="chart-card-container">
         <!-- Chart Controls Toolbar -->
-        <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: var(--bg); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div class="chart-toolbar">
           <!-- Left: View Mode Toggle -->
           <div style="display: flex; align-items: center; gap: 4px;">
             <button type="button" class="btn btn-sm chart-mode-btn active" id="mode-lw-btn" data-mode="lw" style="padding: 4px 12px; font-size: 11px; font-weight: 600;">
@@ -188,7 +188,7 @@
             <span class="muted">Loading candle history...</span>
           </div>
 
-          <div id="lw-chart-wrapper" style="height: 520px; width: 100%; position: relative;"></div>
+          <div id="lw-chart-wrapper" class="candle-canvas"></div>
           
           <div id="lw-chart-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #556b4f; background: rgba(255,255,255,0.92); padding: 10px 18px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
             <span>Loading candlestick data...</span>
@@ -196,17 +196,17 @@
         </div>
 
         <!-- 2. TradingView Widget (Secondary / Alternative) -->
-        <div id="tv-chart-wrapper" style="display: none; height: 560px; width: 100%; position: relative; background: var(--card);">
+        <div id="tv-chart-wrapper" hidden style="height: clamp(300px, 60svh, 560px); width: 100%; position: relative; background: var(--card);">
           <div style="padding: 8px 16px; background: #fdfaf2; border-bottom: 1px solid #f0e6ce; font-size: 11px; color: #876211; display: flex; justify-content: space-between; align-items: center;">
             <span>If TradingView displays an exchange restriction notice for this symbol, switch back to the <strong>Candlestick Chart</strong> tab above or open directly on TradingView.</span>
             <a href="https://in.tradingview.com/chart/?symbol={{ selected_info.exchange }}:{{ selected_info.ticker }}" target="_blank" rel="noopener noreferrer" style="color: #285933; font-weight: 600; text-decoration: underline;">Open TV ↗</a>
           </div>
-          <div id="tradingview_widget_container" style="height: calc(100% - 35px); width: 100%;"></div>
+          <div id="tradingview_widget_container" style="flex: 1; min-height: 0; width: 100%;"></div>
         </div>
       </section>
 
       <!-- Client Holdings & Recent Trades for this Stock -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px;">
         <!-- Card 1: Client Holdings Breakdown -->
         <section class="card" style="margin: 0;">
           <div class="card-header">
@@ -454,7 +454,7 @@
         {% endif %}
       </section>
       {% endif %}
-    </main>
+    </div>
   </div>
   {% endif %}
 </div>
@@ -462,27 +462,6 @@
 
 {% block head %}
 <style>
-.charts-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 20px;
-  align-items: flex-start;
-}
-@media (max-width: 960px) {
-  .charts-layout {
-    grid-template-columns: 1fr;
-  }
-  .charts-sidebar {
-    max-height: 280px;
-  }
-}
-.stock-list-item:hover {
-  background: #f7faf2 !important;
-}
-.stock-list-item.active {
-  background: #edf5e8 !important;
-  border-left: 3px solid #3f7352;
-}
 .live-pulse {
   animation: pulse-ring 1.8s infinite;
 }
@@ -541,13 +520,8 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!lwWrapper || !window.LightweightCharts) return;
     lwWrapper.innerHTML = "";
 
-    const rect = lwWrapper.getBoundingClientRect();
-    const chartWidth = rect.width > 0 ? rect.width : lwWrapper.clientWidth || 800;
-    const chartHeight = 520;
-
     lwChart = window.LightweightCharts.createChart(lwWrapper, {
-      width: chartWidth,
-      height: chartHeight,
+      autoSize: true,
       layout: {
         background: { type: "solid", color: "#ffffff" },
         textColor: "#435940",
@@ -589,7 +563,7 @@ document.addEventListener("DOMContentLoaded", function() {
         mouseWheel: true,
         pressedMouseMove: true,
         horzTouchDrag: true,
-        vertTouchDrag: true,
+        vertTouchDrag: false,
       },
       rightPriceScale: {
         borderColor: "#d8e2d4",
@@ -702,16 +676,6 @@ document.addEventListener("DOMContentLoaded", function() {
         volume: v ? v.value : 0
       });
     });
-
-    // Handle Window / Container Resize
-    const resizeObserver = new ResizeObserver(entries => {
-      if (!entries || !entries.length || !lwChart) return;
-      const { width } = entries[0].contentRect;
-      if (width > 0) {
-        lwChart.applyOptions({ width: width });
-      }
-    });
-    resizeObserver.observe(lwWrapper);
 
     // Initial load
     loadCandles(currentRange, currentInterval);
@@ -844,8 +808,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // 6. View Mode Switchers
   function switchToLw() {
-    if (lwOuter) lwOuter.style.display = "block";
-    if (tvWrapper) tvWrapper.style.display = "none";
+    if (lwOuter) lwOuter.hidden = false;
+    if (tvWrapper) tvWrapper.hidden = true;
     if (rangeControls) rangeControls.style.display = "flex";
     if (modeLwBtn) {
       modeLwBtn.classList.add("active");
@@ -861,8 +825,8 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function switchToTv() {
-    if (lwOuter) lwOuter.style.display = "none";
-    if (tvWrapper) tvWrapper.style.display = "block";
+    if (lwOuter) lwOuter.hidden = true;
+    if (tvWrapper) tvWrapper.hidden = false;
     if (rangeControls) rangeControls.style.display = "none";
     if (modeTvBtn) {
       modeTvBtn.classList.add("active");
@@ -925,7 +889,8 @@ document.addEventListener("DOMContentLoaded", function() {
   // 8. Fullscreen Toggle
   const fsBtn = document.getElementById("btn-chart-fullscreen");
   const chartCard = document.getElementById("chart-card-container");
-  if (fsBtn && chartCard) {
+  if (fsBtn) fsBtn.hidden = !document.fullscreenEnabled;
+  if (fsBtn && chartCard && document.fullscreenEnabled) {
     fsBtn.addEventListener("click", function() {
       if (!document.fullscreenElement) {
         chartCard.requestFullscreen().catch(err => console.warn(err));

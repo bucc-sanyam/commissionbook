@@ -1976,7 +1976,7 @@ def create_app(config=None):
             "is_client": bool(session.get("client_id")),
             "client_name": session.get("client_name"),
             "client_id": session.get("client_id"),
-            "today": date.today().isoformat(), "app_name": "Aldervain",
+            "today": date.today().isoformat(), "app_name": "Alder & Vane",
             "business_name": "" if error else setting("business_name", ""),
             "currency": "\u20b9" if error else setting("currency", "\u20b9"),
             "backend_mode": app.config["BACKEND_MODE"],
@@ -2978,7 +2978,7 @@ def create_app(config=None):
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Market Prices Updated · Aldervain</title>
+  <title>Market Prices Updated · Alder & Vane</title>
   <style>
     :root {{ --bg: #0b0f19; --card: #151c2e; --border: #232d48; --text: #f0f4fc; --sub: #94a3b8; --green: #10b981; --accent: #3b82f6; }}
     * {{ box-sizing: border-box; }}
@@ -3977,7 +3977,7 @@ def create_app(config=None):
         owner_hash()
         return render_template(
             "upload.html", admin=False, need_code=bool(setting("upload_code")), portal_token=token,
-            og_title="Aldervain – Send Your Trades",
+            og_title="Alder & Vane – Send Your Trades",
             og_description="Submit your trades in seconds. Just fill in the share name and amount — no account needed.",
         )
 
@@ -4953,8 +4953,8 @@ def create_app(config=None):
         payload = json.dumps({
             "title": title,
             "body": body,
-            "icon": "/static/aldervain-icon-192.png",
-            "badge": "/static/aldervain-icon-192.png",
+            "icon": "/static/icon-192.png?v=tree",
+            "badge": "/static/icon-192.png?v=tree",
             "url": url,
             "tag": f"trade-{stock or 'alert'}",
             "data": {"url": url}
@@ -5079,7 +5079,7 @@ def create_app(config=None):
         target_name = get_client(client_id)["name"] if client_id else "All Subscribed Clients"
         sent = dispatch_web_push(
             client_id=client_id,
-            title="🔔 Aldervain Test Alert",
+            title="🔔 Alder & Vane Test Alert",
             body="Push notifications are active and working on this device!",
             url="/portal"
         )

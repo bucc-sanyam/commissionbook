@@ -1,16 +1,16 @@
 # Graph Report - Commission  (2026-11-25)
 
 ## Corpus Check
-- 36 files · ~90,887 words
+- 36 files · ~186,773 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1381 nodes · 3415 edges · 74 communities (36 shown, 38 thin omitted)
+- 1381 nodes · 3415 edges · 73 communities (37 shown, 36 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.55)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a163897b`
+- Built from commit: `cf7b1f15`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -84,7 +84,6 @@
 - ei
 - di
 - .Bn
-- jt
 - Alder & Vane redesign brief
 
 ## God Nodes (most connected - your core abstractions)
@@ -114,7 +113,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (74 total, 38 thin omitted)
+## Communities (73 total, 36 thin omitted)
 
 ### Community 0 - "sn"
 Cohesion: 0.05
@@ -133,8 +132,8 @@ Cohesion: 0.08
 Nodes (41): configure_app(), credential_version(), csrf_token(), local_setup_allowed(), _request_is_loopback(), require_csrf(), safe_redirect_target(), secure_response() (+33 more)
 
 ### Community 6 - "lightweight-charts.js"
-Cohesion: 0.08
-Nodes (13): ae(), bt(), E, ee(), H, le(), mt(), oe() (+5 more)
+Cohesion: 0.06
+Nodes (15): ae(), bt(), di(), E, ee(), ei, jt, le() (+7 more)
 
 ### Community 7 - "trade_parser.py"
 Cohesion: 0.11
@@ -157,8 +156,8 @@ Cohesion: 0.16
 Nodes (13): close_db(), complete_request(), Database, get_db(), init_local(), install_database(), _params(), Result (+5 more)
 
 ### Community 18 - "u"
-Cohesion: 0.09
-Nodes (8): ft(), ni, tt, u(), X(), y(), z(), _()
+Cohesion: 0.10
+Nodes (6): ft(), ni, tt, u(), y(), _()
 
 ### Community 20 - "SupabaseStorage"
 Cohesion: 0.22
@@ -205,8 +204,8 @@ Cohesion: 0.14
 Nodes (3): be(), Ce(), It
 
 ### Community 45 - "S"
-Cohesion: 0.10
-Nodes (5): as(), on, os(), ut, wt()
+Cohesion: 0.15
+Nodes (4): as(), on, ut, wt()
 
 ### Community 48 - "manifest.json"
 Cohesion: 0.25
@@ -217,12 +216,12 @@ Cohesion: 0.29
 Nodes (6): bom1, builds, crons, regions, routes, version
 
 ### Community 52 - "gn"
-Cohesion: 0.08
-Nodes (7): dt, G(), Hi(), ki, L, vs(), yn
+Cohesion: 0.09
+Nodes (6): dt, G(), Hi(), ki, os(), vs()
 
 ### Community 54 - "ct"
 Cohesion: 0.17
-Nodes (11): 1. Project Overview, 2. Technology Stack, 3. Directory Structure & Key Files, 4. Financial & Business Logic, 5. Security & Authentication, 6. Development & Deployment Guidelines, Aldervain — Project Summary, Commission Rules (+3 more)
+Nodes (11): 1. Project Overview, 2. Technology Stack, 3. Directory Structure & Key Files, 4. Financial & Business Logic, 5. Security & Authentication, 6. Development & Deployment Guidelines, Alder & Vane — Project Summary, Commission Rules (+3 more)
 
 ### Community 57 - "clean_phone_number"
 Cohesion: 0.40
@@ -230,7 +229,7 @@ Nodes (5): clean_phone_number(), cleanup_existing_client_phones(), get_or_create
 
 ### Community 58 - "Commission Book"
 Cohesion: 0.40
-Nodes (4): Aldervain, Features, How screenshot reading works (no AI API calls), Run
+Nodes (4): Alder & Vane, Features, How screenshot reading works (no AI API calls), Run
 
 ### Community 60 - "format_ist"
 Cohesion: 0.50
@@ -239,6 +238,10 @@ Nodes (4): format_ist(), parse_utc_datetime(), Parse any datetime, string, or ti
 ### Community 67 - ".l"
 Cohesion: 0.12
 Nodes (5): cs(), fs(), ii, ss(), Ts()
+
+### Community 69 - "ei"
+Cohesion: 0.25
+Nodes (3): H, X(), z()
 
 ### Community 71 - ".Bn"
 Cohesion: 0.25
@@ -251,7 +254,7 @@ Nodes (9): Aldervain redesign roadmap, Change the production link, Design decisi
 ## Knowledge Gaps
 - **34 isolated node(s):** `name`, `short_name`, `start_url`, `display`, `background_color` (+29 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **38 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_

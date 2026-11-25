@@ -8,11 +8,14 @@
 {% block shell %}
 <div class="client-portal-wrapper">
   <!-- Mobile Scrim -->
-  <div class="portal-mobile-scrim" id="portal-mobile-scrim" onclick="closePortalSidebar()" hidden></div>
+  <div class="portal-mobile-scrim" id="portal-mobile-scrim" data-menu-scrim hidden></div>
 
   <!-- Left Side Panel (Admin-style Docked / Drawer) -->
   <aside class="portal-sidebar" id="portal-sidebar" aria-label="Portal navigation">
-    <div class="brand portal-wordmark">{{ brand() }}</div>
+    <div class="portal-sidebar-heading">
+      <div class="brand">{{ brand() }}</div>
+      <button type="button" class="portal-sidebar-close-btn" data-menu-close aria-label="Close navigation">{{ icon('x', 18) }}</button>
+    </div>
     <div class="portal-sidebar-brand">
       <span class="portal-avatar-large">{{ client.name[0]|upper }}</span>
       <div class="portal-sidebar-user">
@@ -26,14 +29,11 @@
           + Set @username
         </button>
         {% endif %}
-        <div class="portal-sidebar-rule">{{ rule }}</div>
+        <span class="portal-sidebar-rule">{{ rule }}</span>
       </div>
-      <button type="button" class="portal-sidebar-close-btn" onclick="closePortalSidebar()" aria-label="Close navigation" style="margin-left: auto; color: #a3c4b5; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px; cursor: pointer; display: none;">
-        {{ icon('x', 16) }}
-      </button>
     </div>
 
-    <p class="nav-label" style="color: #6d9383; font-size: 11px; margin: 14px 0 6px; font-weight: 700; letter-spacing: 0.5px;">PORTFOLIO MENU</p>
+    <p class="nav-label">Portfolio</p>
     <nav class="portal-sidebar-nav" role="tablist">
       <button class="portal-nav-btn active" role="tab" data-tab="portal-tab-overview" onclick="switchPortalTab(this, 'portal-tab-overview')">
         <span class="btn-left">{{ icon('pie', 16) }} <span>Overview</span></span>
@@ -51,7 +51,6 @@
       </button>
       <button class="portal-nav-btn" role="tab" data-tab="portal-tab-advisory" onclick="switchPortalTab(this, 'portal-tab-advisory')">
         <span class="btn-left">{{ icon('shield', 16) }} <span>Advisory &amp; Charges</span></span>
-        <span class="tiny-tag" style="background: rgba(30, 151, 82, 0.3); color: #7de0a3;">{{ rule }}</span>
       </button>
     </nav>
 
@@ -73,7 +72,7 @@
   <!-- Client Portal Topbar -->
   <header class="client-portal-topbar">
     <div class="portal-topbar-left">
-      <button class="icon-btn mobile-portal-menu" id="portal-menu-toggle" type="button" aria-label="Open navigation" aria-controls="portal-sidebar" onclick="togglePortalSidebar()">
+      <button class="icon-btn mobile-portal-menu" id="portal-menu-toggle" type="button" aria-label="Open navigation" aria-controls="portal-sidebar" aria-expanded="false" data-menu-toggle>
         {{ icon('menu', 18) }}
       </button>
       <div class="portal-breadcrumb">
@@ -101,13 +100,6 @@
         <span class="push-label"><span class="desktop-only">Enable </span>Alerts</span>
       </button>
 
-      <!-- Hide Values / Privacy Toggle Button -->
-      <button type="button" class="btn btn-ghost btn-sm" id="client-privacy-toggle" aria-label="Toggle hide values"
-        title="Hide or show portfolio values" style="gap: 5px; flex-shrink: 0; padding: 6px 10px;">
-        <span class="privacy-icon-off">{{ icon('eye-off', 15) }}</span>
-        <span class="privacy-icon-on" style="display:none;">{{ icon('eye', 15) }}</span>
-        <span class="privacy-label"><span class="desktop-only">Hide </span>values</span>
-      </button>
     </div>
   </header>
 
@@ -222,12 +214,12 @@
                 <h2 style="margin: 0;">What You Are Holding</h2>
                 <p class="muted">Summary of shares currently in your Demat portfolio.</p>
               </div>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="switchPortalTab(document.querySelector('.client-sidebar-btn[data-tab=\'portal-tab-holdings\']'), 'portal-tab-holdings')">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="switchPortalTab(document.querySelector('.portal-nav-btn[data-tab=\'portal-tab-holdings\']'), 'portal-tab-holdings')">
                 {{ icon('trend', 14) }} Detailed Holdings View &rarr;
               </button>
             </div>
             {% if shares %}
-            <div class="table-wrap">
+            <div class="portal-desktop-table-wrap table-wrap">
               <table class="data-table">
                 <thead>
                   <tr>
@@ -258,24 +250,60 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Mobile Expandable Holdings Summary (Zero Horizontal Scroll) -->
+            <div class="mobile-holdings-list" data-lazy-list="15">
+              {% for sh in shares %}
+              {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
+              <details class="mobile-trade-card">
+                <summary class="mobile-trade-summary">
+                  <div class="mts-left">
+                    <div class="mts-stock">
+                      <strong>{{ sh.stock }}</strong>
+                    </div>
+                    <div class="mts-dates">
+                      <span class="tabular">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
+                    </div>
+                  </div>
+                  <div class="mts-right">
+                    <div class="mts-pnl {{ 'pos' if profit >= 0 else 'neg' }}">
+                      <strong>{{ '+' if profit > 0 else '' }}{{ profit|money }}</strong>
+                      <small>{{ sh.current_value|money }}</small>
+                    </div>
+                    <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+                  </div>
+                </summary>
+                <div class="mobile-trade-details">
+                  <div class="mtd-grid">
+                    <div class="mtd-item">
+                      <span class="mtd-label">Quantity</span>
+                      <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+                    </div>
+                    <div class="mtd-item">
+                      <span class="mtd-label">Avg Buy Price</span>
+                      <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
+                    </div>
+                    <div class="mtd-item">
+                      <span class="mtd-label">Current Price (CMP)</span>
+                      <strong class="mtd-val">{{ sh.cmp|money if sh.cmp else '—' }}</strong>
+                    </div>
+                    <div class="mtd-item">
+                      <span class="mtd-label">Current Value</span>
+                      <strong class="mtd-val">{{ sh.current_value|money }}</strong>
+                    </div>
+                    <div class="mtd-item">
+                      <span class="mtd-label">Unrealized P&amp;L</span>
+                      <strong class="mtd-val {{ 'pos' if profit >= 0 else 'neg' }}">{{ '+' if profit > 0 else '' }}{{ profit|money }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </details>
+              {% endfor %}
+            </div>
             {% else %}
             {{ empty_state('No holdings yet', 'No shares currently recorded in your portfolio.', 'trend') }}
             {% endif %}
           </section>
-
-          <!-- Advisory Slab & Exit Charges Summary Tile -->
-          {% if shares %}
-          <section class="card portal-card portal-advisory-summary" aria-labelledby="advisory-summary-title">
-            <div>
-              <h2 id="advisory-summary-title">Advisory &amp; exit charges</h2>
-              <p>Review your {{ rule }} commission, capital gains tax and broker charges if you sell at the current market price.</p>
-            </div>
-            <button type="button" class="btn btn-secondary btn-sm" aria-controls="portal-tab-advisory"
-              onclick="switchPortalTab(document.querySelector('.portal-nav-btn[data-tab=portal-tab-advisory]'), 'portal-tab-advisory')">
-              View breakdown {{ icon('arrow-up-right', 14) }}
-            </button>
-          </section>
-          {% endif %}
 
         </div> <!-- Close portal-tab-overview -->
 
@@ -700,7 +728,7 @@
       </div>
 
       {% if shares %}
-      <div style="padding: 16px 20px;">
+      <div class="portal-chart-content">
         <!-- 1. Stock Selector Pills -->
         <div style="margin-bottom: 16px;">
           <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
@@ -715,7 +743,7 @@
                     data-qty="{{ sh.quantity|int }}"
                     data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
                     data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
-                    onclick="selectChartStock(this, '{{ sh.stock }}')">
+                    onclick="selectChartStock(this, this.dataset.stock)">
               {{ sh.stock }} ({{ sh.quantity|int }})
             </button>
             {% endfor %}
@@ -758,7 +786,7 @@
                   {{ tg_list|length }} Target Level{{ 's' if tg_list|length != 1 }}
                 </span>
               </div>
-              <div class="table-wrap" style="margin: 0;">
+              <div class="portal-desktop-table-wrap table-wrap" style="margin: 0;">
                 <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
                   <thead>
                     <tr style="background: var(--bg); color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -818,6 +846,70 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Mobile Expandable Price Targets (Zero Horizontal Scroll) -->
+              <div class="mobile-holdings-list" style="padding: 12px;">
+                {% set sqty = sh.quantity|float if sh.quantity else 0 %}
+                {% set sbp = sh.buy_price|float if sh.buy_price else 0 %}
+                {% set scmp = sh.cmp|float if sh.cmp else sbp %}
+                {% for t in tg_list %}
+                {% set tp = t.target_price|float %}
+                {% set gain_per_sh = (tp - sbp) if sbp else 0 %}
+                {% set upside_from_cmp = ((tp - scmp) / scmp * 100) if scmp else 0 %}
+                {% set tot_gain = gain_per_sh * sqty %}
+                {% set ret_pct = ((tp - sbp) / sbp * 100) if sbp else 0 %}
+                <details class="mobile-trade-card">
+                  <summary class="mobile-trade-summary">
+                    <div class="mts-left">
+                      <div class="mts-stock">
+                        <strong>{{ t.label }}</strong>
+                        <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11px;">{{ tp|money }}</span>
+                      </div>
+                      <div class="mts-dates">
+                        Upside {{ '+' if upside_from_cmp > 0 else '' }}{{ '%.1f'|format(upside_from_cmp) }}% from CMP
+                      </div>
+                    </div>
+                    <div class="mts-right">
+                      <div class="mts-pnl {{ 'pos' if tot_gain >= 0 else 'neg' }}">
+                        <strong>{{ '+' if tot_gain > 0 else '' }}{{ tot_gain|money }}</strong>
+                        <small>{{ '+' if ret_pct > 0 else '' }}{{ '%.1f'|format(ret_pct) }}%</small>
+                      </div>
+                      <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+                    </div>
+                  </summary>
+                  <div class="mobile-trade-details">
+                    <div class="mtd-grid">
+                      <div class="mtd-item">
+                        <span class="mtd-label">Target Price</span>
+                        <strong class="mtd-val">{{ tp|money }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Gain / Share</span>
+                        <strong class="mtd-val {{ 'pos' if gain_per_sh >= 0 else 'neg' }}">{{ '+' if gain_per_sh > 0 else '' }}{{ gain_per_sh|money }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Upside from CMP</span>
+                        <strong class="mtd-val {{ 'pos' if upside_from_cmp >= 0 else 'neg' }}">{{ '+' if upside_from_cmp > 0 else '' }}{{ '%.1f'|format(upside_from_cmp) }}%</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Total Potential Profit</span>
+                        <strong class="mtd-val {{ 'pos' if tot_gain >= 0 else 'neg' }}">{{ '+' if tot_gain > 0 else '' }}{{ tot_gain|money }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Expected Return</span>
+                        <strong class="mtd-val {{ 'pos' if ret_pct >= 0 else 'neg' }}">{{ '+' if ret_pct > 0 else '' }}{{ '%.1f'|format(ret_pct) }}%</strong>
+                      </div>
+                      {% if t.notes %}
+                      <div class="mtd-item">
+                        <span class="mtd-label">Advisory Notes</span>
+                        <strong class="mtd-val">{{ t.notes }}</strong>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </details>
+                {% endfor %}
+              </div>
             </div>
             {% else %}
             <div style="background: var(--bg); border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
@@ -833,7 +925,7 @@
         <!-- 4. Interactive Native Candlestick Chart (Same robust engine as Admin) -->
         <div class="card" style="margin: 0; padding: 0; overflow: hidden; border: 1px solid #d5ded2; border-radius: 10px; background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
           <!-- Chart Controls Toolbar -->
-          <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: var(--bg); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div class="chart-toolbar">
             <!-- Left: Timeframe Range Buttons -->
             <div class="range-controls" style="display: flex; align-items: center; gap: 4px;">
               <button type="button" class="portal-range-btn" data-range="5d" data-interval="15m" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: var(--card); cursor: pointer;">5D</button>
@@ -865,7 +957,7 @@
               <span class="muted">Loading candle history...</span>
             </div>
 
-            <div id="portal-lw-chart-wrapper" style="height: 500px; width: 100%; position: relative;"></div>
+            <div id="portal-lw-chart-wrapper" class="candle-canvas"></div>
             
             <div id="portal-lw-chart-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #556b4f; background: rgba(255,255,255,0.92); padding: 10px 18px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
               <span>Loading candlestick data...</span>
@@ -881,22 +973,21 @@
 
   <!-- ===== TAB 5: ADVISORY SLAB & EXIT BREAKUP ===== -->
         <div class="client-tab-panel" id="portal-tab-advisory">
-          <!-- Advisory Slab & Exit Price Breakup Card -->
-          {% if shares %}
-          <section class="card portal-card" style="margin-top: 1.5rem;">
-            <div class="card-header">
-              <div>
-                <h2>Advisory Slab &amp; Exit Breakup</h2>
-                <p>Projected commission, taxes &amp; broker charges if all holdings were sold today at CMP.</p>
-              </div>
-              <span class="badge" style="background: var(--bg); color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
-            </div>
-
-            <!-- Section A: Commission Slab Summary -->
-            <div style="padding: 14px 18px 10px; border-bottom: 1px solid #edf2e5;">
-              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
-                {{ icon('trend', 13) }} Section A — Advisory Commission Slab
-              </div>
+          <details class="advisory-breakdown" id="client-charge-breakdown">
+            <summary class="breakdown-heading">
+              <span>
+                <strong>Advisory &amp; exit charges</strong>
+                <span class="breakdown-description">Your commission, taxes and broker charges at current market prices.</span>
+              </span>
+              <span class="breakdown-action">
+                <span class="when-closed">View breakdown</span><span class="when-open">Close breakdown</span>
+                {{ icon('chevron-down', 16) }}
+              </span>
+            </summary>
+            {% if shares %}
+            <details class="charge-section" open>
+              <summary>Commission slab {{ icon('chevron-down', 16) }}</summary>
+              <div class="charge-section-body">
               <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
                 <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
                   <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
@@ -905,7 +996,7 @@
                   <span style="color:#64786a;">Commission Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
                 </div>
               </div>
-              <div class="table-wrap">
+              <div class="portal-desktop-table-wrap table-wrap">
                 <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
                   <thead>
                     <tr style="background: var(--bg); color: var(--muted); font-size:11px; text-transform:uppercase;">
@@ -958,12 +1049,77 @@
                   </tfoot>
                 </table>
               </div>
-            </div>
 
-            <!-- Section B: Per-holding Exit Price Breakup -->
-            <div style="padding: 14px 18px 16px;">
-              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display:flex; align-items:center; gap:8px;">
-                {{ icon('pie', 13) }} Section B — Exit Price Breakup (If sold today at CMP)
+              <!-- Mobile Expandable Commission Slab (Zero Horizontal Scroll) -->
+              <div class="mobile-holdings-list">
+                {% for sh in shares %}
+                {% set comm_rate = (client.commission_rate or 10)|float %}
+                {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
+                {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
+                {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
+                {% if client.commission_type == 'turnover_pct' %}
+                  {% set my_commission = (buy_val + sell_val) * comm_rate / 100 %}
+                {% elif client.commission_type == 'flat' %}
+                  {% set my_commission = comm_rate %}
+                {% else %}
+                  {% set my_commission = (profit * comm_rate / 100) if profit > 0 else 0 %}
+                {% endif %}
+                <details class="mobile-trade-card">
+                  <summary class="mobile-trade-summary">
+                    <div class="mts-left">
+                      <div class="mts-stock">
+                        <strong>{{ sh.stock }}</strong>
+                      </div>
+                      <div class="mts-dates">
+                        <span class="tabular">{{ sh.quantity|int }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
+                      </div>
+                    </div>
+                    <div class="mts-right">
+                      <div class="mts-pnl">
+                        <strong style="color:#1e4620;">{{ my_commission|money }}</strong>
+                        <small class="{{ 'pos' if profit >= 0 else 'neg' }}">{{ '+' if profit > 0 else '' }}{{ profit|money }}</small>
+                      </div>
+                      <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
+                    </div>
+                  </summary>
+                  <div class="mobile-trade-details">
+                    <div class="mtd-grid">
+                      <div class="mtd-item">
+                        <span class="mtd-label">Quantity</span>
+                        <strong class="mtd-val">{{ sh.quantity|int }} shares</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Avg Buy</span>
+                        <strong class="mtd-val">{{ sh.buy_price|money if sh.buy_price else '—' }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">CMP</span>
+                        <strong class="mtd-val">{{ sh.cmp|money if sh.cmp else '—' }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Unrealised P&amp;L</span>
+                        <strong class="mtd-val {{ 'pos' if profit >= 0 else 'neg' }}">{{ '+' if profit > 0 else '' }}{{ profit|money }}</strong>
+                      </div>
+                      <div class="mtd-item">
+                        <span class="mtd-label">Commission Owed</span>
+                        <strong class="mtd-val" style="color:#1e4620;">{{ my_commission|money }}{% if profit <= 0 %} (₹0 fee){% endif %}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                {% endfor %}
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700; color:#166534;">
+                  <span>Total Commission Owed</span>
+                  <span style="font-family:monospace;">{{ ns_total_comm.val|money }}</span>
+                </div>
+              </div>
+              </div>
+            </details>
+
+            <details class="charge-section">
+              <summary>Exit charges by holding {{ icon('chevron-down', 16) }}</summary>
+              <div class="charge-section-body">
+              <div class="charge-estimate-note">Estimated proceeds if sold at the current market price
                 <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of sell value&#10;• DP Charges: ₹15.34/scrip/day (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;• Stamp Duty: 0.015% of buy value (paid at purchase, shown as note)&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
               </div>
 
@@ -1078,18 +1234,13 @@
               </div>
               {% endif %}
               {% endfor %}
-            </div>
-
-            <!-- Section C: Target Potential Gains (Per Stock) -->
-            {% if stock_targets %}
-            <div style="padding: 14px 18px 16px; border-top: 1px solid #edf2e5;">
-              <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  {{ icon('trend', 13) }} Section C — Target Potential Gains
-                  <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">Advisor Targets</span>
-                </div>
               </div>
+            </details>
 
+            {% if stock_targets %}
+            <details class="charge-section">
+              <summary>Potential gains at target prices {{ icon('chevron-down', 16) }}</summary>
+              <div class="charge-section-body">
               <div style="display: flex; flex-direction: column; gap: 12px;">
                 {% for sh in shares %}
                 {% set stock_key = sh.stock.strip().upper() %}
@@ -1134,10 +1285,14 @@
                 {% endif %}
                 {% endfor %}
               </div>
-            </div>
+              </div>
+            </details>
             {% endif %}
-          </section>
-          {% endif %}
+            {% else %}
+              <p class="charge-section-body muted">Estimates will appear here once your portfolio has holdings.</p>
+            {% endif %}
+            <button class="btn btn-ghost btn-sm breakdown-close" type="button" id="close-charge-breakdown">{{ icon('x', 14) }} Close breakdown</button>
+          </details>
         </div> <!-- Close portal-tab-advisory -->
 
 
@@ -1569,57 +1724,29 @@
 {% endif %}
 
 <script>
-  // ===== Client Portal Tab Switching =====
+  const chargeBreakdown = document.getElementById('client-charge-breakdown');
+  const advisoryTabId = 'portal-tab-advisory';
+
   window.switchPortalTab = function(btn, tabId) {
-    document.querySelectorAll('.portal-nav-btn, .client-sidebar-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.client-tab-panel').forEach(p => p.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    const panel = document.getElementById(tabId);
-    if (panel) panel.classList.add('active');
-    document.querySelectorAll('.portal-nav-btn[data-tab="' + tabId + '"], .client-sidebar-btn[data-tab="' + tabId + '"]').forEach(b => b.classList.add('active'));
-    window.closePortalSidebar();
-    try {
-      history.replaceState(null, '', '#' + tabId);
-    } catch(e) {}
-    if (tabId === 'portal-tab-charts') {
-      setTimeout(function() {
-        if (!portalLwChart) {
-          initPortalCandleChart();
-        } else {
-          const w = document.getElementById('portal-lw-chart-wrapper');
-          if (w && w.clientWidth > 0) {
-            portalLwChart.applyOptions({ width: w.clientWidth });
-            portalLwChart.timeScale().fitContent();
-          }
-        }
-      }, 50);
-    }
+    document.querySelectorAll('.client-tab-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.id === tabId);
+    });
+    document.querySelectorAll('.portal-nav-btn').forEach(button => {
+      const selected = button.dataset.tab === tabId;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    chargeBreakdown.open = tabId === advisoryTabId;
+    history.replaceState(null, '', '#' + tabId);
+    if (tabId === 'portal-tab-charts') initPortalCandleChart();
   };
 
-  window.togglePortalSidebar = function() {
-    const sb = document.getElementById('portal-sidebar');
-    const scrim = document.getElementById('portal-mobile-scrim');
-    if (!sb) return;
-    if (sb.classList.contains('open')) {
-      window.closePortalSidebar();
-    } else {
-      sb.classList.add('open');
-      if (scrim) {
-        scrim.hidden = false;
-        scrim.style.display = 'block';
-      }
-    }
-  };
-
-  window.closePortalSidebar = function() {
-    const sb = document.getElementById('portal-sidebar');
-    const scrim = document.getElementById('portal-mobile-scrim');
-    if (sb) sb.classList.remove('open');
-    if (scrim) {
-      scrim.hidden = true;
-      scrim.style.display = 'none';
-    }
-  };
+  const chargeSummary = chargeBreakdown?.querySelector('summary');
+  document.getElementById('close-charge-breakdown')?.addEventListener('click', () => {
+    if (!chargeBreakdown) return;
+    chargeBreakdown.open = false;
+    chargeSummary?.focus();
+  });
 
   // ===== Client Portal Native Lightweight Candlestick Chart =====
   const portalAllTargets = {{ stock_targets | tojson if stock_targets else '{}' }};
@@ -1634,16 +1761,11 @@
 
   function initPortalCandleChart() {
     const lwWrapper = document.getElementById('portal-lw-chart-wrapper');
-    if (!lwWrapper || !window.LightweightCharts) return;
+    if (!lwWrapper || portalLwChart || !lwWrapper.clientWidth || !window.LightweightCharts) return;
     lwWrapper.innerHTML = '';
 
-    const rect = lwWrapper.getBoundingClientRect();
-    const chartWidth = rect.width > 0 ? rect.width : lwWrapper.clientWidth || 800;
-    const chartHeight = 500;
-
     portalLwChart = window.LightweightCharts.createChart(lwWrapper, {
-      width: chartWidth,
-      height: chartHeight,
+      autoSize: true,
       layout: {
         background: { type: "solid", color: "#ffffff" },
         textColor: "#435940",
@@ -1685,7 +1807,7 @@
         mouseWheel: true,
         pressedMouseMove: true,
         horzTouchDrag: true,
-        vertTouchDrag: true,
+        vertTouchDrag: false,
       },
       rightPriceScale: {
         borderColor: "#d8e2d4",
@@ -1754,16 +1876,6 @@
         volume: v ? v.value : 0
       });
     });
-
-    // Handle container resize
-    const resizeObserver = new ResizeObserver(entries => {
-      if (!entries || !entries.length || !portalLwChart) return;
-      const { width } = entries[0].contentRect;
-      if (width > 0) {
-        portalLwChart.applyOptions({ width: width });
-      }
-    });
-    resizeObserver.observe(lwWrapper);
 
     // Zoom and reset buttons
     const btnUp = document.getElementById("portal-btn-scale-up");
@@ -1980,11 +2092,6 @@
   };
 
   document.addEventListener('DOMContentLoaded', function() {
-    const toggleBtn = document.getElementById('portal-menu-toggle');
-    const scrim = document.getElementById('portal-mobile-scrim');
-    if (toggleBtn) toggleBtn.addEventListener('click', window.togglePortalSidebar);
-    if (scrim) scrim.addEventListener('click', window.closePortalSidebar);
-
     // Range button click handlers
     document.querySelectorAll(".portal-range-btn").forEach(btn => {
       btn.addEventListener("click", function() {
@@ -2005,29 +2112,15 @@
       });
     });
 
-    // Initialize chart if charts tab is active on initial load
-    const activePanel = document.querySelector('.client-tab-panel.active');
-    if (activePanel && activePanel.id === 'portal-tab-charts') {
-      setTimeout(initPortalCandleChart, 100);
-    }
   });
 
-  // Restore tab from URL hash on page load
-  (function() {
-    const hash = window.location.hash.replace('#', '');
-    if (hash) {
-      const btn = document.querySelector('.portal-nav-btn[data-tab="' + hash + '"], .client-sidebar-btn[data-tab="' + hash + '"]');
-      if (btn) window.switchPortalTab(btn, hash);
-    }
-  })();
-
-  // Immediate sync for privacy mode if stored in localStorage
-  try {
-    const isPrivacy = localStorage.getItem('privacyMode') === 'true';
-    if (isPrivacy) {
-      document.body.classList.add('privacy-mode');
-    }
-  } catch (e) { }
+  function restoreTabFromHash() {
+    const tabId = location.hash.slice(1);
+    const btn = Array.from(document.querySelectorAll('.portal-nav-btn')).find(button => button.dataset.tab === tabId);
+    if (btn) switchPortalTab(btn, tabId);
+  }
+  window.addEventListener('hashchange', restoreTabFromHash);
+  restoreTabFromHash();
 
   // Auto-show popup alert modal if there are undismissed alerts
   window.addEventListener('DOMContentLoaded', function () {

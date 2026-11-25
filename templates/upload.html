@@ -7,7 +7,7 @@
 {% if admin %}
   {{ super() }}
 {% else %}
-  <header class="portal-header"><div class="brand" aria-label="Aldervain">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
+  <header class="portal-header"><div class="brand" aria-label="Alder &amp; Vane">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
   <main class="portal-main" id="main">
     <div class="portal-intro">{% if business_name %}<p>{{ business_name }}</p>{% endif %}<h1>Submit trades</h1><p>Upload broker screenshots, review the extracted trades, and submit.</p></div>
     <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-nav-1" onclick="window.wizardGoto(1)" role="button" tabindex="0"><b>1</b>Your details</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-2" onclick="window.wizardGoto(2)" role="button" tabindex="0"><b>2</b>Screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-3" onclick="window.wizardGoto(3)" role="button" tabindex="0"><b>3</b>Trades</span></div>
@@ -15,7 +15,7 @@
     {{ self.upload_workspace() }}
     <div class="portal-safety"><span>{{ icon('lock', 12) }}Private submission</span><span>{{ icon('image', 12) }}Proof stored securely</span><span>{{ icon('shield', 12) }}Verified in your private ledger</span></div>
   </main>
-  <footer class="portal-footer">Aldervain</footer>
+  <footer class="portal-footer">Alder &amp; Vane</footer>
 {% endif %}
 {% endblock %}
 {% block content %}

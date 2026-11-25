@@ -1,11 +1,11 @@
-# Aldervain — Project Summary
+# Alder & Vane — Project Summary
 
 > **Purpose of this file:** Single source of truth for new development sessions. Read this + `graphify-out/GRAPH_REPORT.md` first; do not scan the whole repo unless something here is insufficient or contradicted. Keep this file updated after every meaningful change.
 
 ---
 
 ## 1. Project Overview
-**Aldervain** is an equity portfolio, trade ledger, and commission management platform built for traders and account managers. It handles multi-client trade tracking, profit-sharing commission calculations, client portfolios (cumulative holdings, average buy price, FIFO deductions), live market prices, screenshot trade parsing, and client portal access with Web Push alerts.
+**Alder & Vane** is an equity portfolio, trade ledger, and commission management platform built for traders and account managers. It handles multi-client trade tracking, profit-sharing commission calculations, client portfolios (cumulative holdings, average buy price, FIFO deductions), live market prices, screenshot trade parsing, and client portal access with Web Push alerts.
 
 - **Admin Interface:** Record and close trades, manage clients, reconcile trade batches, configure custom fee structures, import screenshots/trade exports, and view candlestick charts.
 - **Client Portal:** Clients can add holdings, record trades and adjust funds. The portal also shows their open positions, trade history, realised P&L, statement downloads, and commission owed/paid with tap-to-reveal privacy controls and push alerts.

@@ -12,17 +12,42 @@
   }
   window.BookUI = { notify };
 
-  const menu = document.getElementById("menu-toggle");
-  const sidebar = document.getElementById("sidebar");
-  const scrim = document.getElementById("mobile-scrim");
-  const mobileWidth = window.matchMedia("(max-width: 780px)");
-  function setMenu(open) {
-    if (!menu || !sidebar || !scrim) return;
-    sidebar.classList.toggle("open", open);
-    sidebar.inert = mobileWidth.matches && !open;
-    scrim.hidden = !open;
-    menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+  function initNavigation() {
+    const menu = document.querySelector("[data-menu-toggle]");
+    if (!menu) return;
+    const sidebar = document.getElementById(menu.getAttribute("aria-controls"));
+    const scrim = document.querySelector("[data-menu-scrim]");
+    const shell = menu.closest(".app-shell, .portal-app-shell");
+    const mobile = matchMedia(sidebar.id === "portal-sidebar" ? "(max-width: 820px)" : "(max-width: 780px)");
+
+    function setOpen(open) {
+      const wasOpen = sidebar.classList.contains("open");
+      sidebar.classList.toggle("open", open);
+      sidebar.inert = mobile.matches && !open;
+      shell.inert = open;
+      scrim.hidden = !open;
+      document.documentElement.classList.toggle("drawer-open", open);
+      menu.setAttribute("aria-expanded", String(open));
+      menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+      if (open) {
+        (sidebar.querySelector("[data-menu-close]") || sidebar.querySelector("a")).focus();
+      } else if (wasOpen && mobile.matches && !document.querySelector("dialog[open]")) {
+        menu.focus({ preventScroll: true });
+      }
+    }
+
+    menu.addEventListener("click", () => setOpen(!sidebar.classList.contains("open")));
+    scrim.addEventListener("click", () => setOpen(false));
+    sidebar.addEventListener("click", event => {
+      if (mobile.matches && event.target.closest("button, a")) setOpen(false);
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && sidebar.classList.contains("open")) setOpen(false);
+    });
+    mobile.addEventListener("change", () => setOpen(false));
+    setOpen(false);
   }
+  initNavigation();
 
   function updatePrivacyMode(isPrivacy) {
     document.body.classList.toggle("privacy-mode", Boolean(isPrivacy));
@@ -34,16 +59,6 @@
       const iconOn = adminToggle.querySelector(".privacy-icon-on");
       if (iconOff) iconOff.style.display = isPrivacy ? "none" : "inline-flex";
       if (iconOn) iconOn.style.display = isPrivacy ? "inline-flex" : "none";
-    }
-    const clientToggle = document.getElementById("client-privacy-toggle");
-    if (clientToggle) {
-      clientToggle.setAttribute("aria-pressed", isPrivacy ? "true" : "false");
-      const iconOff = clientToggle.querySelector(".privacy-icon-off");
-      const iconOn = clientToggle.querySelector(".privacy-icon-on");
-      const label = clientToggle.querySelector(".privacy-label");
-      if (iconOff) iconOff.style.display = isPrivacy ? "none" : "inline-flex";
-      if (iconOn) iconOn.style.display = isPrivacy ? "inline-flex" : "none";
-      if (label) label.textContent = isPrivacy ? "Show values" : "Hide values";
     }
     // Clear any temporary peek reveals when toggling global mode
     document.querySelectorAll(".privacy-revealed").forEach((el) => el.classList.remove("privacy-revealed"));
@@ -66,7 +81,7 @@
 
   // Global event delegation for privacy toggles and tap-to-reveal
   document.addEventListener("click", (event) => {
-    const btn = event.target.closest("#privacy-toggle, #client-privacy-toggle");
+    const btn = event.target.closest("#privacy-toggle");
     if (btn) {
       event.preventDefault();
       event.stopPropagation();
@@ -89,6 +104,7 @@
   });
 
   function initPrivacy() {
+    if (!document.getElementById("privacy-toggle")) return;
     let isPrivacy = false;
     try {
       isPrivacy = localStorage.getItem("privacyMode") === "true";
@@ -101,17 +117,6 @@
   } else {
     initPrivacy();
   }
-  menu?.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
-  scrim?.addEventListener("click", () => setMenu(false));
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && sidebar?.classList.contains("open")) {
-      setMenu(false);
-      menu.focus();
-    }
-  });
-  mobileWidth.addEventListener("change", () => setMenu(false));
-  setMenu(false);
-
   document.querySelectorAll("[data-today]").forEach((element) => {
     const date = new Date(`${element.dataset.today}T12:00:00`);
     if (!Number.isNaN(date.getTime())) {
@@ -263,10 +268,15 @@
     });
   });
 
+  const rows = [...document.querySelectorAll(".rowchk")];
+  const tradeRows = new Map(rows.map(input => [input.value, input]));
+  const cardChecks = document.querySelectorAll("[data-trade-select]");
   function updateSelection() {
-    const rows = [...document.querySelectorAll(".rowchk")];
     const count = rows.filter((input) => input.checked).length;
     rows.forEach((input) => input.closest("tr").classList.toggle("selected", input.checked));
+    cardChecks.forEach(input => {
+      input.checked = tradeRows.get(input.dataset.tradeSelect).checked;
+    });
     const button = document.getElementById("bulk-delete");
     const label = document.getElementById("selected-count");
     if (button) button.disabled = count === 0;
@@ -288,7 +298,11 @@
       updateSelection();
     });
   });
-  document.querySelectorAll(".rowchk").forEach((input) => input.addEventListener("change", updateSelection));
+  cardChecks.forEach(input => input.addEventListener("change", () => {
+    tradeRows.get(input.dataset.tradeSelect).checked = input.checked;
+    updateSelection();
+  }));
+  rows.forEach(input => input.addEventListener("change", updateSelection));
   updateSelection();
 
   document.querySelectorAll("[data-table-search]").forEach((input) => {

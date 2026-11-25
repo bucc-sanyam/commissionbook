@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "backend/security.py": {
-    "mtime": 1795547060.0532122,
-    "ast_hash": "ef37f6ccbe5c78e1102e581152961de3",
+    "mtime": 1795577230.1330168,
+    "ast_hash": "1e855e72af92de2b563aafb1361d8d56",
     "semantic_hash": ""
   },
   "backend/storage.py": {
@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795576911.5792563,
-    "ast_hash": "ac6bed5d43edb236940f051a8d1a9336",
+    "mtime": 1795577230.1316793,
+    "ast_hash": "acbf002fe5ec288aa57c0478e24133e7",
     "semantic_hash": ""
   },
   "static/app.js": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/market-hours-sync.yml": {
-    "mtime": 1795547060.0537212,
-    "ast_hash": "e289838d16013336adb569237e93f5d0",
+    "mtime": 1795577230.133593,
+    "ast_hash": "d0219f591550a4a73c26d2e5da628d08",
     "semantic_hash": ""
   },
   "README.md": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795547499.6328099,
-    "ast_hash": "38386e99bbeca62c8d6bf94d10bdcb12",
+    "mtime": 1795577230.1323965,
+    "ast_hash": "faa43f263e4e3f3ee5c29366a965cf80",
     "semantic_hash": ""
   },
   "templates/clients.html": {
@@ -310,13 +310,13 @@
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795576911.5799997,
-    "ast_hash": "ce179419cc02e34f8dc0d14a7021ebc0",
+    "mtime": 1795577230.1339984,
+    "ast_hash": "c9484b0e551f9bd49a69caa477eea6e1",
     "semantic_hash": ""
   },
   ".githooks/post-commit": {
-    "mtime": 1795547060.0536408,
-    "ast_hash": "8473680f35978b3a9d9393da880869e0",
+    "mtime": 1795577230.1334581,
+    "ast_hash": "4577acf633ce1bf56c099a705f9bc70a",
     "semantic_hash": ""
   },
   "supabase/migrations/011_stock_price_targets.sql": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "REDESIGN_ROADMAP.md": {
-    "mtime": 1795576943.4467926,
-    "ast_hash": "8501701fd6b195a1840020388e195ede",
+    "mtime": 1795577105.0602214,
+    "ast_hash": "ed92d8021771e6d2da218eddc38b5265",
     "semantic_hash": ""
   },
   "static/aldervain-apple-180.png": {

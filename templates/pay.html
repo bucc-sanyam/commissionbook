@@ -3,7 +3,7 @@
 {% block title %}Payment for {{ client.name }}{% endblock %}
 {% block body_class %}portal-body{% endblock %}
 {% block shell %}
-<header class="portal-header"><div class="brand" aria-label="Aldervain">{{ brand() }}</div><span class="portal-header-label">{{ icon('wallet', 12) }}Client payment portal</span></header>
+<header class="portal-header"><div class="brand" aria-label="Alder &amp; Vane">{{ brand() }}</div><span class="portal-header-label">{{ icon('wallet', 12) }}Client payment portal</span></header>
 <main class="portal-main payment-page" id="main">
   <div class="payment-statement">
     {% if outstanding <= 0 %}
@@ -74,5 +74,5 @@
   </div>
   {% include "_flashes.html" %}
 </main>
-<footer class="portal-footer">Aldervain</footer>
+<footer class="portal-footer">Alder &amp; Vane</footer>
 {% endblock %}

@@ -156,7 +156,7 @@
       <section class="card">
         <div class="card-header"><div><h2>Client holdings</h2><p>Shares currently held by this client.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm" type="button" data-dialog="share-dialog">{{ icon('plus', 14) }}Add holding</button></div></div>
         {% if shares %}
-        <div class="desktop-detail-holdings-table table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
+        <div class="desktop-overview-holdings table-wrap"><table class="data-table"><thead><tr><th>Stock</th><th class="r">Quantity</th><th class="r">Buy price</th><th class="r">CMP</th><th class="r">Current value</th><th></th></tr></thead><tbody>
         {% for sh in shares %}
           <tr class="holding-main-row {% if sh.lots and sh.lots|length > 1 %}has-sublots{% endif %}">
             <td>
@@ -371,7 +371,7 @@
         </div>
 
         <!-- Username line with Edit/Create button -->
-        <div class="details-line" style="align-items: center;">
+        <div class="details-line credentials-line">
           <span>Portal Username</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             {% if client.username %}
@@ -393,7 +393,7 @@
           <span>Login Identifier (ID / Phone)</span>
           <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
         </div>
-        <div class="details-line" style="align-items: center;">
+        <div class="details-line credentials-line">
           <span>Current Password</span>
           {% if client.password_plain %}
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -423,14 +423,14 @@
         <!-- Reset Password Form with Strong Password Generator -->
         <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
           {{ csrf() }}
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px;">
             <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
             <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
               {{ icon('repeat', 11) }} Generate Strong
             </button>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div class="form-grid" style="margin-bottom: 12px;">
             <label class="field" style="margin: 0;">
               <span style="font-size: 11px;">New Password</span>
               <input type="text" id="detail-new-password" name="client_password" required minlength="8" placeholder="Min 8 chars" autocomplete="off" style="font-family:monospace; font-weight:600;">
@@ -504,6 +504,7 @@
               <span style="color:#64786a;">Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
             </div>
           </div>
+          <div class="table-wrap">
           <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
             <thead>
               <tr style="background: var(--bg); color: var(--muted); font-size:11px; text-transform:uppercase;">
@@ -554,6 +555,7 @@
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
 
         <!-- Section B: Per-holding Exit Price Breakup -->
@@ -712,7 +714,7 @@
         <!-- Section C: Target Potential Gains (Per Stock) -->
         {% if stock_targets %}
         <div style="padding: 14px 18px 16px; border-top: 1px solid #edf2e5;">
-          <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               {{ icon('trend', 13) }} Section C — Target Potential Gains
               <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">Technical Analysis Targets</span>
@@ -728,7 +730,7 @@
             {% set tg_list = stock_targets.get(stock_key, []) %}
             {% if tg_list and sh.quantity and sh.buy_price %}
             <div style="background: var(--card); border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <strong style="font-size: 14px; color: var(--ink);">{{ sh.stock }}</strong>
                   <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
@@ -1149,7 +1151,7 @@
         </div>
         <p class="muted">Live technical candlestick chart &amp; price targets for {{ client.name }}'s portfolio shares.</p>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
         <a id="admin-chart-tv-direct-link" href="https://in.tradingview.com/chart/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}" 
            target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm"
            title="Open full technical chart on TradingView in a new tab">
@@ -1177,7 +1179,7 @@
                   data-qty="{{ sh.quantity|int }}"
                   data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
                   data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
-                  onclick="selectAdminClientChartStock(this, '{{ sh.stock }}')">
+                  onclick="selectAdminClientChartStock(this, this.dataset.stock)">
             {{ sh.stock }} ({{ sh.quantity|int }})
           </button>
           {% endfor %}
@@ -1291,7 +1293,7 @@
       </div>
 
       <!-- 4. Interactive Candlestick Chart Frame -->
-      <div style="height: 520px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+      <div style="height: clamp(250px, 55svh, 520px); width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
         <iframe id="admin-client-chart-iframe"
           src="https://s.tradingview.com/widgetembed/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
           style="width: 100%; height: 100%; border: none;" 
@@ -1475,21 +1477,6 @@ function selectAdminClientChartStock(btn, stock) {
     iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=' + encodeURIComponent(tvSymbol) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
   }
 }
-  const symEl = document.getElementById('admin-chart-active-symbol');
-  if (symEl) symEl.textContent = stock;
-
-  document.querySelectorAll('.admin-stock-targets-row').forEach(row => {
-    row.style.display = 'none';
-  });
-  const activeRow = document.getElementById('admin-targets-row-' + stock);
-  if (activeRow) activeRow.style.display = 'flex';
-
-  const iframe = document.getElementById('admin-client-chart-iframe');
-  if (iframe) {
-    iframe.src = 'https://s.tradingview.com/widgetembed/?symbol=NSE%3A' + encodeURIComponent(stock) + '&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f4f8f1&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en';
-  }
-}
-
 // ===== Client Page Tab Switching =====
 function switchClientTab(btn, tabId) {
   // Deactivate all sidebar buttons and panels
@@ -1507,13 +1494,12 @@ function switchClientTab(btn, tabId) {
   } catch(e) {}
 }
 
-// Restore tab from URL hash on page load
-(function() {
-  const hash = window.location.hash.replace('#', '');
-  if (hash) {
-    const btn = document.querySelector('.client-sidebar-btn[data-tab="' + hash + '"], .client-tab-btn[data-tab="' + hash + '"]');
-    if (btn) switchClientTab(btn, hash);
-  }
-})();
+function restoreTabFromHash() {
+  const tabId = location.hash.slice(1);
+  const btn = Array.from(document.querySelectorAll('.client-sidebar-btn')).find(button => button.dataset.tab === tabId);
+  if (btn) switchClientTab(btn, tabId);
+}
+window.addEventListener('hashchange', restoreTabFromHash);
+restoreTabFromHash();
 </script>
 {% endblock %}
