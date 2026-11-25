@@ -3326,6 +3326,46 @@ def create_app(config=None):
             flash("Could not save target.", "error")
         return redirect(url_for("charts_view", stock=stock))
 
+    @app.route("/charts/stocks/delete", methods=["POST"])
+    @login_required
+    def chart_delete_stock():
+        db = get_db()
+        stock = (request.form.get("stock") or "").strip().upper()
+        if not stock:
+            flash("Stock symbol is required.", "error")
+            return redirect(url_for("charts_view"))
+
+        _, variants = get_matching_stock_variants(db, stock, include_known_tickers=False)
+        in_sql, in_params = _stock_in_clause(variants)
+
+        trade_rows = db.execute(f"SELECT id FROM trades WHERE {in_sql}", in_params).fetchall()
+        for tr in trade_rows:
+            db.execute("DELETE FROM funds WHERE notes LIKE ?", (f"%[Trade #{tr['id']}]%",))
+
+        db.execute(f"DELETE FROM trades WHERE {in_sql}", in_params)
+        db.execute(f"DELETE FROM client_shares WHERE {in_sql}", in_params)
+        try:
+            db.execute(f"DELETE FROM stock_prices WHERE {in_sql}", in_params)
+        except Exception:
+            pass
+        try:
+            db.execute(f"DELETE FROM stock_price_targets WHERE {in_sql}", in_params)
+        except Exception:
+            pass
+        try:
+            alias_in_sql, alias_params = _stock_in_clause(variants, column="alias")
+            canon_in_sql, canon_params = _stock_in_clause(variants, column="canonical_name")
+            db.execute(f"DELETE FROM stock_aliases WHERE {alias_in_sql} OR {canon_in_sql}", (*alias_params, *canon_params))
+        except Exception:
+            pass
+
+        sync_client_holdings_from_trades(None, db)
+        invalidate_stock_caches()
+        invalidate_prices_cache()
+        db.commit()
+        flash(f"Deleted share '{stock}' from charts and ledger.", "success")
+        return redirect(url_for("charts_view"))
+
     @app.route("/charts/targets/<int:tid>/delete", methods=["POST"])
     @login_required
     def chart_delete_target(tid):

@@ -33,37 +33,48 @@
 
       <div class="stock-list-items" id="stock-list-container" >
         {% for s in stocks %}
-        <a href="{{ url_for('charts_view', stock=s.symbol) }}" 
-           class="stock-list-item {{ 'active' if s.symbol == selected_stock else '' }}"
-           data-stock="{{ s.symbol }}"
-           data-ticker="{{ s.ticker }}"
-           style="display: block; padding: 12px 16px; border-bottom: 1px solid #f2f5ee; text-decoration: none; color: inherit; transition: background 0.15s;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <strong style="font-size: 13px; color: var(--ink);">{{ s.symbol }}</strong>
-              <span class="exchange-badge" style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: #edf2e8; color: #506642; font-weight: 600;">{{ s.exchange }}</span>
-            </div>
-            {% if s.current_price %}
-              <strong class="tabular" style="font-size: 12px;">{{ s.current_price|money }}</strong>
-            {% else %}
-              <span class="muted" style="font-size: 11px;">—</span>
-            {% endif %}
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-            <span class="muted">
-              {% if s.total_quantity > 0 %}
-                {{ s.total_quantity }} sh &bull; {{ s.clients_count }} client{{ 's' if s.clients_count != 1 else '' }}
+        <div class="stock-list-item {{ 'active' if s.symbol == selected_stock else '' }}"
+             data-stock="{{ s.symbol }}"
+             data-ticker="{{ s.ticker }}"
+             style="display: flex; align-items: center; gap: 6px; padding: 10px 10px 10px 16px; border-bottom: 1px solid #f2f5ee; transition: background 0.15s;">
+          <a href="{{ url_for('charts_view', stock=s.symbol) }}"
+             style="flex: 1; min-width: 0; text-decoration: none; color: inherit; display: block;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                <strong style="font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.symbol }}</strong>
+                <span class="exchange-badge" style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: #edf2e8; color: #506642; font-weight: 600; flex-shrink: 0;">{{ s.exchange }}</span>
+              </div>
+              {% if s.current_price %}
+                <strong class="tabular" style="font-size: 12px; flex-shrink: 0;">{{ s.current_price|money }}</strong>
               {% else %}
-                {{ s.trades_count }} trade{{ 's' if s.trades_count != 1 else '' }} in ledger
+                <span class="muted" style="font-size: 11px;">—</span>
               {% endif %}
-            </span>
-            {% if s.change is defined and s.change != 0 %}
-              <span class="tabular {{ 'pos' if s.change > 0 else 'neg' }}" style="font-size: 11px; font-weight: 600;">
-                {{ '+' if s.change > 0 else '' }}{{ (s.change_pct|round(2)) if s.change_pct is defined else 0 }}%
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+              <span class="muted">
+                {% if s.total_quantity > 0 %}
+                  {{ s.total_quantity }} sh &bull; {{ s.clients_count }} client{{ 's' if s.clients_count != 1 else '' }}
+                {% else %}
+                  {{ s.trades_count }} trade{{ 's' if s.trades_count != 1 else '' }} in ledger
+                {% endif %}
               </span>
-            {% endif %}
-          </div>
-        </a>
+              {% if s.change is defined and s.change != 0 %}
+                <span class="tabular {{ 'pos' if s.change > 0 else 'neg' }}" style="font-size: 11px; font-weight: 600;">
+                  {{ '+' if s.change > 0 else '' }}{{ (s.change_pct|round(2)) if s.change_pct is defined else 0 }}%
+                </span>
+              {% endif %}
+            </div>
+          </a>
+          <form method="post" action="{{ url_for('chart_delete_stock') }}"
+                data-confirm="Delete {{ s.symbol }} from Charts? This will remove all trades, holdings, cached prices, and targets for {{ s.symbol }}."
+                style="margin: 0; flex-shrink: 0;">
+            {{ csrf() }}
+            <input type="hidden" name="stock" value="{{ s.symbol }}">
+            <button type="submit" class="icon-btn icon-btn-danger" aria-label="Delete {{ s.symbol }}" title="Delete {{ s.symbol }}" style="width: 26px; height: 26px;">
+              {{ icon('trash', 13) }}
+            </button>
+          </form>
+        </div>
         {% endfor %}
       </div>
     </aside>
@@ -112,6 +123,15 @@
             <a href="{{ url_for('alerts_list', stock=selected_info.symbol) }}" class="btn btn-secondary btn-sm">
               {{ icon('send', 14) }} Advisory
             </a>
+            <form method="post" action="{{ url_for('chart_delete_stock') }}"
+                  data-confirm="Delete {{ selected_info.symbol }} from Charts? This will remove all trades, holdings, cached prices, and targets for {{ selected_info.symbol }}."
+                  style="margin: 0;">
+              {{ csrf() }}
+              <input type="hidden" name="stock" value="{{ selected_info.symbol }}">
+              <button type="submit" class="btn btn-ghost btn-sm" style="color: #b91c1c; border-color: #fecaca;">
+                {{ icon('trash', 14) }} Delete share
+              </button>
+            </form>
           </div>
         </div>
 
@@ -507,7 +527,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const s = (item.dataset.stock || "").toLowerCase();
         const t = (item.dataset.ticker || "").toLowerCase();
         if (!q || s.includes(q) || t.includes(q)) {
-          item.style.display = "block";
+          item.style.display = "flex";
         } else {
           item.style.display = "none";
         }
