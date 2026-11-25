@@ -7282,6 +7282,7 @@ html.drawer-open body {
   position: relative;
   width: 100%;
   height: clamp(250px, 55svh, 520px);
+  touch-action: none;
 }
 
 #tv-chart-wrapper {

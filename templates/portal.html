@@ -774,16 +774,16 @@
           {% set tg_list = stock_targets.get(stock_key, []) %}
           <div class="stock-targets-table-block" id="targets-table-block-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: block;{% endif %}">
             {% if tg_list %}
-            <div style="background: var(--card); border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
-              <div style="background: var(--mint); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">🎯</span>
-                  <strong style="font-size: 13px; color: #14532d; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Advisory Price Targets &amp; Projected Returns for {{ sh.stock }}
-                  </strong>
+            <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;">
+              <div style="padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <span class="eyebrow" style="display: block; margin-bottom: 2px;">ADVISORY OUTLOOK</span>
+                  <h3 style="margin: 0; font-family: var(--display); font-size: 19px; font-weight: 400; color: var(--ink); letter-spacing: -0.01em;">
+                    Price targets for {{ sh.stock }}
+                  </h3>
                 </div>
-                <span class="badge" style="background: #166534; color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 9px;">
-                  {{ tg_list|length }} Target Level{{ 's' if tg_list|length != 1 }}
+                <span class="badge" style="background: var(--bg); color: var(--muted); border: 1px solid var(--line); font-size: 11px; font-weight: 600; padding: 4px 10px;">
+                  {{ tg_list|length }} target{{ 's' if tg_list|length != 1 }}
                 </span>
               </div>
               <div class="portal-desktop-table-wrap table-wrap" style="margin: 0;">
@@ -1807,7 +1807,7 @@
         mouseWheel: true,
         pressedMouseMove: true,
         horzTouchDrag: true,
-        vertTouchDrag: false,
+        vertTouchDrag: true,
       },
       rightPriceScale: {
         borderColor: "#d8e2d4",
@@ -1823,8 +1823,8 @@
         borderColor: "#d8e2d4",
         timeVisible: true,
         secondsVisible: false,
-        fixLeftEdge: true,
-        fixRightEdge: true
+        fixLeftEdge: false,
+        fixRightEdge: false
       },
       localization: {
         priceFormatter: function(p) {
