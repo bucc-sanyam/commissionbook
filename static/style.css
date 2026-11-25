@@ -7247,3 +7247,54 @@ body {
 .auth-card > .brand-story {
   margin-top: 1.5rem;
 }
+
+.main-content .advisory-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-block: 20px;
+}
+
+.advisory-summary h2,
+.advisory-summary p {
+  margin: 0;
+}
+
+.advisory-summary p {
+  color: var(--muted);
+}
+
+#chart-card-container {
+  margin-bottom: 24px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.portal-intro h1,
+.payment-statement h1 {
+  font: 400 clamp(28px, 4vw, 42px)/1.15 var(--display);
+  color: var(--ink);
+}
+
+.portal-main .upload-card,
+.portal-main .payment-statement {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.portal-main.payment-page {
+  max-width: 600px;
+  margin-inline: auto;
+  padding-block: 40px;
+}
+
+.payment-statement {
+  padding-block: 24px;
+  text-align: center;
+}

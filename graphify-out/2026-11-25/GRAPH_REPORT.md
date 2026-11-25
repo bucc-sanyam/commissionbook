@@ -1,16 +1,16 @@
 # Graph Report - Commission  (2026-11-25)
 
 ## Corpus Check
-- 36 files · ~88,302 words
+- 36 files · ~91,154 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1377 nodes · 3411 edges · 78 communities (36 shown, 42 thin omitted)
+- 1382 nodes · 3416 edges · 72 communities (40 shown, 32 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.55)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9b8194c5`
+- Built from commit: `a163897b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,7 +19,6 @@
 - f
 - pn
 - se
-- zi
 - web.py
 - lightweight-charts.js
 - trade_parser.py
@@ -51,15 +50,14 @@
 - .St
 - .ob
 - et
-- oi
 - c
 - .Oc
 - N
 - .Jp
 - .Hs
 - .p
-- yn
 - S
+- z
 - .Ii
 - manifest.json
 - vercel.json
@@ -78,15 +76,10 @@
 - graphify.md
 - __init__.py
 - .br
-- .Bn
 - .l
-- .zn
+- qt
 - di
 - .Bn
-- kn
-- dt
-- jt
-- gn
 - Alder & Vane redesign brief
 
 ## God Nodes (most connected - your core abstractions)
@@ -116,19 +109,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (78 total, 42 thin omitted)
-
-### Community 0 - "sn"
-Cohesion: 0.05
-Nodes (7): gi(), he(), mi, mn, sn(), Vt(), wn()
+## Communities (72 total, 32 thin omitted)
 
 ### Community 1 - "f"
-Cohesion: 0.06
-Nodes (8): en(), hn(), ln(), rn(), si, ti, tn(), vn
+Cohesion: 0.07
+Nodes (8): ci(), en(), hn(), ln(), nn(), rn(), tn(), vn
 
 ### Community 3 - "se"
-Cohesion: 0.07
-Nodes (4): ge(), se(), xe, zi
+Cohesion: 0.06
+Nodes (23): ge(), O(), se(), xe, addRow(), authorization(), checkRow(), commitSubmission() (+15 more)
 
 ### Community 5 - "web.py"
 Cohesion: 0.08
@@ -136,15 +125,19 @@ Nodes (41): configure_app(), credential_version(), csrf_token(), local_setup_all
 
 ### Community 6 - "lightweight-charts.js"
 Cohesion: 0.06
-Nodes (12): ae(), bt(), di(), ei, Fn, ii, le(), mt() (+4 more)
+Nodes (14): ae(), bt(), di(), E, ee(), ei, H, jt (+6 more)
 
 ### Community 7 - "trade_parser.py"
 Cohesion: 0.11
 Nodes (43): _anchors(), _bad_status(), _card_blocks(), _date_info(), detect_platform(), _execution_text(), extract_orders(), _extract_records() (+35 more)
 
+### Community 8 - "ht"
+Cohesion: 0.05
+Nodes (5): A(), ht, kn, oi, st
+
 ### Community 9 - "ps"
-Cohesion: 0.11
-Nodes (13): drawEarnings(), monthLabel(), svgElement(), bs(), gs(), hs(), ms(), ps (+5 more)
+Cohesion: 0.13
+Nodes (12): drawEarnings(), monthLabel(), svgElement(), bs(), gs(), hs(), ms(), ps (+4 more)
 
 ### Community 16 - "prices.py"
 Cohesion: 0.10
@@ -155,8 +148,12 @@ Cohesion: 0.16
 Nodes (13): close_db(), complete_request(), Database, get_db(), init_local(), install_database(), _params(), Result (+5 more)
 
 ### Community 18 - "u"
-Cohesion: 0.07
-Nodes (9): dt, G(), ki, ni, tt, u(), vs(), y() (+1 more)
+Cohesion: 0.10
+Nodes (7): ni, tt, u(), X(), y(), z(), _()
+
+### Community 19 - "bn"
+Cohesion: 0.08
+Nodes (5): bn, gn, ji, qi(), T()
 
 ### Community 20 - "SupabaseStorage"
 Cohesion: 0.22
@@ -182,29 +179,33 @@ Nodes (6): bi(), fi(), pi(), ui(), vi(), wi()
 Cohesion: 0.14
 Nodes (3): j, qt, xi
 
-### Community 34 - ".St"
-Cohesion: 0.16
-Nodes (19): addRow(), authorization(), checkRow(), commitSubmission(), csrfToken(), handleFiles(), loadImage(), makeThumbnail() (+11 more)
+### Community 33 - "on"
+Cohesion: 0.05
+Nodes (5): ks, q(), ri, zi, Zs()
 
-### Community 37 - "oi"
-Cohesion: 0.24
-Nodes (3): cs(), fs(), Ts()
+### Community 39 - ".Oc"
+Cohesion: 0.18
+Nodes (5): ai(), c(), Hi(), li(), Pe()
 
 ### Community 41 - ".Jp"
 Cohesion: 0.18
 Nodes (3): b(), k, S()
 
 ### Community 42 - ".Hs"
-Cohesion: 0.12
-Nodes (4): be(), ft(), gt, It
-
-### Community 44 - "yn"
-Cohesion: 0.18
-Nodes (3): lt(), oe(), we
+Cohesion: 0.15
+Nodes (3): be(), It, yt
 
 ### Community 45 - "S"
-Cohesion: 0.13
-Nodes (4): as(), on, os(), wt()
+Cohesion: 0.15
+Nodes (5): as(), ls(), on, ut, wt()
+
+### Community 46 - "z"
+Cohesion: 0.18
+Nodes (4): d(), lt(), v(), ys()
+
+### Community 47 - ".Ii"
+Cohesion: 0.19
+Nodes (3): gi(), he(), mi
 
 ### Community 48 - "manifest.json"
 Cohesion: 0.25
@@ -214,13 +215,13 @@ Nodes (7): background_color, display, icons, name, short_name, start_url, theme_
 Cohesion: 0.29
 Nodes (6): bom1, builds, crons, regions, routes, version
 
-### Community 51 - "ci"
-Cohesion: 0.12
-Nodes (4): ai(), Hi(), li(), oi
+### Community 52 - "gn"
+Cohesion: 0.11
+Nodes (6): dt, G(), ki, L, vs(), yn
 
 ### Community 54 - "ct"
 Cohesion: 0.17
-Nodes (11): 1. Project Overview, 2. Technology Stack, 3. Directory Structure & Key Files, 4. Financial & Business Logic, 5. Security & Authentication, 6. Development & Deployment Guidelines, Alder & Vane — Project Summary, Commission Rules (+3 more)
+Nodes (11): 1. Project Overview, 2. Technology Stack, 3. Directory Structure & Key Files, 4. Financial & Business Logic, 5. Security & Authentication, 6. Development & Deployment Guidelines, Aldervain — Project Summary, Commission Rules (+3 more)
 
 ### Community 57 - "clean_phone_number"
 Cohesion: 0.40
@@ -228,39 +229,43 @@ Nodes (5): clean_phone_number(), cleanup_existing_client_phones(), get_or_create
 
 ### Community 58 - "Commission Book"
 Cohesion: 0.40
-Nodes (4): Alder & Vane, Features, How screenshot reading works (no AI API calls), Run
+Nodes (4): Aldervain, Features, How screenshot reading works (no AI API calls), Run
 
 ### Community 60 - "format_ist"
 Cohesion: 0.50
 Nodes (4): format_ist(), parse_utc_datetime(), Parse any datetime, string, or timestamp into a timezone-aware UTC datetime., Format UTC timestamp to IST in various formats:     - chip: '09:20 AM' if today,
 
-### Community 66 - ".Bn"
+### Community 65 - ".br"
+Cohesion: 0.14
+Nodes (3): Cn, I, xs()
+
+### Community 67 - ".l"
 Cohesion: 0.22
-Nodes (5): E, ee(), H, re(), ue()
+Nodes (3): cs(), fs(), Ts()
 
 ### Community 77 - "Alder & Vane redesign brief"
-Cohesion: 0.33
-Nodes (5): Alder & Vane redesign brief, Design decisions, Design references, Implementation order, Working efficiently
+Cohesion: 0.18
+Nodes (10): Aldervain redesign roadmap, Design decisions, Design references, Hostname cutover for an authorized release, Implementation reviewed, Next implementation pass, Original design specification, Prompt for the implementation model (+2 more)
 
 ## Knowledge Gaps
-- **30 isolated node(s):** `name`, `short_name`, `start_url`, `display`, `background_color` (+25 more)
+- **34 isolated node(s):** `name`, `short_name`, `start_url`, `display`, `background_color` (+29 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `f()` connect `.ob` to `sn`, `f`, `pn`, `se`, `lightweight-charts.js`, `ps`, `Ns`, `ds`, `ki`, `an`, `u`, `yi`, `ks`, `j`, `.qt`, `et`, `oi`, `.Jp`, `yn`, `.Fc`, `.l`, `.zn`, `.Bn`?**
+- **Why does `f()` connect `ks` to `sn`, `f`, `pn`, `zi`, `lightweight-charts.js`, `ps`, `Ns`, `ds`, `u`, `j`, `.Gn`, `.qt`, `on`, `.St`, `.ob`, `.Jp`, `yn`, `z`, `.Ii`, `.od`, `.l`, `qt`, `.Bn`?**
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `sn()` connect `sn` to `f`, `oi`, `lightweight-charts.js`, `.Bn`, `nt`, `.Gn`?**
+- **Why does `sn()` connect `sn` to `.qt`, `f`, `.St`, `pn`, `et`, `oi`, `c`, `lightweight-charts.js`, `zi`, `yn`, `.Ii`, `.Gn`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `vn` connect `f` to `.l`, `et`, `.zn`, `lightweight-charts.js`, `z`, `bn`, `.Fc`?**
+- **Why does `vn` connect `f` to `on`, `pn`, `zi`, `lightweight-charts.js`, `.Bn`, `z`, `bn`, `ks`?**
   _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **What connects `name`, `short_name`, `start_url` to the rest of the system?**
-  _30 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `sn` be split into smaller, more focused modules?**
-  _Cohesion score 0.05171907140758154 - nodes in this community are weakly interconnected._
+  _34 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `f` be split into smaller, more focused modules?**
-  _Cohesion score 0.06327160493827161 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06664388243335612 - nodes in this community are weakly interconnected._
+- **Should `pn` be split into smaller, more focused modules?**
+  _Cohesion score 0.1471861471861472 - nodes in this community are weakly interconnected._
 - **Should `se` be split into smaller, more focused modules?**
-  _Cohesion score 0.06612244897959184 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05805515239477504 - nodes in this community are weakly interconnected._

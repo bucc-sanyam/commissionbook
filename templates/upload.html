@@ -7,19 +7,19 @@
 {% if admin %}
   {{ super() }}
 {% else %}
-  <header class="portal-header"><div class="brand" aria-label="Alder & Vane">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
+  <header class="portal-header"><div class="brand" aria-label="Aldervain">{{ brand() }}</div><span class="portal-header-label">{{ icon('shield', 12) }}Client submission portal</span></header>
   <main class="portal-main" id="main">
-    <div class="portal-intro"><p class="eyebrow">{{ business_name if business_name else 'A LITTLE LESS PAPERWORK' }}</p><h1>You make the trades.<br><em>We'll take care of the details.</em></h1><p>Upload your trade screenshots, check the numbers, and send them in. No account needed. No complicated spreadsheets.</p></div>
+    <div class="portal-intro">{% if business_name %}<p>{{ business_name }}</p>{% endif %}<h1>Submit trades</h1><p>Upload broker screenshots, review the extracted trades, and submit.</p></div>
     <div class="portal-steps" aria-label="Submission steps"><span class="portal-step active" id="step-nav-1" onclick="window.wizardGoto(1)" role="button" tabindex="0"><b>1</b>Your details</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-2" onclick="window.wizardGoto(2)" role="button" tabindex="0"><b>2</b>Screenshots</span><span class="portal-step-line"></span><span class="portal-step" id="step-nav-3" onclick="window.wizardGoto(3)" role="button" tabindex="0"><b>3</b>Trades</span></div>
     {% include "_flashes.html" %}
     {{ self.upload_workspace() }}
     <div class="portal-safety"><span>{{ icon('lock', 12) }}Private submission</span><span>{{ icon('image', 12) }}Proof stored securely</span><span>{{ icon('shield', 12) }}Verified in your private ledger</span></div>
   </main>
-  <footer class="portal-footer">Alder & Vane</footer>
+  <footer class="portal-footer">Aldervain</footer>
 {% endif %}
 {% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">TRADE SUBMISSION</p><h1>Trade proof &amp; ledger entry<span class="accent-period">.</span></h1><p>Attach broker screenshots for proof, then enter trade details into your clean ledger.</p></div><a class="btn" href="{{ url_for('settings_page') }}#client-portal">{{ icon('link', 15) }}Client upload link</a></div>
+<div class="page-heading"><div><h1>Screenshot scanner</h1><p>Attach broker screenshots and review the trade details before recording them.</p></div><a class="btn" href="{{ url_for('settings_page') }}#client-portal">{{ icon('link', 15) }}Client upload link</a></div>
 {{ self.upload_workspace() }}
 {% endblock %}
 {% block upload_workspace %}
@@ -72,7 +72,7 @@
   <button class="btn btn-primary" id="retry-submit" type="button" hidden>{{ icon('repeat', 15) }}Retry save safely</button>
 </form>
 <section class="card submission-success" id="submission-success" hidden tabindex="-1">
-  <div class="success-mark">{{ icon('check', 37) }}</div><p class="eyebrow">ONE LESS THING ON YOUR LIST</p><h2>Your trades are in good hands.</h2><p id="success-message"></p><div class="success-receipt">{{ icon('check-circle', 14) }}<span id="success-reference"></span></div><div class="actions" style="justify-content:center"><button class="btn btn-primary" type="button" id="send-another">{{ icon('plus', 15) }}Send another trade</button>{% if admin %}<a class="btn" href="{{ url_for('trades_list') }}">Open ledger{{ icon('arrow-right', 15) }}</a>{% endif %}</div>
+  <div class="success-mark">{{ icon('check', 37) }}</div><h2>Trades submitted</h2><p id="success-message"></p><div class="success-receipt">{{ icon('check-circle', 14) }}<span id="success-reference"></span></div><div class="actions" style="justify-content:center"><button class="btn btn-primary" type="button" id="send-another">{{ icon('plus', 15) }}Send another trade</button>{% if admin %}<a class="btn" href="{{ url_for('trades_list') }}">Open ledger{{ icon('arrow-right', 15) }}</a>{% endif %}</div>
 </section>
 {% endblock %}
 {% block scripts %}

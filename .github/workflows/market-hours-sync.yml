@@ -12,8 +12,8 @@ jobs:
     steps:
       - name: Ping Market Price Updater
         env:
-          # Set the repository variable to https://ordervain.vercel.app once the alias is active.
-          UPDATER_ORIGIN: ${{ vars.PUBLIC_BASE_URL || 'https://ordervain.vercel.app' }}
+          # Set the repository variable to https://aldervain.vercel.app once the alias is active.
+          UPDATER_ORIGIN: ${{ vars.PUBLIC_BASE_URL || 'https://aldervain.vercel.app' }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           curl --fail --silent --show-error --output /dev/null \

@@ -1976,7 +1976,7 @@ def create_app(config=None):
             "is_client": bool(session.get("client_id")),
             "client_name": session.get("client_name"),
             "client_id": session.get("client_id"),
-            "today": date.today().isoformat(), "app_name": "Alder & Vane",
+            "today": date.today().isoformat(), "app_name": "Aldervain",
             "business_name": "" if error else setting("business_name", ""),
             "currency": "\u20b9" if error else setting("currency", "\u20b9"),
             "backend_mode": app.config["BACKEND_MODE"],
@@ -2978,7 +2978,7 @@ def create_app(config=None):
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Market Prices Updated · Alder & Vane</title>
+  <title>Market Prices Updated · Aldervain</title>
   <style>
     :root {{ --bg: #0b0f19; --card: #151c2e; --border: #232d48; --text: #f0f4fc; --sub: #94a3b8; --green: #10b981; --accent: #3b82f6; }}
     * {{ box-sizing: border-box; }}
@@ -3366,13 +3366,15 @@ def create_app(config=None):
 
         _, eff_rate = effective_rule(client)
         show_advisory_agreement = float(eff_rate) < 35.0
+        payment_path = url_for("client_pay", token=payment_signer().dumps(cid))
+        public_origin = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
 
         return render_template(
             "client_detail.html", client=client, trades=trades, s=summary, payments=payments,
             funds=funds, total_funds=total_funds, shares=shares, advisories=advisories,
             uploads=upload_records(cid), rule=rule_label(client["commission_type"], client["commission_rate"]),
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
-            payment_token=payment_signer().dumps(cid),
+            payment_url=public_origin + payment_path,
             pending_reconciliations=pending_reconciliations,
             stock_targets=all_targets,
             show_advisory_agreement=show_advisory_agreement,
@@ -3930,7 +3932,7 @@ def create_app(config=None):
         ).fetchone()["total"]
         base = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
         go_url = base + url_for("short_upload_link")
-        short_url = setting("upload_short_url") or go_url
+        short_url = go_url if app.config["PUBLIC_BASE_URL"] else setting("upload_short_url") or go_url
         return render_template(
             "settings.html", s={key: setting(key, "") for key in keys}, upload_url=portal_url(),
             short_url=short_url, legacy_commission_count=legacy_count,
@@ -3975,7 +3977,7 @@ def create_app(config=None):
         owner_hash()
         return render_template(
             "upload.html", admin=False, need_code=bool(setting("upload_code")), portal_token=token,
-            og_title="Alder & Vane – Send Your Trades",
+            og_title="Aldervain – Send Your Trades",
             og_description="Submit your trades in seconds. Just fill in the share name and amount — no account needed.",
         )
 
@@ -4380,6 +4382,8 @@ def create_app(config=None):
 
         _, eff_rate = effective_rule(client)
         show_advisory_agreement = float(eff_rate) < 35.0
+        payment_path = url_for("client_pay", token=payment_signer().dumps(cid))
+        public_origin = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
 
         return render_template(
             "portal.html",
@@ -4949,8 +4953,8 @@ def create_app(config=None):
         payload = json.dumps({
             "title": title,
             "body": body,
-            "icon": "/static/icon-192.png",
-            "badge": "/static/icon-192.png",
+            "icon": "/static/aldervain-icon-192.png",
+            "badge": "/static/aldervain-icon-192.png",
             "url": url,
             "tag": f"trade-{stock or 'alert'}",
             "data": {"url": url}
@@ -5075,7 +5079,7 @@ def create_app(config=None):
         target_name = get_client(client_id)["name"] if client_id else "All Subscribed Clients"
         sent = dispatch_web_push(
             client_id=client_id,
-            title="🔔 Alder & Vane Test Alert",
+            title="🔔 Aldervain Test Alert",
             body="Push notifications are active and working on this device!",
             url="/portal"
         )

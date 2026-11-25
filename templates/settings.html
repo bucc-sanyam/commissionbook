@@ -3,7 +3,7 @@
 {% block title %}Settings{% endblock %}
 {% block breadcrumb %}Settings{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">MAKE YOURSELF AT HOME</p><h1>Your workspace. Your way<span class="accent-period">.</span></h1><p>Set the rules, share the right link, and keep everything secure.</p></div></div>
+<div class="page-heading"><div><h1>Settings</h1></div></div>
 <div class="settings-layout">
   <form method="post" class="stack">
     {{ csrf() }}
@@ -76,6 +76,6 @@ Dates and screenshots are optional. Takes less than a minute! 🙏</textarea><bu
   </aside>
 </div>
 <dialog class="modal modal-sm" id="rotate-link-dialog"><form class="modal-inner" method="post" action="{{ url_for('rotate_upload_link') }}">
-  {{ csrf() }}<div class="modal-heading"><div><span class="eyebrow">START WITH A FRESH LINK</span><h2>Reset client access?</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">The current submission link will stop working immediately. You'll need to share the new link with your clients. Existing trades and screenshots stay in your books.</p><div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Keep current link</button><button class="btn btn-danger">{{ icon('repeat', 14) }}Reset link</button></div>
+  {{ csrf() }}<div class="modal-heading"><div><h2>Reset client access?</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><p class="muted">The current submission link will stop working immediately. You'll need to share the new link with your clients. Existing trades and screenshots stay in your books.</p><div class="modal-actions"><button class="btn btn-ghost" type="button" data-dialog-close>Keep current link</button><button class="btn btn-danger">{{ icon('repeat', 14) }}Reset link</button></div>
 </form></dialog>
 {% endblock %}

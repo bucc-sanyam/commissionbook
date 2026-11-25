@@ -3,29 +3,29 @@
 {% block title %}Payment for {{ client.name }}{% endblock %}
 {% block body_class %}portal-body{% endblock %}
 {% block shell %}
-<header class="portal-header"><div class="brand" aria-label="Alder & Vane">{{ brand() }}</div><span class="portal-header-label">{{ icon('wallet', 12) }}Client payment portal</span></header>
-<main class="portal-main" id="main" style="max-width: 600px; margin: 0 auto; padding-top: 40px; padding-bottom: 40px;">
-  <div class="card card-pad" style="text-align: center;">
+<header class="portal-header"><div class="brand" aria-label="Aldervain">{{ brand() }}</div><span class="portal-header-label">{{ icon('wallet', 12) }}Client payment portal</span></header>
+<main class="portal-main payment-page" id="main">
+  <div class="payment-statement">
     {% if outstanding <= 0 %}
       <div style="padding: 40px 0;">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#eafff3;color:#1e9752;border-radius:50%;margin-bottom:20px;">
           {{ icon('check', 32) }}
         </span>
-        <h1 style="margin-bottom:10px;font-size:28px;">All settled up!</h1>
-        <p style="color:var(--text-secondary);font-size:15px;">Your outstanding balance is completely cleared.</p>
+        <h1>Balance settled</h1>
+        <p style="color:var(--muted);font-size:15px;">Your outstanding balance is completely cleared.</p>
       </div>
     {% else %}
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#f3f4f6;color:var(--text-primary);border-radius:50%;margin-bottom:20px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#f3f4f6;color:var(--ink);border-radius:50%;margin-bottom:20px;">
         {{ icon('wallet', 32) }}
       </span>
-      <h1 style="margin-bottom:10px;font-size:24px;">Payment for {{ client.name }}</h1>
-      <p style="margin-bottom:20px;color:var(--text-secondary);font-size:15px;">Your current outstanding balance is:</p>
-      <div style="font-size:42px;font-weight:bold;margin-bottom:30px;color:var(--text-primary);letter-spacing:-0.5px;">
+      <h1>Payment for {{ client.name }}</h1>
+      <p style="margin-bottom:20px;color:var(--muted);font-size:15px;">Your current outstanding balance is:</p>
+      <div style="font-size:42px;font-weight:bold;margin-bottom:30px;color:var(--ink);letter-spacing:-0.5px;">
           {{ outstanding|money }}
       </div>
       
       <div style="background:#fafafa; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: left; border: 1px solid #edf2e5;">
-        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 15px; border-bottom: 1px solid #edf2e5; padding-bottom: 8px;">Summary Breakdown</h3>
+        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 15px; border-bottom: 1px solid #edf2e5; padding-bottom: 8px;">Summary Breakdown</h3>
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
           <span>Total Commission</span>
           <strong>{{ s.commission|money }}</strong>
@@ -42,7 +42,7 @@
 
       {% if trades %}
       <div style="background:#fff; border-radius: 8px; border: 1px solid #edf2e5; margin-bottom: 30px; text-align: left; overflow: hidden;">
-        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin: 0; padding: 15px 20px; border-bottom: 1px solid #edf2e5; background: #fafafa;">Trade Ledger Details</h3>
+        <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0; padding: 15px 20px; border-bottom: 1px solid #edf2e5; background: #fafafa;">Trade Ledger Details</h3>
         <div style="max-height: 400px; overflow-y: auto;">
           {% for t in trades %}
             {% if t.status == 'Closed' %}
@@ -51,13 +51,13 @@
                 <strong style="font-size: 15px;">{{ t.stock }}</strong>
                 <span style="font-weight: 600;">{{ t.commission|money }} fee</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 4px;">
                 <span>Bought @ {{ t.buy_price|money }} &times; {{ t.quantity|num }}</span>
                 <span>Sold @ {{ t.sell_price|money }}</span>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 13px;">
                 <span>Profit: {{ t.pnl|money }} <span style="color: {{ '#1e9752' if t.pnl > 0 else '#e53e3e' }}; font-weight: 500;">({{ '%+.2f'|format(t.pnl_pct) }}%)</span></span>
-                <span style="color: var(--text-secondary);">Rule: {{ t.eff_rate|num }}{{ '%' if 'pct' in t.eff_type else ' flat' }}</span>
+                <span style="color: var(--muted);">Rule: {{ t.eff_rate|num }}{{ '%' if 'pct' in t.eff_type else ' flat' }}</span>
               </div>
             </div>
             {% endif %}
@@ -74,5 +74,5 @@
   </div>
   {% include "_flashes.html" %}
 </main>
-<footer class="portal-footer">Alder & Vane</footer>
+<footer class="portal-footer">Aldervain</footer>
 {% endblock %}

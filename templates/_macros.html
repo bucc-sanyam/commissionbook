@@ -55,15 +55,14 @@
 {%- endmacro %}
 
 {% macro brand() -%}
-<span class="brand-mark" aria-hidden="true">AV</span>
-<span class="brand-name">Alder &amp; Vane</span>
+<img class="brand-mark" src="{{ url_for('static', filename='aldervain-mark.png') }}" width="34" height="34" alt="">
+<span class="brand-name">Aldervain</span>
 {%- endmacro %}
 
 {% macro brand_story() -%}
 <details class="brand-story">
-  <summary>Why Alder &amp; Vane?</summary>
-  <p>An alder is a tree. A weather vane turns to show which way the wind is blowing.
-    We chose the alder for its roots and the vane for its sense of direction.</p>
+  <summary>Why Aldervain?</summary>
+  <p>The name Aldervain draws on the roots of an alder tree and the direction shown by a weather vane.</p>
   <p>Commission Book began as a place to record trades and fees. As the ledger grew to
     include holdings, portfolio values and client statements, we wanted a name that
     reflected both the record you keep and the decisions it helps you make.</p>

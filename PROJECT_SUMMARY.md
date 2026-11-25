@@ -1,11 +1,11 @@
-# Alder & Vane — Project Summary
+# Aldervain — Project Summary
 
 > **Purpose of this file:** Single source of truth for new development sessions. Read this + `graphify-out/GRAPH_REPORT.md` first; do not scan the whole repo unless something here is insufficient or contradicted. Keep this file updated after every meaningful change.
 
 ---
 
 ## 1. Project Overview
-**Alder & Vane** is an equity portfolio, trade ledger, and commission management platform built for traders and account managers. It handles multi-client trade tracking, profit-sharing commission calculations, client portfolios (cumulative holdings, average buy price, FIFO deductions), live market prices, screenshot trade parsing, and client portal access with Web Push alerts.
+**Aldervain** is an equity portfolio, trade ledger, and commission management platform built for traders and account managers. It handles multi-client trade tracking, profit-sharing commission calculations, client portfolios (cumulative holdings, average buy price, FIFO deductions), live market prices, screenshot trade parsing, and client portal access with Web Push alerts.
 
 - **Admin Interface:** Record and close trades, manage clients, reconcile trade batches, configure custom fee structures, import screenshots/trade exports, and view candlestick charts.
 - **Client Portal:** Clients can add holdings, record trades and adjust funds. The portal also shows their open positions, trade history, realised P&L, statement downloads, and commission owed/paid with tap-to-reveal privacy controls and push alerts.
@@ -142,4 +142,4 @@ Comprehensive transaction cost breakup for client demat sales:
   ```bash
   graphify update .
   ```
-- **Vercel Deployments:** Vercel builds production from `master`. The repository syncs `main` and `master`. The public origin is `https://ordervain.vercel.app`. Existing client links on `commissionbook.vercel.app` are supported. Background threading is disabled on Vercel serverless to prevent invocation timeout issues.
+- **Vercel Deployments:** Vercel builds production from `master`. The repository syncs `main` and `master`. The public origin is `https://aldervain.vercel.app`. Existing client links on `ordervain.vercel.app` and `commissionbook.vercel.app` are supported. Background threading is disabled on Vercel serverless to prevent invocation timeout issues.

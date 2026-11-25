@@ -332,7 +332,7 @@
                   {% if h.lots and h.lots|length > 1 %}
                   <button type="button" class="lots-toggle-btn icon-btn" data-target="portal-lots-{{ loop.index }}"
                     aria-label="Toggle trade lots for {{ h.stock }}" title="View {{ h.lots|length }} open trades"
-                    style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                    style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--bg); color: #2e5a36; border: none; cursor: pointer;">
                     {{ icon('chevron-down', 14) }}
                   </button>
                   {% endif %}
@@ -384,7 +384,7 @@
             </tr>
             {% if h.lots and h.lots|length > 1 %}
             <tr class="holding-lots-subrow" id="portal-lots-{{ loop.index }}"
-              style="display: none; background: #fafbf7;">
+              style="display: none; background: var(--bg);">
               <td colspan="7" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
                 <div
                   style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
@@ -392,9 +392,9 @@
                   average {{ h.buy_price|money }}
                 </div>
                 <table class="lots-nested-table"
-                  style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+                  style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: var(--card); border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
                   <thead>
-                    <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                    <tr style="background: var(--bg); color: var(--muted); font-size: 10px; text-transform: uppercase;">
                       <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
                       <th style="padding: 6px 12px; text-align: right;">Quantity</th>
                       <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
@@ -494,7 +494,7 @@
                 style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #edf1e8;">
                 <span class="muted">{{ lot.added_on or '—' }} &bull; {{ lot.quantity }} sh @ {{ lot.buy_price|money
                   }}</span>
-                <strong class="tabular" style="color: #173d34;">{{ lot.total_cost|money }}</strong>
+                <strong class="tabular" style="color: var(--ink);">{{ lot.total_cost|money }}</strong>
               </div>
               {% endfor %}
             </div>
@@ -703,7 +703,7 @@
       <div style="padding: 16px 20px;">
         <!-- 1. Stock Selector Pills -->
         <div style="margin-bottom: 16px;">
-          <span style="font-size: 11px; font-weight: 700; color: #5b6d52; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
             Choose a Stock to View Chart &amp; Targets:
           </span>
           <div class="chart-stock-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -723,9 +723,9 @@
         </div>
 
         <!-- 2. Active Stock Header -->
-        <div id="chart-active-header" style="background: #f4f8f1; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div id="chart-active-header" style="background: var(--bg); border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <span id="chart-active-symbol" style="font-size: 18px; font-weight: 800; color: #173d34;">{{ shares[0].stock }}</span>
+            <span id="chart-active-symbol" style="font-size: 18px; font-weight: 800; color: var(--ink);">{{ shares[0].stock }}</span>
             <span id="chart-active-meta" class="muted" style="font-size: 13px; margin-left: 8px;">
               Qty: <strong id="chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
             </span>
@@ -746,8 +746,8 @@
           {% set tg_list = stock_targets.get(stock_key, []) %}
           <div class="stock-targets-table-block" id="targets-table-block-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: block;{% endif %}">
             {% if tg_list %}
-            <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
-              <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="background: var(--card); border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
+              <div style="background: var(--mint); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🎯</span>
                   <strong style="font-size: 13px; color: #14532d; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -761,7 +761,7 @@
               <div class="table-wrap" style="margin: 0;">
                 <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
                   <thead>
-                    <tr style="background: #fafcf8; color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <tr style="background: var(--bg); color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
                       <th style="padding: 12px 16px; text-align: left;">Target</th>
                       <th class="r" style="padding: 12px 16px;">Target Price</th>
                       <th class="r" style="padding: 12px 16px;">Gain / Share</th>
@@ -820,9 +820,9 @@
               </div>
             </div>
             {% else %}
-            <div style="background: #fafcf8; border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
+            <div style="background: var(--bg); border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
               <span style="font-size: 22px; display: block; margin-bottom: 4px;">📈</span>
-              <strong style="color: #173d34; font-size: 14px;">No advisory price targets set yet for {{ sh.stock }}</strong>
+              <strong style="color: var(--ink); font-size: 14px;">No advisory price targets set yet for {{ sh.stock }}</strong>
               <p style="margin: 4px 0 0; color: #64786a; font-size: 12px;">When your advisor publishes price target levels for this share, the full targets table and profit calculations will display here.</p>
             </div>
             {% endif %}
@@ -831,25 +831,25 @@
         </div>
 
         <!-- 4. Interactive Native Candlestick Chart (Same robust engine as Admin) -->
-        <div class="card" style="margin: 0; padding: 0; overflow: hidden; border: 1px solid #d5ded2; border-radius: 10px; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card" style="margin: 0; padding: 0; overflow: hidden; border: 1px solid #d5ded2; border-radius: 10px; background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
           <!-- Chart Controls Toolbar -->
-          <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: #fafcf7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div class="chart-toolbar" style="padding: 10px 18px; border-bottom: 1px solid #edf1e8; background: var(--bg); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <!-- Left: Timeframe Range Buttons -->
             <div class="range-controls" style="display: flex; align-items: center; gap: 4px;">
-              <button type="button" class="portal-range-btn" data-range="5d" data-interval="15m" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">5D</button>
+              <button type="button" class="portal-range-btn" data-range="5d" data-interval="15m" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: var(--card); cursor: pointer;">5D</button>
               <button type="button" class="portal-range-btn active" data-range="1mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #285933; border-radius: 4px; background: #285933; color: #fff; cursor: pointer;">1M</button>
-              <button type="button" class="portal-range-btn" data-range="3mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">3M</button>
-              <button type="button" class="portal-range-btn" data-range="6mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">6M</button>
-              <button type="button" class="portal-range-btn" data-range="1y" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: #fff; cursor: pointer;">1Y</button>
+              <button type="button" class="portal-range-btn" data-range="3mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: var(--card); cursor: pointer;">3M</button>
+              <button type="button" class="portal-range-btn" data-range="6mo" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: var(--card); cursor: pointer;">6M</button>
+              <button type="button" class="portal-range-btn" data-range="1y" data-interval="1d" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border: 1px solid #d4ded2; border-radius: 4px; background: var(--card); cursor: pointer;">1Y</button>
             </div>
 
             <!-- Right: Price Scale Controls & Live Status -->
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="display: flex; align-items: center; gap: 3px; background: #eef4eb; border: 1px solid #d2ded0; border-radius: 5px; padding: 2px 4px;">
                 <span style="font-size: 10px; font-weight: 700; color: #4b664d; margin-right: 2px;">Price Scale:</span>
-                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-up" title="Expand Price Scale (+)" style="padding: 1px 6px; font-size: 12px; font-weight: 800; line-height: 1.2; background: #fff; border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">+</button>
-                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-down" title="Compress Price Scale (-)" style="padding: 1px 6px; font-size: 12px; font-weight: 800; line-height: 1.2; background: #fff; border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">−</button>
-                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-reset" title="Auto Scale / Reset Chart" style="padding: 1px 6px; font-size: 10px; font-weight: 700; background: #fff; border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">↺ Auto</button>
+                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-up" title="Expand Price Scale (+)" style="padding: 1px 6px; font-size: 12px; font-weight: 800; line-height: 1.2; background: var(--card); border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">+</button>
+                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-down" title="Compress Price Scale (-)" style="padding: 1px 6px; font-size: 12px; font-weight: 800; line-height: 1.2; background: var(--card); border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">−</button>
+                <button type="button" class="btn btn-ghost btn-xs" id="portal-btn-scale-reset" title="Auto Scale / Reset Chart" style="padding: 1px 6px; font-size: 10px; font-weight: 700; background: var(--card); border: 1px solid #cbd8ca; border-radius: 3px; cursor: pointer;">↺ Auto</button>
               </div>
               <span class="live-dot-wrap" style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #2e7d32; font-weight: 600;">
                 <span class="live-pulse" style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2e7d32;"></span>
@@ -859,9 +859,9 @@
           </div>
 
           <!-- Chart Area -->
-          <div id="portal-lw-chart-outer" style="position: relative; width: 100%; background: #ffffff;">
+          <div id="portal-lw-chart-outer" style="position: relative; width: 100%; background: var(--card);">
             <!-- Floating Crosshair HUD / Legend -->
-            <div id="portal-lw-chart-legend" style="padding: 8px 18px; font-size: 12px; background: #fafcf8; border-bottom: 1px solid #edf2e8; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 20px;">
+            <div id="portal-lw-chart-legend" style="padding: 8px 18px; font-size: 12px; background: var(--bg); border-bottom: 1px solid #edf2e8; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 20px;">
               <span class="muted">Loading candle history...</span>
             </div>
 
@@ -889,7 +889,7 @@
                 <h2>Advisory Slab &amp; Exit Breakup</h2>
                 <p>Projected commission, taxes &amp; broker charges if all holdings were sold today at CMP.</p>
               </div>
-              <span class="badge" style="background:#f4f8f1; color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
+              <span class="badge" style="background: var(--bg); color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
             </div>
 
             <!-- Section A: Commission Slab Summary -->
@@ -898,17 +898,17 @@
                 {{ icon('trend', 13) }} Section A — Advisory Commission Slab
               </div>
               <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
-                <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+                <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
                   <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
                 </div>
-                <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+                <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
                   <span style="color:#64786a;">Commission Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
                 </div>
               </div>
               <div class="table-wrap">
                 <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
                   <thead>
-                    <tr style="background:#f4f8f1; color:#5b6d52; font-size:11px; text-transform:uppercase;">
+                    <tr style="background: var(--bg); color: var(--muted); font-size:11px; text-transform:uppercase;">
                       <th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e1e9de;">Stock</th>
                       <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Qty</th>
                       <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Avg Buy</th>
@@ -1063,7 +1063,7 @@
 
                 <hr class="breakup-divider">
 
-                <div class="breakup-row" style="background:#f4f8f1;">
+                <div class="breakup-row" style="background: var(--bg);">
                   <span class="label" style="font-weight:600;">
                     Advisor Commission
                     <small style="color:#9eb09e; font-weight:400;">({{ comm_rate }}% of profit)</small>
@@ -1095,10 +1095,10 @@
                 {% set stock_key = sh.stock.strip().upper() %}
                 {% set tg_list = stock_targets.get(stock_key, []) %}
                 {% if tg_list and sh.quantity and sh.buy_price %}
-                <div style="background: #ffffff; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
+                <div style="background: var(--card); border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <strong style="font-size: 14px; color: #173d34;">{{ sh.stock }}</strong>
+                      <strong style="font-size: 14px; color: var(--ink);">{{ sh.stock }}</strong>
                       <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
                     </div>
                   </div>
@@ -1178,7 +1178,7 @@
 
     <!-- Client Profile Screen Disclaimer Footer with 'i' icon -->
     <footer class="portal-disclaimer-footer"
-      style="margin-top: 1.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1rem;">
+      style="margin-top: 1.5rem; padding: 16px 20px; border-top: 1px solid #e1e9de; display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: var(--bg); border-radius: 10px; margin-bottom: 1rem;">
       <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
       <div>
         <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading
@@ -1510,7 +1510,7 @@
       </div>
 
       <div class="advisory-price-grid"
-        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:1.25rem; background:#f4f8f3; padding:12px; border-radius:8px;">
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:1.25rem; background: var(--bg); padding:12px; border-radius:8px;">
         <div class="advisory-price-block">
           <small
             style="display:block; font-size:10px; text-transform:uppercase; color:#5c705c; font-weight:700;">RECOMMENDED
@@ -1535,14 +1535,14 @@
 
       {% if alert.message %}
       <div class="advisory-message-box"
-        style="margin-bottom:1rem; background:#ffffff; border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
+        style="margin-bottom:1rem; background: var(--card); border:1px solid #dce7db; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
         <p style="margin:0;">{{ alert.message }}</p>
       </div>
       {% endif %}
 
       <!-- Disclaimer with 'i' icon on Acknowledgment Screen -->
       <div class="advisory-disclaimer-notice"
-        style="display:flex; gap:8px; align-items:flex-start; background:#fafcf8; border:1px solid #dce7db; border-radius:8px; padding:10px 12px; margin-bottom:1.15rem;">
+        style="display:flex; gap:8px; align-items:flex-start; background: var(--bg); border:1px solid #dce7db; border-radius:8px; padding:10px 12px; margin-bottom:1.15rem;">
         <span style="color:#2e7d32; flex-shrink:0; margin-top:1px;">{{ icon('info', 16) }}</span>
         <p style="margin:0; font-size:11px; line-height:1.45; color:#435443;">
           <strong>Trading &amp; Advisory Disclaimer:</strong> Stock market trading and securities investments involve
@@ -1834,7 +1834,7 @@
     const changeColor = isPos ? "#236146" : "#913e42";
 
     hud.innerHTML = `
-      <span style="font-weight:700; color:#173d34; margin-right:6px;">${dateStr}</span>
+      <span style="font-weight:700; color: var(--ink); margin-right:6px;">${dateStr}</span>
       <span class="muted" style="margin-right:8px;">O <strong style="color:#222;">₹${Number(c.open).toFixed(2)}</strong></span>
       <span class="muted" style="margin-right:8px;">H <strong style="color:#222;">₹${Number(c.high).toFixed(2)}</strong></span>
       <span class="muted" style="margin-right:8px;">L <strong style="color:#222;">₹${Number(c.low).toFixed(2)}</strong></span>

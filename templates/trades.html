@@ -4,7 +4,7 @@
 {% block breadcrumb %}Trade ledger{% endblock %}
 {% block content %}
 <div class="page-heading">
-  <div><p class="eyebrow">EVERY DETAIL, ACCOUNTED FOR</p><h1>Trade ledger<span class="accent-period">.</span></h1><p>Every buy, every sell, and every commission in between.</p></div>
+  <div><h1>Trade ledger</h1></div>
   <div class="heading-actions">
     <button class="btn" type="button" data-dialog="import-dialog">{{ icon('upload', 15) }}Import</button>
     <button class="btn" type="button" data-dialog="payment-dialog">{{ icon('wallet', 15) }}Record payment</button>
@@ -74,7 +74,7 @@
 <dialog class="modal modal-sm" id="import-dialog">
   <form class="modal-inner" method="post" action="{{ url_for('import_trades') }}" enctype="multipart/form-data">
     {{ csrf() }}
-    <div class="modal-heading"><div><span class="eyebrow">BRING YOUR BOOKS ALONG</span><h2>Import from Excel</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    <div class="modal-heading"><div><h2>Import from Excel</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
     <p class="muted">Use the template to organise your trades. Include a client name, stock, quantity, price and date for each entry.</p>
     <a class="text-link" href="{{ url_for('export_template') }}">{{ icon('download', 15) }}Download the import template</a>
     <div class="section-divider"></div>
@@ -85,7 +85,7 @@
 <dialog class="modal" id="payment-dialog">
   <form method="post" action="{{ url_for('payments_list') }}" class="modal-inner">
     <input type="hidden" name="back" value="{{ request.full_path }}">
-    <div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
+    <div class="modal-heading"><div><h2>Record a payment</h2></div><button class="icon-btn" type="button" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>
     {% if clients %}{{ payment_fields(clients, preset=args.client_id) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div>
     {% else %}<p class="muted">Add a client before recording your first payment.</p><a class="btn btn-primary" href="{{ url_for('clients_list') }}">{{ icon('plus', 15) }}Add a client</a>{% endif %}
   </form>

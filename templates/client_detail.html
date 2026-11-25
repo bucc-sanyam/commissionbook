@@ -12,7 +12,7 @@
       <div class="client-contact">
         <span>{{ icon('users', 13) }}Client #{{ client.id }}</span>
         {% if client.username %}
-          <span style="font-weight:700; color:#164237; background:#eef3e8; padding:2px 8px; border-radius:4px; font-family:monospace;">@{{ client.username }}</span>
+          <span style="font-weight:700; color:#164237; background: var(--bg); padding:2px 8px; border-radius:4px; font-family:monospace;">@{{ client.username }}</span>
         {% endif %}
         {% if client.email %}<span>{{ icon('mail', 13) }}{{ client.email }}</span>{% endif %}
         {% if client.phone %}<span>{{ client.phone }}</span>{% endif %}
@@ -25,11 +25,11 @@
     <a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name, back=url_for('client_detail', cid=client.id)) }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
 </div>
-<div class="kpi-grid">
-  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ s.commission|money }}</div><div class="kpi-bottom">{{ rule }}</div></section>
-  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div class="kpi-value">{{ s.paid|money }}</div><div class="kpi-bottom">{{ payments|length }} payment{{ 's' if payments|length != 1 }} on record</div></section>
-  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">{{ 'Client credit' if s.outstanding < 0 else 'Still to collect' }}</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div class="kpi-value">{{ (s.outstanding|abs)|money }}</div><div class="kpi-bottom">{{ 'Paid ahead of commissions earned' if s.outstanding < 0 else 'Commission less payments received' }}</div></section>
-  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Their realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div><div class="kpi-value {{ 'neg' if s.pnl < 0 else 'pos' }}">{{ s.pnl|money }}</div><div class="kpi-bottom">{{ s.wins }} profitable · {{ s.losses }} losing trades</div></section>
+<div class="kpi-grid dashboard-statement">
+  <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div data-privacy-value class="kpi-value">{{ s.commission|money }}</div><div class="kpi-bottom">{{ rule }}</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Payments received</h2><span class="kpi-icon">{{ icon('wallet', 17) }}</span></div><div data-privacy-value class="kpi-value">{{ s.paid|money }}</div><div class="kpi-bottom">{{ payments|length }} payment{{ 's' if payments|length != 1 }} on record</div></section>
+  <section class="card kpi kpi-amber"><div class="kpi-top"><h2 class="kpi-label">{{ 'Client credit' if s.outstanding < 0 else 'Still to collect' }}</h2><span class="kpi-icon">{{ icon('clock', 17) }}</span></div><div data-privacy-value class="kpi-value">{{ (s.outstanding|abs)|money }}</div><div class="kpi-bottom">{{ 'Paid ahead of commissions earned' if s.outstanding < 0 else 'Commission less payments received' }}</div></section>
+  <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Their realised P&amp;L</h2><span class="kpi-icon">{{ icon('pie', 17) }}</span></div><div data-privacy-value class="kpi-value {{ 'neg' if s.pnl < 0 else 'pos' }}">{{ s.pnl|money }}</div><div class="kpi-bottom">{{ s.wins }} profitable · {{ s.losses }} losing trades</div></section>
 </div>
 
 {% if pending_reconciliations %}
@@ -49,7 +49,7 @@
   </div>
   <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
     {% for rec in pending_reconciliations %}
-    <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+    <div style="background: var(--card); border: 1px solid #fed7aa; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
         <div style="flex: 1; min-width: 260px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -101,8 +101,8 @@
   <!-- Client Page Sidebar Navigation -->
   <aside class="client-page-sidebar">
     <div class="client-sidebar-heading">
-      <span class="eyebrow" style="font-size: 10px; color: #5b6d52; letter-spacing: 0.5px;">CLIENT MENU</span>
-      <h3 style="margin: 2px 0 0; font-size: 14px; color: #173d34;">{{ client.name }}</h3>
+      <span class="eyebrow" style="font-size: 10px; color: var(--muted); letter-spacing: 0.5px;">CLIENT MENU</span>
+      <h3 style="margin: 2px 0 0; font-size: 14px; color: var(--ink);">{{ client.name }}</h3>
     </div>
     <nav class="client-sidebar-nav" role="tablist">
       <button class="client-sidebar-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
@@ -162,7 +162,7 @@
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 {% if sh.lots and sh.lots|length > 1 %}
-                <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                <button type="button" class="lots-toggle-btn icon-btn" data-target="client-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--bg); color: #2e5a36; border: none; cursor: pointer;">
                   {{ icon('chevron-down', 14) }}
                 </button>
                 {% endif %}
@@ -199,14 +199,14 @@
             </td>
           </tr>
           {% if sh.lots and sh.lots|length > 1 %}
-          <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+          <tr class="holding-lots-subrow" id="client-lots-{{ loop.index }}" style="display: none; background: var(--bg);">
             <td colspan="6" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
               <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                 {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
               </div>
-              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: var(--card); border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
                 <thead>
-                  <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                  <tr style="background: var(--bg); color: var(--muted); font-size: 10px; text-transform: uppercase;">
                     <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
                     <th style="padding: 6px 12px; text-align: right;">Quantity</th>
                     <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
@@ -236,7 +236,7 @@
           <div class="mobile-trade-card" style="padding: 12px 14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
               <div>
-                <strong style="font-size: 15px; color: #173d34;">{{ sh.stock }}</strong>
+                <strong style="font-size: 15px; color: var(--ink);">{{ sh.stock }}</strong>
                 {% if sh.lots and sh.lots|length > 1 %}
                   <span class="lots-pill" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: #e8f0e4; color: #2e5a36; margin-left: 4px;">{{ sh.lots|length }} lots</span>
                 {% endif %}
@@ -345,26 +345,15 @@
 
       <!-- Advisory Slab & Exit Charges Summary Tile -->
       {% if shares %}
-      <section class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, #fbfdfa 0%, #f4f8f2 100%); border: 1.5px solid #d2e4ce; cursor: pointer;" onclick="switchClientTab(document.querySelector('.client-sidebar-btn[data-tab=\'tab-advisory\']'), 'tab-advisory')">
-        <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-          <div style="display: flex; gap: 14px; align-items: center;">
-            <span style="width: 40px; height: 40px; border-radius: 8px; background: #e2f0dd; color: #1e4620; display: grid; place-items: center; flex-shrink: 0;">
-              {{ icon('shield', 20) }}
-            </span>
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <strong style="font-size: 14px; color: #173d34;">Advisory Slab &amp; Exit Breakup</strong>
-                <span class="badge" style="background:#e8f5e9; color:#1b5e20;">{{ rule }}</span>
-              </div>
-              <p style="margin: 3px 0 0; font-size: 12px; color: #516d56;">
-                Projected commission, STCG/LTCG taxes, and broker charges (STT, DP &#8377;15.34, GST) if sold at CMP.
-              </p>
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none;">
-            {{ icon('pie', 14) }} View Full Breakup &rarr;
-          </button>
+      <section class="card advisory-summary" aria-labelledby="client-advisory-title">
+        <div>
+          <h2 id="client-advisory-title">Advisory &amp; exit charges</h2>
+          <p>Review the {{ rule }} commission, capital gains tax and broker charges at the current market price.</p>
         </div>
+        <button type="button" class="btn btn-secondary btn-sm" aria-controls="tab-advisory"
+          onclick="switchClientTab(document.querySelector('.client-sidebar-btn[data-tab=tab-advisory]'), 'tab-advisory')">
+          View breakdown {{ icon('arrow-up-right', 14) }}
+        </button>
       </section>
       {% endif %}
     </div>
@@ -386,7 +375,7 @@
           <span>Portal Username</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             {% if client.username %}
-              <strong style="font-family:monospace; font-size:13px; color:#164237; background:#eef3e8; padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
+              <strong style="font-family:monospace; font-size:13px; color:#164237; background: var(--bg); padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
               <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
                 {{ icon('copy', 12) }}
               </button>
@@ -408,7 +397,7 @@
           <span>Current Password</span>
           {% if client.password_plain %}
             <div style="display: flex; align-items: center; gap: 8px;">
-              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: #eef3e8; color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
+              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: var(--bg); color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
               <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
                 {{ icon('eye', 14) }}
               </button>
@@ -468,7 +457,7 @@
       </section>
       <section class="card card-pad">
         <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
-        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ url_for('client_pay', token=payment_token, _external=True) %}
+        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ payment_url %}
         <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
@@ -496,7 +485,7 @@
             <h2>Advisory Slab &amp; Exit Breakup</h2>
             <p>Projected commission, taxes &amp; charges if all holdings were sold today at CMP.</p>
           </div>
-          <span class="badge" style="background:#f4f8f1; color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
+          <span class="badge" style="background: var(--bg); color:#3f7352; border:1px solid #c6dfc0;">{{ rule }}</span>
         </div>
 
         <!-- Section A: Commission Slab Summary -->
@@ -505,19 +494,19 @@
             {{ icon('trend', 13) }} Section A — Advisory Commission Slab
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
-            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+            <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
               <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
             </div>
-            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+            <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
               <span style="color:#64786a;">Type:</span> <strong>{{ client.commission_type or 'profit_pct' }}</strong>
             </div>
-            <div style="background:#f4f8f1; border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
+            <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
               <span style="color:#64786a;">Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
             </div>
           </div>
           <table style="width:100%; font-size:12px; border-collapse:collapse; margin-top:6px;">
             <thead>
-              <tr style="background:#f4f8f1; color:#5b6d52; font-size:11px; text-transform:uppercase;">
+              <tr style="background: var(--bg); color: var(--muted); font-size:11px; text-transform:uppercase;">
                 <th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e1e9de;">Stock</th>
                 <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Qty</th>
                 <th style="padding:6px 10px; text-align:right; border-bottom:1px solid #e1e9de;">Avg Buy</th>
@@ -673,7 +662,7 @@
               <span class="label" style="font-weight:600;">Total Broker Charges</span>
               <span class="value neg" style="font-weight:700;">−{{ broker_total|money }}</span>
             </div>
-            <div class="breakup-row" style="font-size:11px; color:#9eb09e; font-style:italic; background:#fafcf8;">
+            <div class="breakup-row" style="font-size:11px; color:#9eb09e; font-style:italic; background: var(--bg);">
               <span class="label">Stamp Duty <small>(0.015% of buy value — already paid at purchase)</small></span>
               <span class="value" style="color:#9eb09e;">note</span>
             </div>
@@ -681,7 +670,7 @@
             <hr class="breakup-divider">
 
             <!-- My commission -->
-            <div class="breakup-row" style="background:#f4f8f1;">
+            <div class="breakup-row" style="background: var(--bg);">
               <span class="label" style="font-weight:600;">
                 My Commission
                 <small style="color:#9eb09e; font-weight:400;">
@@ -738,10 +727,10 @@
             {% set stock_key = sh.stock.strip().upper() %}
             {% set tg_list = stock_targets.get(stock_key, []) %}
             {% if tg_list and sh.quantity and sh.buy_price %}
-            <div style="background: #ffffff; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
+            <div style="background: var(--card); border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <strong style="font-size: 14px; color: #173d34;">{{ sh.stock }}</strong>
+                  <strong style="font-size: 14px; color: var(--ink);">{{ sh.stock }}</strong>
                   <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
                 </div>
                 <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-ghost btn-xs" style="color: #2e7d32;">
@@ -930,7 +919,7 @@
 <div class="client-tab-panel" id="tab-payments">
   <div class="detail-grid">
     <section class="card">
-      <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ url_for('client_pay', token=payment_token, _external=True) }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
+      <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ payment_url }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
       {% if payments %}
       <div class="desktop-detail-payments-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
       {% for p in payments %}
@@ -1050,7 +1039,7 @@
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 {% if sh.lots and sh.lots|length > 1 %}
-                <button type="button" class="lots-toggle-btn icon-btn" data-target="holdings-tab-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #eaf1e5; color: #2e5a36; border: none; cursor: pointer;">
+                <button type="button" class="lots-toggle-btn icon-btn" data-target="holdings-tab-lots-{{ loop.index }}" aria-label="Toggle trades for {{ sh.stock }}" title="View {{ sh.lots|length }} open trades" style="width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--bg); color: #2e5a36; border: none; cursor: pointer;">
                   {{ icon('chevron-down', 14) }}
                 </button>
                 {% endif %}
@@ -1109,14 +1098,14 @@
             </td>
           </tr>
           {% if sh.lots and sh.lots|length > 1 %}
-          <tr class="holding-lots-subrow" id="holdings-tab-lots-{{ loop.index }}" style="display: none; background: #fafbf7;">
+          <tr class="holding-lots-subrow" id="holdings-tab-lots-{{ loop.index }}" style="display: none; background: var(--bg);">
             <td colspan="7" style="padding: 10px 18px 14px 44px; border-bottom: 1px solid #edf1e8;">
               <div style="font-size: 11px; font-weight: 600; color: #405738; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                 {{ icon('book', 12) }} Open Trades for {{ sh.stock }} &bull; Accumulated {{ sh.quantity }} shares at average {{ sh.buy_price|money }}
               </div>
-              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: #ffffff; border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
+              <table class="lots-nested-table" style="width: 100%; max-width: 650px; font-size: 11px; border-collapse: collapse; background: var(--card); border: 1px solid #e0e7da; border-radius: 6px; overflow: hidden;">
                 <thead>
-                  <tr style="background: #f2f6ee; color: #5b6d52; font-size: 10px; text-transform: uppercase;">
+                  <tr style="background: var(--bg); color: var(--muted); font-size: 10px; text-transform: uppercase;">
                     <th style="padding: 6px 12px; text-align: left;">Buy Date</th>
                     <th style="padding: 6px 12px; text-align: right;">Quantity</th>
                     <th style="padding: 6px 12px; text-align: right;">Buy Price</th>
@@ -1176,7 +1165,7 @@
     <div style="padding: 16px 20px;">
       <!-- 1. Stock Selector Pills -->
       <div style="margin-bottom: 16px;">
-        <span style="font-size: 11px; font-weight: 700; color: #5b6d52; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
           Choose a Stock to View Chart &amp; Targets:
         </span>
         <div class="chart-stock-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1196,9 +1185,9 @@
       </div>
 
       <!-- 2. Active Stock Info Header -->
-      <div style="background: #f4f8f1; border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div style="background: var(--bg); border: 1px solid #e1e9de; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <span id="admin-chart-active-symbol" style="font-size: 18px; font-weight: 800; color: #173d34;">{{ shares[0].stock }}</span>
+          <span id="admin-chart-active-symbol" style="font-size: 18px; font-weight: 800; color: var(--ink);">{{ shares[0].stock }}</span>
           <span class="muted" style="font-size: 13px; margin-left: 8px;">
             Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
           </span>
@@ -1212,8 +1201,8 @@
         {% set tg_list = stock_targets.get(stock_key, []) %}
         <div class="admin-targets-table-block" id="admin-targets-table-block-{{ sh.stock }}" style="{% if not loop.first %}display: none;{% else %}display: block;{% endif %}">
           {% if tg_list %}
-          <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div style="background: var(--card); border: 1.5px solid #bbf7d0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(22, 101, 52, 0.05);">
+            <div style="background: var(--mint); padding: 12px 18px; border-bottom: 1px solid #dcfce7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 18px;">🎯</span>
                 <strong style="font-size: 13px; color: #14532d; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -1232,7 +1221,7 @@
             <div class="table-wrap" style="margin: 0;">
               <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <thead>
-                  <tr style="background: #fafcf8; color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <tr style="background: var(--bg); color: #435443; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
                     <th style="padding: 12px 16px; text-align: left;">Target</th>
                     <th class="r" style="padding: 12px 16px;">Target Price</th>
                     <th class="r" style="padding: 12px 16px;">Gain / Share</th>
@@ -1291,9 +1280,9 @@
             </div>
           </div>
           {% else %}
-          <div style="background: #fafcf8; border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
+          <div style="background: var(--bg); border: 1.5px dashed #d5ded2; border-radius: 10px; padding: 20px; text-align: center; color: #5c705c; font-size: 13px; margin-bottom: 16px;">
             <span style="font-size: 22px; display: block; margin-bottom: 4px;">📈</span>
-            <strong style="color: #173d34; font-size: 14px;">No targets set yet for {{ sh.stock }}</strong>
+            <strong style="color: var(--ink); font-size: 14px;">No targets set yet for {{ sh.stock }}</strong>
             <p style="margin: 4px 0 0; color: #64786a; font-size: 12px;">Add price targets on the Charts page to view client potential gains.</p>
           </div>
           {% endif %}
@@ -1302,7 +1291,7 @@
       </div>
 
       <!-- 4. Interactive Candlestick Chart Frame -->
-      <div style="height: 520px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+      <div style="height: 520px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #d5ded2; background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
         <iframe id="admin-client-chart-iframe"
           src="https://s.tradingview.com/widgetembed/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
           style="width: 100%; height: 100%; border: none;" 
@@ -1321,7 +1310,7 @@
   </div> <!-- Close .client-page-content -->
 </div> <!-- Close .client-page-layout -->
 
-<footer class="client-detail-disclaimer-footer" style="margin-top: 2rem; padding: 14px 18px; border-top: 1px solid var(--border-light, #e1e9de); display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: #fafcf8; border-radius: 10px; margin-bottom: 1.5rem;">
+<footer class="client-detail-disclaimer-footer" style="margin-top: 2rem; padding: 14px 18px; border-top: 1px solid var(--border-light, #e1e9de); display: flex; gap: 12px; align-items: flex-start; color: #5c705c; font-size: 11px; line-height: 1.5; background: var(--bg); border-radius: 10px; margin-bottom: 1.5rem;">
   <span style="color: #2e7d32; flex-shrink: 0; margin-top: 2px;">{{ icon('info', 18) }}</span>
   <div>
     <strong style="color: #1e4620; display: block; margin-bottom: 2px; font-size: 12px;">Regulatory &amp; Trading Advisory Disclaimer</strong>

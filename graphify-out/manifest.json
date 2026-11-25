@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "backend/security.py": {
-    "mtime": 1795547060.0532122,
-    "ast_hash": "ef37f6ccbe5c78e1102e581152961de3",
+    "mtime": 1795577230.1330168,
+    "ast_hash": "1e855e72af92de2b563aafb1361d8d56",
     "semantic_hash": ""
   },
   "backend/storage.py": {
@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795546552.7526207,
-    "ast_hash": "a13914ad719cf129d47701751dca6e57",
+    "mtime": 1795577230.1316793,
+    "ast_hash": "acbf002fe5ec288aa57c0478e24133e7",
     "semantic_hash": ""
   },
   "static/app.js": {
@@ -65,13 +65,13 @@
     "semantic_hash": ""
   },
   "static/manifest.json": {
-    "mtime": 1795546552.7567825,
-    "ast_hash": "65d4e703398ebf09132a8d14e4d7371e",
+    "mtime": 1795576911.5803747,
+    "ast_hash": "4ac70fd713135aeb7235dee543674f4d",
     "semantic_hash": ""
   },
   "static/sw.js": {
-    "mtime": 1795546552.7529886,
-    "ast_hash": "74372c1b046f56211b9efeeae017786e",
+    "mtime": 1795576911.5794685,
+    "ast_hash": "cdf4b0c159493aa5165407b3dee1171d",
     "semantic_hash": ""
   },
   "static/upload.js": {
@@ -155,13 +155,13 @@
     "semantic_hash": ""
   },
   ".github/workflows/market-hours-sync.yml": {
-    "mtime": 1795547060.0537212,
-    "ast_hash": "e289838d16013336adb569237e93f5d0",
+    "mtime": 1795577230.133593,
+    "ast_hash": "d0219f591550a4a73c26d2e5da628d08",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795546740.4204836,
-    "ast_hash": "3f39c4f74510470f3a91707a2f5137d3",
+    "mtime": 1795576911.5797005,
+    "ast_hash": "514a64d6bfe67bf09c411f4b535f9b1f",
     "semantic_hash": ""
   },
   "requirements-dev.txt": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "templates/_macros.html": {
-    "mtime": 1795546924.8271847,
-    "ast_hash": "64c413c9e9338c5c6d9df29055b99faf",
+    "mtime": 1795576943.4465408,
+    "ast_hash": "4312ebcf8e1ace4f69e0de3077390733",
     "semantic_hash": ""
   },
   "templates/alerts.html": {
@@ -200,18 +200,18 @@
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795546951.02132,
-    "ast_hash": "e1a45b8f19aa22cc33ec789c2d0312e7",
+    "mtime": 1795576911.5802462,
+    "ast_hash": "5fde77f6f8f8ce00959d8ef0ae69a975",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795546552.7546947,
-    "ast_hash": "90855b8f5b602795a1cede25541e36e5",
+    "mtime": 1795547499.6347878,
+    "ast_hash": "e3ae60ad55f29989800146ba9f8d4698",
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795546552.745514,
-    "ast_hash": "38ceaa04f8acf9eb24ee257c842e0463",
+    "mtime": 1795577230.1323965,
+    "ast_hash": "faa43f263e4e3f3ee5c29366a965cf80",
     "semantic_hash": ""
   },
   "templates/clients.html": {
@@ -235,13 +235,13 @@
     "semantic_hash": ""
   },
   "templates/login.html": {
-    "mtime": 1795546924.858153,
-    "ast_hash": "ffc07f2ac2276c1eed6ce9f6e9c1f107",
+    "mtime": 1795576911.5776062,
+    "ast_hash": "38d2b15b9b8d4455856bad51120f14fc",
     "semantic_hash": ""
   },
   "templates/pay.html": {
-    "mtime": 1795546552.7447872,
-    "ast_hash": "91ef9bdbff5cd4222f6ceb009ad33ee3",
+    "mtime": 1795576911.5804615,
+    "ast_hash": "49392f8145c00441aa356d1811655c2b",
     "semantic_hash": ""
   },
   "templates/payments.html": {
@@ -250,28 +250,28 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795546973.455909,
-    "ast_hash": "5bc301ef7a0d1f46ae96a298e384b42d",
+    "mtime": 1795547499.6394596,
+    "ast_hash": "175185ec25a3382d1a55dbfa5e00555f",
     "semantic_hash": ""
   },
   "templates/settings.html": {
-    "mtime": 1795546552.7493513,
-    "ast_hash": "4a79cf09852f1f39ec045a87ac491c28",
+    "mtime": 1795547499.6405213,
+    "ast_hash": "0dcd07bf6bd4b12556cf8599c0800b7b",
     "semantic_hash": ""
   },
   "templates/trade_form.html": {
-    "mtime": 1795546552.7467506,
-    "ast_hash": "40bce6d4d524c091aa5d839adf3b1fbf",
+    "mtime": 1795547499.6407843,
+    "ast_hash": "3a9156f46b50c030b2b72dbf6bb3d61e",
     "semantic_hash": ""
   },
   "templates/trades.html": {
-    "mtime": 1795546552.7511227,
-    "ast_hash": "822d2308172b01e161fe5897ef42674a",
+    "mtime": 1795547499.6400704,
+    "ast_hash": "1e502cb104bbc7288d80b50cd5af394a",
     "semantic_hash": ""
   },
   "templates/upload.html": {
-    "mtime": 1795546552.7508163,
-    "ast_hash": "c6e6fd6ee4172d029229aeffe354917a",
+    "mtime": 1795576911.5782309,
+    "ast_hash": "22b4a342067ef729e1db7c5c3f4e875a",
     "semantic_hash": ""
   },
   "templates/uploads.html": {
@@ -310,13 +310,13 @@
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795547060.0538154,
-    "ast_hash": "8ef42243a4122ecaff9943aa5d945d53",
+    "mtime": 1795577230.1339984,
+    "ast_hash": "c9484b0e551f9bd49a69caa477eea6e1",
     "semantic_hash": ""
   },
   ".githooks/post-commit": {
-    "mtime": 1795547060.0536408,
-    "ast_hash": "8473680f35978b3a9d9393da880869e0",
+    "mtime": 1795577230.1334581,
+    "ast_hash": "4577acf633ce1bf56c099a705f9bc70a",
     "semantic_hash": ""
   },
   "supabase/migrations/011_stock_price_targets.sql": {
@@ -330,8 +330,48 @@
     "semantic_hash": ""
   },
   "REDESIGN_ROADMAP.md": {
-    "mtime": 1795547060.053922,
-    "ast_hash": "6d45fc58a2f12d94c6feb944cbcfd8f3",
+    "mtime": 1795577105.0602214,
+    "ast_hash": "ed92d8021771e6d2da218eddc38b5265",
+    "semantic_hash": ""
+  },
+  "static/aldervain-apple-180.png": {
+    "mtime": 1795576911.5339072,
+    "ast_hash": "156b540cf13e1683d105ba80dccb1e87",
+    "semantic_hash": ""
+  },
+  "static/aldervain-favicon-32.png": {
+    "mtime": 1795576911.5351844,
+    "ast_hash": "61d43ee385c4e48e51bfc62ea69485b1",
+    "semantic_hash": ""
+  },
+  "static/aldervain-icon-192.png": {
+    "mtime": 1795576911.526509,
+    "ast_hash": "e3aa6378ea979bf2c18b772b18227029",
+    "semantic_hash": ""
+  },
+  "static/aldervain-icon-512.png": {
+    "mtime": 1795576911.5285463,
+    "ast_hash": "32666fe079b926da4dda4cd4b3c5b17b",
+    "semantic_hash": ""
+  },
+  "static/aldervain-mark.png": {
+    "mtime": 1795576911.5248415,
+    "ast_hash": "6bf6603af1b178ecf5e4b4fe75848c5a",
+    "semantic_hash": ""
+  },
+  "static/aldervain-maskable-192.png": {
+    "mtime": 1795576911.5301528,
+    "ast_hash": "e3aa6378ea979bf2c18b772b18227029",
+    "semantic_hash": ""
+  },
+  "static/aldervain-maskable-512.png": {
+    "mtime": 1795576911.5320365,
+    "ast_hash": "32666fe079b926da4dda4cd4b3c5b17b",
+    "semantic_hash": ""
+  },
+  "static/aldervain-preview.png": {
+    "mtime": 1795576911.5464056,
+    "ast_hash": "faff88ac77321148ea2c3c8e1c4eea31",
     "semantic_hash": ""
   }
 }
