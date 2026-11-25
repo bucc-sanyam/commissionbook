@@ -5564,10 +5564,7 @@ def create_app(config=None):
     def api_stock_suggestions():
         return jsonify(get_stock_suggestions(get_db()))
 
-    @app.route("/alerts", methods=["GET"])
-    @login_required
-    def alerts_list():
-        db = get_db()
+    def _build_enriched_alerts(db, *, today_only_ist=False):
         expire_old_alerts(db)
         alerts = db.execute(
             """
@@ -5575,7 +5572,7 @@ def create_app(config=None):
                    (SELECT COUNT(*) FROM client_alert_views v WHERE v.alert_id=a.id AND (v.dismissed=1 OR v.acknowledged=1)) as view_count
             FROM client_alerts a
             LEFT JOIN clients c ON c.id=a.client_id
-            ORDER BY a.created_at DESC
+            ORDER BY a.created_at DESC, a.id DESC
             """
         ).fetchall()
         clients = db.execute("SELECT id, name FROM clients WHERE active=1 ORDER BY lower(name)").fetchall()
@@ -5590,7 +5587,6 @@ def create_app(config=None):
             """
         ).fetchall()
 
-        # Batch-fetch all active clients' non-zero holdings in ONE query to avoid N+1 queries per SELL alert
         all_holdings = db.execute(
             """
             SELECT h.client_id, c.name as client_name, h.stock
@@ -5616,10 +5612,15 @@ def create_app(config=None):
         active_client_map = {c["id"]: c["name"] for c in clients}
 
         now_utc = datetime.now(timezone.utc)
+        today_ist_date = now_utc.astimezone(IST).date()
         enriched_alerts = []
         for a in alerts:
             ad = dict(a)
             created_dt = parse_utc_datetime(ad.get("created_at"))
+            created_ist = created_dt.astimezone(IST) if created_dt else None
+            if today_only_ist and (not created_ist or created_ist.date() != today_ist_date):
+                continue
+
             is_expired = False
             if created_dt and (now_utc - created_dt).total_seconds() >= 86400:
                 is_expired = True
@@ -5629,6 +5630,7 @@ def create_app(config=None):
                 ad["active"] = 0
 
             ad["created_at_ist"] = format_ist(ad.get("created_at"), "short")
+            ad["created_at_time_ist"] = format_ist(ad.get("created_at"), "time")
             ad["created_at_full_ist"] = format_ist(ad.get("created_at"), "full")
 
             acks = ack_by_alert.get(ad["id"], [])
@@ -5650,12 +5652,8 @@ def create_app(config=None):
                 cid = ad["client_id"]
                 cname = ad.get("client_name") or active_client_map.get(cid, f"Client #{cid}")
                 target_clients = [{"id": cid, "name": cname}]
-                if cid in acked_client_ids:
-                    pending_clients = []
-                else:
-                    pending_clients = [{"id": cid, "name": cname}]
+                pending_clients = [] if cid in acked_client_ids else [{"id": cid, "name": cname}]
             elif ad.get("action") == "SELL":
-                # Sell pop-up broadcast: only sent to clients who hold the given stock
                 canon_stk = alias_map.get((ad.get("stock") or "").strip().upper(), (ad.get("stock") or "").strip().upper())
                 holder_map = dict(stock_holders_map.get(canon_stk, {}))
                 for v in acks:
@@ -5681,7 +5679,35 @@ def create_app(config=None):
         except Exception:
             push_subs_count = 0
 
+        return enriched_alerts, clients, push_subs_count
+
+    @app.route("/alerts", methods=["GET"])
+    @login_required
+    def alerts_list():
+        db = get_db()
+        enriched_alerts, clients, push_subs_count = _build_enriched_alerts(db, today_only_ist=False)
         return render_template("alerts.html", alerts=enriched_alerts, clients=clients, push_subs_count=push_subs_count)
+
+    @app.route("/todays-trade", methods=["GET"])
+    @login_required
+    def todays_trades():
+        db = get_db()
+        todays_alerts, clients, push_subs_count = _build_enriched_alerts(db, today_only_ist=True)
+        now_ist = datetime.now(IST)
+        today_label = now_ist.strftime("%d %b %Y")
+        tomorrow_midnight_label = (now_ist.date() + timedelta(days=1)).strftime("%d %b %Y, 12:00 AM IST")
+        buy_count = sum(1 for a in todays_alerts if a.get("action") == "BUY")
+        sell_count = sum(1 for a in todays_alerts if a.get("action") == "SELL")
+        return render_template(
+            "todays_trades.html",
+            alerts=todays_alerts,
+            clients=clients,
+            push_subs_count=push_subs_count,
+            today_label=today_label,
+            tomorrow_midnight_label=tomorrow_midnight_label,
+            buy_count=buy_count,
+            sell_count=sell_count,
+        )
 
     def ensure_push_tables(db):
         try:
@@ -5967,7 +5993,7 @@ def create_app(config=None):
     def alert_delete(aid):
         get_db().execute("DELETE FROM client_alerts WHERE id=?", (aid,))
         flash("Alert deleted.", "success")
-        return redirect(url_for("alerts_list"))
+        return redirect(safe_redirect_target(request.form.get("back") or request.referrer, url_for("alerts_list")))
 
     is_serverless = bool(
         os.environ.get("VERCEL")

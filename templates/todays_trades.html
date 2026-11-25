@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, avatar, empty_state, csrf with context %}
+{% block title %}Today's Trade{% endblock %}
+{% block breadcrumb %}Today's Trade{% endblock %}
+{% block content %}
+<div class="page-heading" style="margin-bottom: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <h1 style="margin: 0;">Today's Trade<span class="accent-period">.</span></h1>
+      <span class="badge" style="background: #eef5eb; color: #173d34; border: 1px solid #d4e5d0; font-weight: 700;">
+        {{ icon('calendar', 12) }} {{ today_label }}
+      </span>
+    </div>
+    <p class="muted" style="margin: 4px 0 0; font-size: 13px;">
+      All trade push notifications &amp; suggestions sent to clients today. Automatically clears at <strong>{{ tomorrow_midnight_label }}</strong>.
+    </p>
+  </div>
+  <div class="heading-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="{{ url_for('alerts_list') }}" class="btn btn-secondary">
+      {{ icon('clock', 15) }} All History
+    </a>
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('global-popup-trade-dialog').showModal()">
+      {{ icon('send', 15) }} Send Trade Push
+    </button>
+  </div>
+</div>
+
+<div class="kpi-grid" style="margin-bottom: 1.25rem;">
+  <section class="card kpi kpi-featured">
+    <div class="kpi-top"><h2 class="kpi-label">Sent Today</h2><span class="kpi-icon">{{ icon('send', 17) }}</span></div>
+    <div class="kpi-value">{{ alerts|length }}</div>
+    <div class="kpi-bottom">{{ icon('clock', 12) }}<span>Valid until 12:00 AM IST tonight</span></div>
+  </section>
+  <section class="card kpi">
+    <div class="kpi-top"><h2 class="kpi-label">BUY Calls</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div>
+    <div class="kpi-value pos">{{ buy_count }}</div>
+    <div class="kpi-bottom"><span>Recommended buys today</span></div>
+  </section>
+  <section class="card kpi kpi-amber">
+    <div class="kpi-top"><h2 class="kpi-label">SELL Calls</h2><span class="kpi-icon">{{ icon('alert', 17) }}</span></div>
+    <div class="kpi-value">{{ sell_count }}</div>
+    <div class="kpi-bottom"><span>Recommended exits today</span></div>
+  </section>
+  <section class="card kpi">
+    <div class="kpi-top"><h2 class="kpi-label">Push Devices</h2><span class="kpi-icon">{{ icon('check-circle', 17) }}</span></div>
+    <div class="kpi-value">{{ push_subs_count }}</div>
+    <div class="kpi-bottom"><span>Subscribed client device{{ 's' if push_subs_count != 1 }}</span></div>
+  </section>
+</div>
+
+<section class="card" id="main">
+  <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+    <div>
+      <h2>Today's Sent Trade Push Notifications</h2>
+      <p class="muted">Saved for {{ today_label }} only — expires at {{ tomorrow_midnight_label }}.</p>
+    </div>
+    <span class="badge" style="background: #fff8e1; color: #855700; border: 1px solid #ffe082; font-size: 11px; font-weight: 600;">
+      {{ icon('clock', 12) }} Resets daily at 12:00 AM IST
+    </span>
+  </div>
+
+  {% if alerts %}
+  <!-- Desktop Table -->
+  <div class="desktop-alerts-table table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sent Time (IST)</th>
+          <th>Action</th>
+          <th>Stock</th>
+          <th>Target Recipient</th>
+          <th class="r">Entry Price</th>
+          <th class="r">Target / SL</th>
+          <th>Advisory Note</th>
+          <th class="r">Acknowledged</th>
+          <th class="r">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr class="{{ 'row-all-acknowledged' if a.all_acknowledged else '' }}">
+          <td class="date-cell muted" title="{{ a.created_at_full_ist }}">
+            {{ a.created_at_time_ist or a.created_at_ist }}
+          </td>
+          <td>
+            <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}">
+              {{ a.action }}
+            </span>
+          </td>
+          <td><strong>{{ a.stock }}</strong></td>
+          <td>
+            {% if a.client_id %}
+              <span class="client-cell">{{ avatar(a.client_name, a.client_id) }}<span>{{ a.client_name }}</span></span>
+            {% elif a.action == 'SELL' %}
+              <span class="badge" style="background: #fff8e1; color: #855700; font-weight: 600; border: 1px solid #ffe082;">
+                {{ icon('users', 12) }} Holders of {{ a.stock }} ({{ a.target_count }})
+              </span>
+            {% else %}
+              <span class="badge" style="background: #eef3e8; color: #215935; font-weight: 600;">
+                {{ icon('users', 12) }} All Clients (Broadcast)
+              </span>
+            {% endif %}
+          </td>
+          <td class="r tabular"><strong>{{ a.price|money if a.price else 'CMP' }}</strong></td>
+          <td class="r tabular">
+            <span class="pos">{{ a.target_price|money if a.target_price else '—' }}</span>
+            <small class="muted"> / </small>
+            <span class="neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</span>
+          </td>
+          <td style="max-width: 240px; font-size: 13px;">
+            {{ a.message or '<span class="muted">—</span>'|safe }}
+          </td>
+          <td class="r tabular">
+            {% if a.target_count == 0 and a.action == 'SELL' and not a.client_id %}
+              <span class="badge" style="background:#f5f5f5; color:#777; font-weight:600; border:1px solid #ddd;">0 Holders</span>
+            {% elif a.all_acknowledged %}
+              <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-weight:700; border:1px solid #c8e6c9;">
+                {{ icon('check-circle', 13) }} {{ a.ack_count }}/{{ a.target_count }} Done
+              </span>
+            {% else %}
+              <span class="badge" style="background:#fff3e0; color:#b76e00; font-weight:700; border:1px solid #ffe0b2;">
+                {{ icon('clock', 13) }} {{ a.ack_count }}/{{ a.target_count }} Acked
+              </span>
+            {% endif %}
+          </td>
+          <td class="r">
+            <form method="post" action="{{ url_for('alert_delete', aid=a.id) }}" data-confirm="Delete this today's trade notification?" style="display:inline;">
+              {{ csrf() }}
+              <input type="hidden" name="back" value="{{ url_for('todays_trades') }}">
+              <button type="submit" class="icon-btn icon-btn-danger" aria-label="Delete notification" title="Delete">
+                {{ icon('trash', 15) }}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="mobile-alerts-list">
+    {% for a in alerts %}
+    <div class="mobile-alert-card {{ 'card-all-acknowledged' if a.all_acknowledged else '' }}">
+      <div class="mac-header">
+        <div class="mac-header-left">
+          <span class="advisory-action-pill {{ 'pill-buy' if a.action == 'BUY' else 'pill-sell' }}">{{ a.action }}</span>
+          <div>
+            <strong class="mac-stock" style="display:block; line-height:1.2;">{{ a.stock }}</strong>
+            <small class="date-cell muted" style="font-size:10px; display:block; margin-top:2px;">{{ a.created_at_time_ist or a.created_at_ist }}</small>
+          </div>
+        </div>
+        <div class="mac-header-right">
+          <span class="badge" style="background:#eef5eb; color:#173d34; font-size:11px;">{{ a.ack_count }}/{{ a.target_count }} Acked</span>
+          <form method="post" action="{{ url_for('alert_delete', aid=a.id) }}" data-confirm="Delete this today's trade notification?" style="display:inline;">
+            {{ csrf() }}
+            <input type="hidden" name="back" value="{{ url_for('todays_trades') }}">
+            <button type="submit" class="icon-btn icon-btn-sm icon-btn-danger" aria-label="Delete" title="Delete">
+              {{ icon('trash', 14) }}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="mac-price-grid">
+        <div class="mac-price-item">
+          <span class="mac-label">Entry</span>
+          <strong class="mac-val">{{ a.price|money if a.price else 'CMP' }}</strong>
+        </div>
+        <div class="mac-price-item">
+          <span class="mac-label">Target</span>
+          <strong class="mac-val pos">{{ a.target_price|money if a.target_price else '—' }}</strong>
+        </div>
+        <div class="mac-price-item">
+          <span class="mac-label">Stop Loss</span>
+          <strong class="mac-val neg">{{ a.stop_loss|money if a.stop_loss else '—' }}</strong>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: #334155; margin-top: 6px;">
+        <strong>To:</strong>
+        {% if a.client_id %}
+          {{ a.client_name }}
+        {% elif a.action == 'SELL' %}
+          Holders of {{ a.stock }} ({{ a.target_count }})
+        {% else %}
+          All Clients (Broadcast)
+        {% endif %}
+        {% if a.message %}
+          <div class="muted" style="margin-top: 3px;">{{ a.message }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    {{ empty_state("No trade notifications sent today", "Any trade push notification you send today will appear here until 12:00 AM IST midnight.", 'send') }}
+  {% endif %}
+</section>
+{% endblock %}

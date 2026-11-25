@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795591854.9284244,
-    "ast_hash": "af8e9c585f10b360a9d806dff2f13423",
+    "mtime": 1795592305.6234734,
+    "ast_hash": "a16be4ba1520cc8da4fa902cdf71bd0b",
     "semantic_hash": ""
   },
   "static/app.js": {
@@ -200,12 +200,12 @@
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795582425.2836196,
-    "ast_hash": "202472a8ef388eafbf027db3554f8506",
+    "mtime": 1795592334.7572417,
+    "ast_hash": "9584b444aef8976f1d3a5cc79dda8d57",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795591865.1120148,
+    "mtime": 1795592212.0155878,
     "ast_hash": "e85a12ff56661576913e47eb0e70203b",
     "semantic_hash": ""
   },
@@ -402,6 +402,11 @@
   "static/icon-maskable-1024.png": {
     "mtime": 1795582190.269547,
     "ast_hash": "18a4cf7b99242e9fc19c573182d0b85c",
+    "semantic_hash": ""
+  },
+  "templates/todays_trades.html": {
+    "mtime": 1795592336.9825776,
+    "ast_hash": "9e1c8c949785e7b737d265ff9e899bce",
     "semantic_hash": ""
   }
 }
