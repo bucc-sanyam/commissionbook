@@ -65,13 +65,13 @@
     "semantic_hash": ""
   },
   "static/manifest.json": {
-    "mtime": 1795578459.5378356,
-    "ast_hash": "bc85186f69b53ec3e2b786ac077e5709",
+    "mtime": 1795582206.0212276,
+    "ast_hash": "1f7ed7375fb873564f01065b4cf1d235",
     "semantic_hash": ""
   },
   "static/sw.js": {
-    "mtime": 1795578459.5382843,
-    "ast_hash": "7a64d60a589f4161a1ad23b5feb5c36b",
+    "mtime": 1795582210.061174,
+    "ast_hash": "9ea4b6404e3acc2a82ca8e4fc32fa5db",
     "semantic_hash": ""
   },
   "static/upload.js": {
@@ -200,12 +200,12 @@
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795580753.9094496,
-    "ast_hash": "531dcd19c9d789bc537b3e2057760a6f",
+    "mtime": 1795582207.9961245,
+    "ast_hash": "202472a8ef388eafbf027db3554f8506",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795580744.796342,
+    "mtime": 1795580845.5154603,
     "ast_hash": "492a0031ad1deb489e9cecdebd74ac4c",
     "semantic_hash": ""
   },
@@ -250,7 +250,7 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795580740.7384481,
+    "mtime": 1795580782.4411836,
     "ast_hash": "d4d8deb62bfcb77b47a35431ccd500ba",
     "semantic_hash": ""
   },
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "static/apple-touch-icon.png": {
-    "mtime": 1795579027.1846023,
-    "ast_hash": "8b06c17bb32d847ff5baf9838671cea2",
+    "mtime": 1795582190.3222349,
+    "ast_hash": "ac9830c3f720043fece02b1e84613adc",
     "semantic_hash": ""
   },
   "static/favicon.svg": {
@@ -290,23 +290,23 @@
     "semantic_hash": ""
   },
   "static/icon-192.png": {
-    "mtime": 1795579027.0883446,
-    "ast_hash": "97f96853878f50175e9ac8465f63c8ec",
+    "mtime": 1795582190.312176,
+    "ast_hash": "84fd4072ec02d7a2221df595397d3488",
     "semantic_hash": ""
   },
   "static/icon-512.png": {
-    "mtime": 1795579027.1374202,
-    "ast_hash": "43cc36c61b92a61d648d9991bec2ea6b",
+    "mtime": 1795582190.2898662,
+    "ast_hash": "db045e1b8d4305b4fa4461ac5296f495",
     "semantic_hash": ""
   },
   "static/icon-maskable-192.png": {
-    "mtime": 1795579027.105613,
-    "ast_hash": "3a75b002200016e8a21a1b1956ea01e3",
+    "mtime": 1795582190.3172567,
+    "ast_hash": "9e1a8cbb15ca1372d6c86c424c3c9e37",
     "semantic_hash": ""
   },
   "static/icon-maskable-512.png": {
-    "mtime": 1795579027.1666536,
-    "ast_hash": "b22ef4046572a78c1422e97280edef7b",
+    "mtime": 1795582190.306339,
+    "ast_hash": "fe5508439709c9de16a8d166d338668f",
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "static/alder-tree-mark.png": {
-    "mtime": 1795579027.2004619,
-    "ast_hash": "d230a8d438199c7e288785a428ac1914",
+    "mtime": 1795582190.3297837,
+    "ast_hash": "e5eb21044557428b48d5cc1a96f63dc9",
     "semantic_hash": ""
   },
   "static/alder-tree.webp": {
@@ -392,6 +392,16 @@
   "static/favicon-32.png": {
     "mtime": 1795579027.2018013,
     "ast_hash": "c2dcf3200b788d1dfa062bec5f73c2fe",
+    "semantic_hash": ""
+  },
+  "static/icon-1024.png": {
+    "mtime": 1795582190.2200856,
+    "ast_hash": "85607875139dcbdddbca7fa67895a124",
+    "semantic_hash": ""
+  },
+  "static/icon-maskable-1024.png": {
+    "mtime": 1795582190.269547,
+    "ast_hash": "18a4cf7b99242e9fc19c573182d0b85c",
     "semantic_hash": ""
   }
 }

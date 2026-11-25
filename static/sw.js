@@ -22,8 +22,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'New trade recommendation or portfolio update.',
-    icon: data.icon || '/static/icon-192.png?v=tree',
-    badge: data.badge || '/static/icon-192.png?v=tree',
+    icon: data.icon || '/static/icon-192.png?v=tree2',
+    badge: data.badge || '/static/icon-192.png?v=tree2',
     tag: data.tag || ('trade-alert-' + Date.now()),
     renotify: true,
     requireInteraction: true,
