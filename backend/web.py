@@ -4380,7 +4380,7 @@ def create_app(config=None):
         except Exception:
             all_targets = {}
 
-        _, eff_rate = effective_rule(client)
+        eff_ctype, eff_rate = effective_rule(client)
         show_advisory_agreement = float(eff_rate) < 35.0
         payment_path = url_for("client_pay", token=payment_signer().dumps(cid))
         public_origin = app.config["PUBLIC_BASE_URL"] or request.host_url.rstrip("/")
@@ -4403,7 +4403,7 @@ def create_app(config=None):
             today=date.today().isoformat(),
             known_stocks=get_known_stocks(get_db()),
             stock_targets=all_targets,
-            rule=rule_label(client["commission_type"], client["commission_rate"]),
+            rule=rule_label(eff_ctype, eff_rate),
             show_advisory_agreement=show_advisory_agreement,
         )
 
