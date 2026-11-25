@@ -52,7 +52,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_index",
-      "community": 26,
+      "community": 5,
       "norm_label": "index.py"
     },
     {
@@ -62,7 +62,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_index_rationale_1",
-      "community": 26,
+      "community": 5,
       "norm_label": "vercel's wsgi entrypoint; all state lives in postgresql and private storage."
     },
     {
@@ -72,7 +72,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app",
-      "community": 26,
+      "community": 5,
       "norm_label": "app.py"
     },
     {
@@ -342,7 +342,7 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "backend_prices_invalidate_prices_cache",
-      "community": 16,
+      "community": 24,
       "norm_label": "invalidate_prices_cache()"
     },
     {
@@ -362,7 +362,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "datetime",
-      "community": 17,
+      "community": 16,
       "norm_label": "datetime"
     },
     {
@@ -589,7 +589,7 @@
       "label": "credential_version()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L141",
+      "source_location": "L142",
       "_origin": "ast",
       "id": "backend_security_credential_version",
       "community": 5,
@@ -599,7 +599,7 @@
       "label": "csrf_token()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L146",
+      "source_location": "L147",
       "_origin": "ast",
       "id": "backend_security_csrf_token",
       "community": 5,
@@ -609,7 +609,7 @@
       "label": "require_csrf()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L152",
+      "source_location": "L153",
       "_origin": "ast",
       "id": "backend_security_require_csrf",
       "community": 5,
@@ -619,7 +619,7 @@
       "label": "_request_is_loopback()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L181",
+      "source_location": "L182",
       "_origin": "ast",
       "id": "backend_security_request_is_loopback",
       "community": 5,
@@ -629,7 +629,7 @@
       "label": "local_setup_allowed()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L189",
+      "source_location": "L190",
       "_origin": "ast",
       "id": "backend_security_local_setup_allowed",
       "community": 5,
@@ -639,7 +639,7 @@
       "label": "safe_redirect_target()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L197",
+      "source_location": "L198",
       "_origin": "ast",
       "id": "backend_security_safe_redirect_target",
       "community": 5,
@@ -649,7 +649,7 @@
       "label": "secure_response()",
       "file_type": "code",
       "source_file": "backend/security.py",
-      "source_location": "L217",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "backend_security_secure_response",
       "community": 5,
@@ -662,7 +662,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "backend_storage",
-      "community": 20,
+      "community": 26,
       "norm_label": "storage.py"
     },
     {
@@ -692,7 +692,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "backend_storage_validate_image",
-      "community": 20,
+      "community": 26,
       "norm_label": "validate_image()"
     },
     {
@@ -712,7 +712,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "backend_storage_localstorage",
-      "community": 20,
+      "community": 26,
       "norm_label": "localstorage"
     },
     {
@@ -722,7 +722,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "backend_storage_localstorage_init",
-      "community": 20,
+      "community": 26,
       "norm_label": ".__init__()"
     },
     {
@@ -732,7 +732,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "backend_storage_localstorage_store",
-      "community": 20,
+      "community": 26,
       "norm_label": ".store()"
     },
     {
@@ -742,7 +742,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "backend_storage_localstorage_verify",
-      "community": 20,
+      "community": 26,
       "norm_label": ".verify()"
     },
     {
@@ -882,7 +882,7 @@
       "source_location": "L213",
       "_origin": "ast",
       "id": "backend_storage_get_storage",
-      "community": 20,
+      "community": 26,
       "norm_label": "get_storage()"
     },
     {
@@ -1172,7 +1172,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "backend_web_dec",
-      "community": 5,
+      "community": 24,
       "norm_label": "dec()"
     },
     {
@@ -1182,7 +1182,7 @@
       "source_location": "L275",
       "_origin": "ast",
       "id": "backend_web_effective_rule",
-      "community": 5,
+      "community": 24,
       "norm_label": "effective_rule()"
     },
     {
@@ -1192,7 +1192,7 @@
       "source_location": "L296",
       "_origin": "ast",
       "id": "backend_web_ensure_stock_aliases_table",
-      "community": 24,
+      "community": 5,
       "norm_label": "ensure_stock_aliases_table()"
     },
     {
@@ -1202,7 +1202,7 @@
       "source_location": "L328",
       "_origin": "ast",
       "id": "backend_web_invalidate_stock_caches",
-      "community": 24,
+      "community": 5,
       "norm_label": "invalidate_stock_caches()"
     },
     {
@@ -1226,40 +1226,70 @@
       "norm_label": "resolve_canonical_stock()"
     },
     {
+      "label": "get_matching_stock_variants()",
+      "file_type": "code",
+      "source_file": "backend/web.py",
+      "source_location": "L376",
+      "_origin": "ast",
+      "id": "backend_web_get_matching_stock_variants",
+      "community": 24,
+      "norm_label": "get_matching_stock_variants()"
+    },
+    {
+      "label": "_stock_in_clause()",
+      "file_type": "code",
+      "source_file": "backend/web.py",
+      "source_location": "L404",
+      "_origin": "ast",
+      "id": "backend_web_stock_in_clause",
+      "community": 24,
+      "norm_label": "_stock_in_clause()"
+    },
+    {
+      "label": "_safe_sell_date()",
+      "file_type": "code",
+      "source_file": "backend/web.py",
+      "source_location": "L413",
+      "_origin": "ast",
+      "id": "backend_web_safe_sell_date",
+      "community": 24,
+      "norm_label": "_safe_sell_date()"
+    },
+    {
       "label": "get_known_stocks()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L371",
+      "source_location": "L423",
       "_origin": "ast",
       "id": "backend_web_get_known_stocks",
-      "community": 24,
+      "community": 5,
       "norm_label": "get_known_stocks()"
     },
     {
       "label": "get_client_entered_stocks()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L407",
+      "source_location": "L459",
       "_origin": "ast",
       "id": "backend_web_get_client_entered_stocks",
-      "community": 24,
+      "community": 5,
       "norm_label": "get_client_entered_stocks()"
     },
     {
       "label": "cleanup_stock_aliases_table()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L493",
+      "source_location": "L545",
       "_origin": "ast",
       "id": "backend_web_cleanup_stock_aliases_table",
-      "community": 24,
+      "community": 5,
       "norm_label": "cleanup_stock_aliases_table()"
     },
     {
       "label": "get_stock_suggestions()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L526",
+      "source_location": "L578",
       "_origin": "ast",
       "id": "backend_web_get_stock_suggestions",
       "community": 24,
@@ -1269,7 +1299,7 @@
       "label": "clean_phone_number()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L579",
+      "source_location": "L631",
       "_origin": "ast",
       "id": "backend_web_clean_phone_number",
       "community": 57,
@@ -1279,7 +1309,7 @@
       "label": "cleanup_existing_client_phones()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L598",
+      "source_location": "L650",
       "_origin": "ast",
       "id": "backend_web_cleanup_existing_client_phones",
       "community": 57,
@@ -1289,17 +1319,17 @@
       "label": "get_client()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L612",
+      "source_location": "L664",
       "_origin": "ast",
       "id": "backend_web_get_client",
-      "community": 24,
+      "community": 17,
       "norm_label": "get_client()"
     },
     {
       "label": "get_or_create_client()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L619",
+      "source_location": "L671",
       "_origin": "ast",
       "id": "backend_web_get_or_create_client",
       "community": 57,
@@ -1309,37 +1339,37 @@
       "label": "insert_trade()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L645",
+      "source_location": "L697",
       "_origin": "ast",
       "id": "backend_web_insert_trade",
-      "community": 24,
+      "community": 17,
       "norm_label": "insert_trade()"
     },
     {
       "label": "insert_trades()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L649",
+      "source_location": "L701",
       "_origin": "ast",
       "id": "backend_web_insert_trades",
-      "community": 24,
+      "community": 17,
       "norm_label": "insert_trades()"
     },
     {
       "label": "enrich()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L700",
+      "source_location": "L752",
       "_origin": "ast",
       "id": "backend_web_enrich",
-      "community": 5,
+      "community": 24,
       "norm_label": "enrich()"
     },
     {
       "label": "query_trades()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L739",
+      "source_location": "L791",
       "_origin": "ast",
       "id": "backend_web_query_trades",
       "community": 26,
@@ -1349,47 +1379,47 @@
       "label": "summarize()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L770",
+      "source_location": "L822",
       "_origin": "ast",
       "id": "backend_web_summarize",
-      "community": 5,
+      "community": 24,
       "norm_label": "summarize()"
     },
     {
       "label": "payments_by_client()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L786",
+      "source_location": "L838",
       "_origin": "ast",
       "id": "backend_web_payments_by_client",
-      "community": 5,
+      "community": 24,
       "norm_label": "payments_by_client()"
     },
     {
       "label": "funds_by_client()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L791",
+      "source_location": "L843",
       "_origin": "ast",
       "id": "backend_web_funds_by_client",
-      "community": 5,
+      "community": 24,
       "norm_label": "funds_by_client()"
     },
     {
       "label": "aggregate_clients_sql()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L796",
+      "source_location": "L848",
       "_origin": "ast",
       "id": "backend_web_aggregate_clients_sql",
-      "community": 5,
+      "community": 24,
       "norm_label": "aggregate_clients_sql()"
     },
     {
       "label": "sync_client_holdings_from_trades()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L891",
+      "source_location": "L943",
       "_origin": "ast",
       "id": "backend_web_sync_client_holdings_from_trades",
       "community": 24,
@@ -1399,7 +1429,7 @@
       "label": "get_client_calculated_holdings()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1015",
+      "source_location": "L1074",
       "_origin": "ast",
       "id": "backend_web_get_client_calculated_holdings",
       "community": 24,
@@ -1409,7 +1439,7 @@
       "label": "get_clients_holding_stock()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1165",
+      "source_location": "L1231",
       "_origin": "ast",
       "id": "backend_web_get_clients_holding_stock",
       "community": 24,
@@ -1419,17 +1449,17 @@
       "label": "sync_trade_profits_to_funds()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1195",
+      "source_location": "L1261",
       "_origin": "ast",
       "id": "backend_web_sync_trade_profits_to_funds",
-      "community": 5,
+      "community": 24,
       "norm_label": "sync_trade_profits_to_funds()"
     },
     {
       "label": "apply_sale_fifo()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1232",
+      "source_location": "L1298",
       "_origin": "ast",
       "id": "backend_web_apply_sale_fifo",
       "community": 24,
@@ -1439,17 +1469,17 @@
       "label": "get_pending_holding_reconciliations()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1411",
+      "source_location": "L1528",
       "_origin": "ast",
       "id": "backend_web_get_pending_holding_reconciliations",
-      "community": 5,
+      "community": 24,
       "norm_label": "get_pending_holding_reconciliations()"
     },
     {
       "label": "repair_client_holdings_data()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1559",
+      "source_location": "L1680",
       "_origin": "ast",
       "id": "backend_web_repair_client_holdings_data",
       "community": 5,
@@ -1459,17 +1489,17 @@
       "label": "rule_label()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1716",
+      "source_location": "L1837",
       "_origin": "ast",
       "id": "backend_web_rule_label",
-      "community": 5,
+      "community": 24,
       "norm_label": "rule_label()"
     },
     {
       "label": "client_values()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1726",
+      "source_location": "L1847",
       "_origin": "ast",
       "id": "backend_web_client_values",
       "community": 26,
@@ -1479,7 +1509,7 @@
       "label": "upload_records()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1740",
+      "source_location": "L1861",
       "_origin": "ast",
       "id": "backend_web_upload_records",
       "community": 17,
@@ -1489,7 +1519,7 @@
       "label": "sheet()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1753",
+      "source_location": "L1874",
       "_origin": "ast",
       "id": "backend_web_sheet",
       "community": 5,
@@ -1499,7 +1529,7 @@
       "label": "workbook_response()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1772",
+      "source_location": "L1893",
       "_origin": "ast",
       "id": "backend_web_workbook_response",
       "community": 5,
@@ -1509,7 +1539,7 @@
       "label": "json_object()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1784",
+      "source_location": "L1905",
       "_origin": "ast",
       "id": "backend_web_json_object",
       "community": 5,
@@ -1519,7 +1549,7 @@
       "label": "owner_hash()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1793",
+      "source_location": "L1914",
       "_origin": "ast",
       "id": "backend_web_owner_hash",
       "community": 5,
@@ -1529,7 +1559,7 @@
       "label": "scope_hash()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1799",
+      "source_location": "L1920",
       "_origin": "ast",
       "id": "backend_web_scope_hash",
       "community": 5,
@@ -1539,7 +1569,7 @@
       "label": "authorize_upload()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1814",
+      "source_location": "L1935",
       "_origin": "ast",
       "id": "backend_web_authorize_upload",
       "community": 5,
@@ -1549,7 +1579,7 @@
       "label": "receipt_signer()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1832",
+      "source_location": "L1953",
       "_origin": "ast",
       "id": "backend_web_receipt_signer",
       "community": 5,
@@ -1559,7 +1589,7 @@
       "label": "payment_signer()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1836",
+      "source_location": "L1957",
       "_origin": "ast",
       "id": "backend_web_payment_signer",
       "community": 5,
@@ -1569,7 +1599,7 @@
       "label": "decode_receipt()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1840",
+      "source_location": "L1961",
       "_origin": "ast",
       "id": "backend_web_decode_receipt",
       "community": 5,
@@ -1579,7 +1609,7 @@
       "label": "receipt_asset()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1854",
+      "source_location": "L1975",
       "_origin": "ast",
       "id": "backend_web_receipt_asset",
       "community": 5,
@@ -1589,7 +1619,7 @@
       "label": "prior_submission()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1873",
+      "source_location": "L1994",
       "_origin": "ast",
       "id": "backend_web_prior_submission",
       "community": 17,
@@ -1599,7 +1629,7 @@
       "label": "create_app()",
       "file_type": "code",
       "source_file": "backend/web.py",
-      "source_location": "L1885",
+      "source_location": "L2006",
       "_origin": "ast",
       "id": "backend_web_create_app",
       "community": 26,
@@ -1646,32 +1676,62 @@
       "norm_label": "call the free is.gd api to get a short url. returns none on any failure."
     },
     {
+      "label": "Return (canonical_stock, set_of_upper_trimmed_variants) for a stock symbol.",
+      "file_type": "rationale",
+      "source_file": "backend/web.py",
+      "source_location": "L377",
+      "_origin": "ast",
+      "id": "backend_web_rationale_377",
+      "community": 24,
+      "norm_label": "return (canonical_stock, set_of_upper_trimmed_variants) for a stock symbol."
+    },
+    {
+      "label": "Build SQL IN clause and ordered parameter tuple for case/whitespace-insensitive",
+      "file_type": "rationale",
+      "source_file": "backend/web.py",
+      "source_location": "L405",
+      "_origin": "ast",
+      "id": "backend_web_rationale_405",
+      "community": 24,
+      "norm_label": "build sql in clause and ordered parameter tuple for case/whitespace-insensitive"
+    },
+    {
+      "label": "Ensure sell_date is valid and never precedes buy_date (required by Postgres trad",
+      "file_type": "rationale",
+      "source_file": "backend/web.py",
+      "source_location": "L414",
+      "_origin": "ast",
+      "id": "backend_web_rationale_414",
+      "community": 24,
+      "norm_label": "ensure sell_date is valid and never precedes buy_date (required by postgres trad"
+    },
+    {
       "label": "Returns all distinct stock names found in trades, client holdings, and aliases w",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L408",
+      "source_location": "L460",
       "_origin": "ast",
-      "id": "backend_web_rationale_408",
-      "community": 24,
+      "id": "backend_web_rationale_460",
+      "community": 5,
       "norm_label": "returns all distinct stock names found in trades, client holdings, and aliases w"
     },
     {
       "label": "Ensure that only main canonical stock names stay in stock_aliases, removing old",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L494",
+      "source_location": "L546",
       "_origin": "ast",
-      "id": "backend_web_rationale_494",
-      "community": 24,
+      "id": "backend_web_rationale_546",
+      "community": 5,
       "norm_label": "ensure that only main canonical stock names stay in stock_aliases, removing old"
     },
     {
       "label": "Returns a list of deduplicated main stock suggestion dicts (cached in memory for",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L527",
+      "source_location": "L579",
       "_origin": "ast",
-      "id": "backend_web_rationale_527",
+      "id": "backend_web_rationale_579",
       "community": 24,
       "norm_label": "returns a list of deduplicated main stock suggestion dicts (cached in memory for"
     },
@@ -1679,9 +1739,9 @@
       "label": "Strip any +91, 91, or 0 country codes and keep only the 10-digit mobile number.",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L580",
+      "source_location": "L632",
       "_origin": "ast",
-      "id": "backend_web_rationale_580",
+      "id": "backend_web_rationale_632",
       "community": 57,
       "norm_label": "strip any +91, 91, or 0 country codes and keep only the 10-digit mobile number."
     },
@@ -1689,9 +1749,9 @@
       "label": "Ensure any client phones with +91 prefixes in SQLite/Supabase are normalized to",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L599",
+      "source_location": "L651",
       "_origin": "ast",
-      "id": "backend_web_rationale_599",
+      "id": "backend_web_rationale_651",
       "community": 57,
       "norm_label": "ensure any client phones with +91 prefixes in sqlite/supabase are normalized to"
     },
@@ -1699,19 +1759,19 @@
       "label": "Aggregate per-client performance and commission directly in SQL.     Replaces O(",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L797",
+      "source_location": "L849",
       "_origin": "ast",
-      "id": "backend_web_rationale_797",
-      "community": 5,
+      "id": "backend_web_rationale_849",
+      "community": 24,
       "norm_label": "aggregate per-client performance and commission directly in sql.     replaces o("
     },
     {
       "label": "Sync open buy trades into client_shares, accumulating all open trades per client",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L892",
+      "source_location": "L944",
       "_origin": "ast",
-      "id": "backend_web_rationale_892",
+      "id": "backend_web_rationale_944",
       "community": 24,
       "norm_label": "sync open buy trades into client_shares, accumulating all open trades per client"
     },
@@ -1719,9 +1779,9 @@
       "label": "Returns list of active clients ({'id': ..., 'name': ...}) who currently hold the",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L1166",
+      "source_location": "L1232",
       "_origin": "ast",
-      "id": "backend_web_rationale_1166",
+      "id": "backend_web_rationale_1232",
       "community": 24,
       "norm_label": "returns list of active clients ({'id': ..., 'name': ...}) who currently hold the"
     },
@@ -1729,19 +1789,19 @@
       "label": "Ensure completed trades have their realized profit recorded in funds ledger exac",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L1196",
+      "source_location": "L1262",
       "_origin": "ast",
-      "id": "backend_web_rationale_1196",
-      "community": 5,
+      "id": "backend_web_rationale_1262",
+      "community": 24,
       "norm_label": "ensure completed trades have their realized profit recorded in funds ledger exac"
     },
     {
       "label": "Apply FIFO deduction when a client sells shares.     - Compares sold quantity to",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L1233",
+      "source_location": "L1299",
       "_origin": "ast",
-      "id": "backend_web_rationale_1233",
+      "id": "backend_web_rationale_1299",
       "community": 24,
       "norm_label": "apply fifo deduction when a client sells shares.     - compares sold quantity to"
     },
@@ -1749,19 +1809,19 @@
       "label": "Detects historical completed trades that correspond to still-open holding lots",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L1412",
+      "source_location": "L1529",
       "_origin": "ast",
-      "id": "backend_web_rationale_1412",
-      "community": 5,
+      "id": "backend_web_rationale_1529",
+      "community": 24,
       "norm_label": "detects historical completed trades that correspond to still-open holding lots"
     },
     {
       "label": "Ensures Sanket (Client 11) has exactly SBC 1,880 shares @ 63.28 buy price,     w",
       "file_type": "rationale",
       "source_file": "backend/web.py",
-      "source_location": "L1560",
+      "source_location": "L1681",
       "_origin": "ast",
-      "id": "backend_web_rationale_1560",
+      "id": "backend_web_rationale_1681",
       "community": 5,
       "norm_label": "ensures sanket (client 11) has exactly sbc 1,880 shares @ 63.28 buy price,     w"
     },
@@ -1786,20 +1846,20 @@
       "norm_label": "notify()"
     },
     {
-      "label": "setMenu()",
+      "label": "initNavigation()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L19",
+      "source_location": "L15",
       "_origin": "ast",
-      "id": "static_app_setmenu",
+      "id": "static_app_initnavigation",
       "community": 21,
-      "norm_label": "setmenu()"
+      "norm_label": "initnavigation()"
     },
     {
       "label": "updatePrivacyMode()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L27",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "static_app_updateprivacymode",
       "community": 21,
@@ -1809,7 +1869,7 @@
       "label": "togglePrivacy()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L54",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "static_app_toggleprivacy",
       "community": 21,
@@ -1819,7 +1879,7 @@
       "label": "initPrivacy()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L91",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "static_app_initprivacy",
       "community": 21,
@@ -1829,7 +1889,7 @@
       "label": "showDialog()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L124",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "static_app_showdialog",
       "community": 21,
@@ -1839,7 +1899,7 @@
       "label": "updateSelection()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L266",
+      "source_location": "L274",
       "_origin": "ast",
       "id": "static_app_updateselection",
       "community": 21,
@@ -1849,7 +1909,7 @@
       "label": "cleanPhoneNumberValue()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L384",
+      "source_location": "L398",
       "_origin": "ast",
       "id": "static_app_cleanphonenumbervalue",
       "community": 21,
@@ -1859,7 +1919,7 @@
       "label": "initPhoneInputs()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L405",
+      "source_location": "L419",
       "_origin": "ast",
       "id": "static_app_initphoneinputs",
       "community": 21,
@@ -1869,7 +1929,7 @@
       "label": "loadStockSuggestions()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L433",
+      "source_location": "L447",
       "_origin": "ast",
       "id": "static_app_loadstocksuggestions",
       "community": 21,
@@ -1879,7 +1939,7 @@
       "label": "initStockAutocomplete()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L452",
+      "source_location": "L466",
       "_origin": "ast",
       "id": "static_app_initstockautocomplete",
       "community": 21,
@@ -1889,7 +1949,7 @@
       "label": "initLazyTables()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L669",
+      "source_location": "L683",
       "_origin": "ast",
       "id": "static_app_initlazytables",
       "community": 21,
@@ -1899,7 +1959,7 @@
       "label": "startProgress()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L792",
+      "source_location": "L806",
       "_origin": "ast",
       "id": "static_app_startprogress",
       "community": 21,
@@ -1909,7 +1969,7 @@
       "label": "completeProgress()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L798",
+      "source_location": "L812",
       "_origin": "ast",
       "id": "static_app_completeprogress",
       "community": 21,
@@ -1919,7 +1979,7 @@
       "label": "isMarketOpenIST()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L952",
+      "source_location": "L966",
       "_origin": "ast",
       "id": "static_app_ismarketopenist",
       "community": 21,
@@ -1929,7 +1989,7 @@
       "label": "updateBadgeUI()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L964",
+      "source_location": "L978",
       "_origin": "ast",
       "id": "static_app_updatebadgeui",
       "community": 21,
@@ -1939,7 +1999,7 @@
       "label": "pollLiveQuotes()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L987",
+      "source_location": "L1001",
       "_origin": "ast",
       "id": "static_app_polllivequotes",
       "community": 21,
@@ -1949,7 +2009,7 @@
       "label": "applyLiveQuoteUpdates()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L1017",
+      "source_location": "L1031",
       "_origin": "ast",
       "id": "static_app_applylivequoteupdates",
       "community": 21,
@@ -1959,7 +2019,7 @@
       "label": "recalculateTotals()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L1148",
+      "source_location": "L1162",
       "_origin": "ast",
       "id": "static_app_recalculatetotals",
       "community": 21,
@@ -1969,7 +2029,7 @@
       "label": "startPolling()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L1197",
+      "source_location": "L1211",
       "_origin": "ast",
       "id": "static_app_startpolling",
       "community": 21,
@@ -1979,7 +2039,7 @@
       "label": "stopPolling()",
       "file_type": "code",
       "source_file": "static/app.js",
-      "source_location": "L1209",
+      "source_location": "L1223",
       "_origin": "ast",
       "id": "static_app_stoppolling",
       "community": 21,
@@ -2062,7 +2122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_c",
-      "community": 39,
+      "community": 42,
       "norm_label": "c()"
     },
     {
@@ -2072,7 +2132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_d",
-      "community": 46,
+      "community": 2,
       "norm_label": "d()"
     },
     {
@@ -2082,7 +2142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_f",
-      "community": 35,
+      "community": 1,
       "norm_label": "f()"
     },
     {
@@ -2142,7 +2202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k",
-      "community": 41,
+      "community": 13,
       "norm_label": "k"
     },
     {
@@ -2152,7 +2212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_constructor",
-      "community": 41,
+      "community": 13,
       "norm_label": ".constructor()"
     },
     {
@@ -2172,7 +2232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_v",
-      "community": 15,
+      "community": 13,
       "norm_label": ".v()"
     },
     {
@@ -2182,7 +2242,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_p",
-      "community": 29,
+      "community": 13,
       "norm_label": ".p()"
     },
     {
@@ -2202,7 +2262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_k_s",
-      "community": 41,
+      "community": 13,
       "norm_label": ".s()"
     },
     {
@@ -2262,7 +2322,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_z",
-      "community": 18,
+      "community": 68,
       "norm_label": "z()"
     },
     {
@@ -2272,7 +2332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e",
-      "community": 6,
+      "community": 69,
       "norm_label": "e"
     },
     {
@@ -2282,7 +2342,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_constructor",
-      "community": 6,
+      "community": 69,
       "norm_label": ".constructor()"
     },
     {
@@ -2292,7 +2352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_w",
-      "community": 6,
+      "community": 69,
       "norm_label": ".w()"
     },
     {
@@ -2302,7 +2362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_u",
-      "community": 6,
+      "community": 69,
       "norm_label": ".u()"
     },
     {
@@ -2312,7 +2372,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_j",
-      "community": 6,
+      "community": 69,
       "norm_label": ".j()"
     },
     {
@@ -2322,7 +2382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_e_h",
-      "community": 6,
+      "community": 69,
       "norm_label": ".h()"
     },
     {
@@ -2482,7 +2542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_j_xt",
-      "community": 44,
+      "community": 65,
       "norm_label": ".xt()"
     },
     {
@@ -2492,7 +2552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_j_st",
-      "community": 53,
+      "community": 1,
       "norm_label": ".st()"
     },
     {
@@ -2502,7 +2562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_h",
-      "community": 6,
+      "community": 52,
       "norm_label": "h"
     },
     {
@@ -2552,7 +2612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u_xt",
-      "community": 44,
+      "community": 65,
       "norm_label": ".xt()"
     },
     {
@@ -2562,7 +2622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_u_st",
-      "community": 35,
+      "community": 18,
       "norm_label": ".st()"
     },
     {
@@ -2582,7 +2642,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_x",
-      "community": 18,
+      "community": 6,
       "norm_label": "x()"
     },
     {
@@ -2622,7 +2682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_j_k",
-      "community": 28,
+      "community": 52,
       "norm_label": ".k()"
     },
     {
@@ -2692,7 +2752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_q_ai",
-      "community": 33,
+      "community": 68,
       "norm_label": ".ai()"
     },
     {
@@ -2702,7 +2762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_q_bi",
-      "community": 33,
+      "community": 68,
       "norm_label": ".bi()"
     },
     {
@@ -2872,7 +2932,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_st_st",
-      "community": 0,
+      "community": 4,
       "norm_label": ".st()"
     },
     {
@@ -2882,7 +2942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et",
-      "community": 38,
+      "community": 36,
       "norm_label": "et"
     },
     {
@@ -2892,7 +2952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_constructor",
-      "community": 38,
+      "community": 36,
       "norm_label": ".constructor()"
     },
     {
@@ -2902,7 +2962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_zi",
-      "community": 25,
+      "community": 2,
       "norm_label": ".zi()"
     },
     {
@@ -2912,7 +2972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_gi",
-      "community": 25,
+      "community": 2,
       "norm_label": ".gi()"
     },
     {
@@ -2922,7 +2982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_at",
-      "community": 38,
+      "community": 36,
       "norm_label": ".at()"
     },
     {
@@ -2932,7 +2992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_ji",
-      "community": 38,
+      "community": 36,
       "norm_label": ".ji()"
     },
     {
@@ -2942,7 +3002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_qi",
-      "community": 38,
+      "community": 36,
       "norm_label": ".qi()"
     },
     {
@@ -2952,7 +3012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_tn",
-      "community": 38,
+      "community": 36,
       "norm_label": ".tn()"
     },
     {
@@ -2962,7 +3022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_tt",
-      "community": 38,
+      "community": 36,
       "norm_label": ".tt()"
     },
     {
@@ -2982,7 +3042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_constructor",
-      "community": 4,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -3202,7 +3262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt",
-      "community": 56,
+      "community": 2,
       "norm_label": "lt()"
     },
     {
@@ -3232,7 +3292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_nn",
-      "community": 30,
+      "community": 14,
       "norm_label": ".nn()"
     },
     {
@@ -3252,7 +3312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_hn",
-      "community": 11,
+      "community": 39,
       "norm_label": ".hn()"
     },
     {
@@ -3322,7 +3382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_qn",
-      "community": 11,
+      "community": 41,
       "norm_label": ".qn()"
     },
     {
@@ -3332,7 +3392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_at_ts",
-      "community": 30,
+      "community": 41,
       "norm_label": ".ts()"
     },
     {
@@ -3552,7 +3612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gt",
-      "community": 51,
+      "community": 18,
       "norm_label": "gt"
     },
     {
@@ -3562,7 +3622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gt_constructor",
-      "community": 51,
+      "community": 18,
       "norm_label": ".constructor()"
     },
     {
@@ -3572,7 +3632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gt_it",
-      "community": 51,
+      "community": 18,
       "norm_label": ".it()"
     },
     {
@@ -3612,7 +3672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yt_bs",
-      "community": 36,
+      "community": 10,
       "norm_label": ".bs()"
     },
     {
@@ -3692,7 +3752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vt",
-      "community": 0,
+      "community": 25,
       "norm_label": "vt()"
     },
     {
@@ -3772,7 +3832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zt_ys",
-      "community": 9,
+      "community": 51,
       "norm_label": ".ys()"
     },
     {
@@ -3792,7 +3852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_et_te",
-      "community": 38,
+      "community": 36,
       "norm_label": ".te()"
     },
     {
@@ -3812,7 +3872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_it",
-      "community": 42,
+      "community": 66,
       "norm_label": "it"
     },
     {
@@ -3822,7 +3882,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_it_constructor",
-      "community": 42,
+      "community": 66,
       "norm_label": ".constructor()"
     },
     {
@@ -3832,7 +3892,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_it_ne",
-      "community": 42,
+      "community": 66,
       "norm_label": ".ne()"
     },
     {
@@ -3842,7 +3902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_it_gs",
-      "community": 42,
+      "community": 66,
       "norm_label": ".gs()"
     },
     {
@@ -3852,7 +3912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_constructor",
-      "community": 56,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -3862,7 +3922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_it",
-      "community": 56,
+      "community": 2,
       "norm_label": ".it()"
     },
     {
@@ -3872,7 +3932,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_z",
-      "community": 56,
+      "community": 6,
       "norm_label": ".z()"
     },
     {
@@ -3882,7 +3942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_lt_oe",
-      "community": 56,
+      "community": 2,
       "norm_label": ".oe()"
     },
     {
@@ -3912,7 +3972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_nt_qs",
-      "community": 36,
+      "community": 31,
       "norm_label": ".qs()"
     },
     {
@@ -3932,7 +3992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ft_ne",
-      "community": 42,
+      "community": 9,
       "norm_label": ".ne()"
     },
     {
@@ -3972,7 +4032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt",
-      "community": 72,
+      "community": 74,
       "norm_label": "jt"
     },
     {
@@ -3982,7 +4042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt_constructor",
-      "community": 72,
+      "community": 74,
       "norm_label": ".constructor()"
     },
     {
@@ -3992,7 +4052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jt_ds",
-      "community": 72,
+      "community": 74,
       "norm_label": ".ds()"
     },
     {
@@ -4002,7 +4062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_ne",
-      "community": 42,
+      "community": 9,
       "norm_label": ".ne()"
     },
     {
@@ -4012,7 +4072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ht_gs",
-      "community": 0,
+      "community": 8,
       "norm_label": ".gs()"
     },
     {
@@ -4092,7 +4152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ut_ne",
-      "community": 42,
+      "community": 9,
       "norm_label": ".ne()"
     },
     {
@@ -4142,7 +4202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yt_constructor",
-      "community": 4,
+      "community": 1,
       "norm_label": ".constructor()"
     },
     {
@@ -4232,7 +4292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zt_ne",
-      "community": 42,
+      "community": 9,
       "norm_label": ".ne()"
     },
     {
@@ -4242,7 +4302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zt_gs",
-      "community": 0,
+      "community": 1,
       "norm_label": ".gs()"
     },
     {
@@ -4252,7 +4312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gt_ne",
-      "community": 51,
+      "community": 18,
       "norm_label": ".ne()"
     },
     {
@@ -4312,7 +4372,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ti",
-      "community": 50,
+      "community": 1,
       "norm_label": "ti"
     },
     {
@@ -4322,7 +4382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ti_constructor",
-      "community": 50,
+      "community": 1,
       "norm_label": ".constructor()"
     },
     {
@@ -4332,7 +4392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ti_ar",
-      "community": 50,
+      "community": 1,
       "norm_label": ".ar()"
     },
     {
@@ -4342,7 +4402,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ti_k",
-      "community": 50,
+      "community": 1,
       "norm_label": ".k()"
     },
     {
@@ -4352,7 +4412,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii",
-      "community": 67,
+      "community": 6,
       "norm_label": "ii"
     },
     {
@@ -4362,7 +4422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii_constructor",
-      "community": 67,
+      "community": 6,
       "norm_label": ".constructor()"
     },
     {
@@ -4432,7 +4492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si",
-      "community": 53,
+      "community": 1,
       "norm_label": "si"
     },
     {
@@ -4442,7 +4502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_constructor",
-      "community": 53,
+      "community": 1,
       "norm_label": ".constructor()"
     },
     {
@@ -4452,7 +4512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_gt",
-      "community": 53,
+      "community": 1,
       "norm_label": ".gt()"
     },
     {
@@ -4462,7 +4522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_xt",
-      "community": 50,
+      "community": 1,
       "norm_label": ".xt()"
     },
     {
@@ -4472,7 +4532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ei",
-      "community": 69,
+      "community": 6,
       "norm_label": "ei"
     },
     {
@@ -4482,7 +4542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ei_constructor",
-      "community": 69,
+      "community": 6,
       "norm_label": ".constructor()"
     },
     {
@@ -4492,7 +4552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ei_yr",
-      "community": 69,
+      "community": 1,
       "norm_label": ".yr()"
     },
     {
@@ -4552,7 +4612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_li",
-      "community": 34,
+      "community": 56,
       "norm_label": "li()"
     },
     {
@@ -4562,7 +4622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ai",
-      "community": 34,
+      "community": 42,
       "norm_label": "ai()"
     },
     {
@@ -4592,7 +4652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_jr",
-      "community": 32,
+      "community": 34,
       "norm_label": ".jr()"
     },
     {
@@ -4602,7 +4662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_hr",
-      "community": 32,
+      "community": 34,
       "norm_label": ".hr()"
     },
     {
@@ -4652,7 +4712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_xt",
-      "community": 44,
+      "community": 34,
       "norm_label": ".xt()"
     },
     {
@@ -4662,7 +4722,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_oi_st",
-      "community": 34,
+      "community": 51,
       "norm_label": ".st()"
     },
     {
@@ -4702,7 +4762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci",
-      "community": 1,
+      "community": 46,
       "norm_label": "ci()"
     },
     {
@@ -4712,7 +4772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di",
-      "community": 66,
+      "community": 72,
       "norm_label": "di()"
     },
     {
@@ -4752,7 +4812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi",
-      "community": 27,
+      "community": 25,
       "norm_label": "mi"
     },
     {
@@ -4762,7 +4822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_constructor",
-      "community": 27,
+      "community": 25,
       "norm_label": ".constructor()"
     },
     {
@@ -4772,7 +4832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_it",
-      "community": 27,
+      "community": 25,
       "norm_label": ".it()"
     },
     {
@@ -4782,7 +4842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_ar",
-      "community": 18,
+      "community": 25,
       "norm_label": ".ar()"
     },
     {
@@ -4832,7 +4892,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gi",
-      "community": 0,
+      "community": 4,
       "norm_label": "gi()"
     },
     {
@@ -4842,7 +4902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_gt",
-      "community": 27,
+      "community": 25,
       "norm_label": ".gt()"
     },
     {
@@ -4852,7 +4912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_xt",
-      "community": 27,
+      "community": 25,
       "norm_label": ".xt()"
     },
     {
@@ -4862,7 +4922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_lh",
-      "community": 0,
+      "community": 25,
       "norm_label": ".lh()"
     },
     {
@@ -4872,7 +4932,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mi_hh",
-      "community": 0,
+      "community": 25,
       "norm_label": ".hh()"
     },
     {
@@ -4912,7 +4972,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_ii",
-      "community": 53,
+      "community": 1,
       "norm_label": ".ii()"
     },
     {
@@ -4922,7 +4982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_fh",
-      "community": 53,
+      "community": 1,
       "norm_label": ".fh()"
     },
     {
@@ -4932,7 +4992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_si_dh",
-      "community": 53,
+      "community": 1,
       "norm_label": ".dh()"
     },
     {
@@ -5052,7 +5112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ki_th",
-      "community": 52,
+      "community": 19,
       "norm_label": ".th()"
     },
     {
@@ -5082,7 +5142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_constructor",
-      "community": 1,
+      "community": 46,
       "norm_label": ".constructor()"
     },
     {
@@ -5092,7 +5152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_ah",
-      "community": 1,
+      "community": 46,
       "norm_label": ".ah()"
     },
     {
@@ -5102,7 +5162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_bh",
-      "community": 1,
+      "community": 46,
       "norm_label": ".bh()"
     },
     {
@@ -5112,7 +5172,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_ph",
-      "community": 1,
+      "community": 46,
       "norm_label": ".ph()"
     },
     {
@@ -5122,7 +5182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ci_rh",
-      "community": 1,
+      "community": 46,
       "norm_label": ".rh()"
     },
     {
@@ -5132,7 +5192,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ti_yr",
-      "community": 50,
+      "community": 1,
       "norm_label": ".yr()"
     },
     {
@@ -5152,7 +5212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pi_ii",
-      "community": 53,
+      "community": 1,
       "norm_label": ".ii()"
     },
     {
@@ -5172,7 +5232,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_nh",
-      "community": 32,
+      "community": 34,
       "norm_label": ".nh()"
     },
     {
@@ -5202,7 +5262,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_jh",
-      "community": 1,
+      "community": 33,
       "norm_label": ".jh()"
     },
     {
@@ -5232,7 +5292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ri_zh",
-      "community": 4,
+      "community": 1,
       "norm_label": ".zh()"
     },
     {
@@ -5242,7 +5302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di_constructor",
-      "community": 66,
+      "community": 72,
       "norm_label": ".constructor()"
     },
     {
@@ -5252,7 +5312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_di_qt",
-      "community": 66,
+      "community": 72,
       "norm_label": ".qt()"
     },
     {
@@ -5262,7 +5322,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ai_constructor",
-      "community": 23,
+      "community": 42,
       "norm_label": ".constructor()"
     },
     {
@@ -5272,7 +5332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ai_hs",
-      "community": 42,
+      "community": 9,
       "norm_label": ".hs()"
     },
     {
@@ -5502,7 +5562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ii_k",
-      "community": 67,
+      "community": 68,
       "norm_label": ".k()"
     },
     {
@@ -5522,7 +5582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_li_constructor",
-      "community": 34,
+      "community": 56,
       "norm_label": ".constructor()"
     },
     {
@@ -5532,7 +5592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_li_xt",
-      "community": 34,
+      "community": 56,
       "norm_label": ".xt()"
     },
     {
@@ -5542,7 +5602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_li_ml",
-      "community": 52,
+      "community": 56,
       "norm_label": ".ml()"
     },
     {
@@ -5592,7 +5652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji",
-      "community": 13,
+      "community": 19,
       "norm_label": "ji"
     },
     {
@@ -5602,7 +5662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_constructor",
-      "community": 13,
+      "community": 19,
       "norm_label": ".constructor()"
     },
     {
@@ -5612,7 +5672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_cl",
-      "community": 13,
+      "community": 19,
       "norm_label": ".cl()"
     },
     {
@@ -5622,7 +5682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_on",
-      "community": 13,
+      "community": 19,
       "norm_label": ".on()"
     },
     {
@@ -5632,7 +5692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_pn",
-      "community": 13,
+      "community": 19,
       "norm_label": ".pn()"
     },
     {
@@ -5642,7 +5702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_tn",
-      "community": 13,
+      "community": 19,
       "norm_label": ".tn()"
     },
     {
@@ -5652,7 +5712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_rn",
-      "community": 13,
+      "community": 19,
       "norm_label": ".rn()"
     },
     {
@@ -5672,7 +5732,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_pl",
-      "community": 13,
+      "community": 19,
       "norm_label": ".pl()"
     },
     {
@@ -5682,7 +5742,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_rl",
-      "community": 13,
+      "community": 19,
       "norm_label": ".rl()"
     },
     {
@@ -5692,7 +5752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ji_br",
-      "community": 13,
+      "community": 19,
       "norm_label": ".br()"
     },
     {
@@ -5702,7 +5762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_hi",
-      "community": 52,
+      "community": 56,
       "norm_label": "hi()"
     },
     {
@@ -5712,7 +5772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_qi",
-      "community": 13,
+      "community": 19,
       "norm_label": "qi()"
     },
     {
@@ -5742,7 +5802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_h",
-      "community": 53,
+      "community": 1,
       "norm_label": "._h()"
     },
     {
@@ -5752,7 +5812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_yr",
-      "community": 0,
+      "community": 1,
       "norm_label": ".yr()"
     },
     {
@@ -5772,7 +5832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_nh",
-      "community": 25,
+      "community": 14,
       "norm_label": ".nh()"
     },
     {
@@ -5842,7 +5902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_xh",
-      "community": 23,
+      "community": 42,
       "norm_label": ".xh()"
     },
     {
@@ -5902,7 +5962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_pn",
-      "community": 52,
+      "community": 4,
       "norm_label": ".pn()"
     },
     {
@@ -5942,7 +6002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_oa",
-      "community": 23,
+      "community": 65,
       "norm_label": ".oa()"
     },
     {
@@ -5982,7 +6042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_rl",
-      "community": 1,
+      "community": 46,
       "norm_label": ".rl()"
     },
     {
@@ -6042,7 +6102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_uh",
-      "community": 53,
+      "community": 1,
       "norm_label": ".uh()"
     },
     {
@@ -6052,7 +6112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_tt",
-      "community": 53,
+      "community": 1,
       "norm_label": ".tt()"
     },
     {
@@ -6072,7 +6132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_wa",
-      "community": 13,
+      "community": 19,
       "norm_label": ".wa()"
     },
     {
@@ -6102,7 +6162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_ea",
-      "community": 23,
+      "community": 2,
       "norm_label": ".ea()"
     },
     {
@@ -6112,7 +6172,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_a",
-      "community": 23,
+      "community": 42,
       "norm_label": "._a()"
     },
     {
@@ -6162,7 +6222,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_yi_yl",
-      "community": 10,
+      "community": 32,
       "norm_label": ".yl()"
     },
     {
@@ -6192,7 +6252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_xi_ca",
-      "community": 4,
+      "community": 2,
       "norm_label": ".ca()"
     },
     {
@@ -6232,7 +6292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zi_xt",
-      "community": 35,
+      "community": 10,
       "norm_label": ".xt()"
     },
     {
@@ -6242,7 +6302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gi_constructor",
-      "community": 0,
+      "community": 4,
       "norm_label": ".constructor()"
     },
     {
@@ -6252,7 +6312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gi_wh",
-      "community": 52,
+      "community": 4,
       "norm_label": ".wh()"
     },
     {
@@ -6272,7 +6332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_nn",
-      "community": 0,
+      "community": 1,
       "norm_label": "nn()"
     },
     {
@@ -6382,7 +6442,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_n_xa",
-      "community": 40,
+      "community": 1,
       "norm_label": ".xa()"
     },
     {
@@ -6422,7 +6482,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_un",
-      "community": 25,
+      "community": 2,
       "norm_label": "un()"
     },
     {
@@ -6452,7 +6512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_xa",
-      "community": 46,
+      "community": 2,
       "norm_label": ".xa()"
     },
     {
@@ -6632,7 +6692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ot",
-      "community": 0,
+      "community": 1,
       "norm_label": ".ot()"
     },
     {
@@ -6692,7 +6752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_no",
-      "community": 25,
+      "community": 2,
       "norm_label": ".no()"
     },
     {
@@ -6722,7 +6782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_pt",
-      "community": 4,
+      "community": 1,
       "norm_label": ".pt()"
     },
     {
@@ -6742,7 +6802,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_ia",
-      "community": 4,
+      "community": 1,
       "norm_label": ".ia()"
     },
     {
@@ -6752,7 +6812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_vn_o",
-      "community": 1,
+      "community": 13,
       "norm_label": ".$o()"
     },
     {
@@ -7022,7 +7082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_d",
-      "community": 46,
+      "community": 2,
       "norm_label": ".d_()"
     },
     {
@@ -7032,7 +7092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_s",
-      "community": 29,
+      "community": 13,
       "norm_label": ".s()"
     },
     {
@@ -7042,7 +7102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_v",
-      "community": 4,
+      "community": 2,
       "norm_label": ".v_()"
     },
     {
@@ -7082,7 +7142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_et",
-      "community": 53,
+      "community": 1,
       "norm_label": ".et()"
     },
     {
@@ -7092,7 +7152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_m",
-      "community": 25,
+      "community": 2,
       "norm_label": ".m_()"
     },
     {
@@ -7102,7 +7162,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_oo",
-      "community": 4,
+      "community": 2,
       "norm_label": ".oo()"
     },
     {
@@ -7112,7 +7172,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_ta",
-      "community": 46,
+      "community": 2,
       "norm_label": ".ta()"
     },
     {
@@ -7122,7 +7182,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_dr",
-      "community": 4,
+      "community": 2,
       "norm_label": ".dr()"
     },
     {
@@ -7132,7 +7192,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_fo",
-      "community": 25,
+      "community": 2,
       "norm_label": ".fo()"
     },
     {
@@ -7142,7 +7202,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_jo",
-      "community": 46,
+      "community": 2,
       "norm_label": ".jo()"
     },
     {
@@ -7162,7 +7222,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_y",
-      "community": 46,
+      "community": 2,
       "norm_label": ".y_()"
     },
     {
@@ -7212,7 +7272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_vn",
-      "community": 4,
+      "community": 2,
       "norm_label": ".vn()"
     },
     {
@@ -7232,7 +7292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_x",
-      "community": 46,
+      "community": 2,
       "norm_label": ".x_()"
     },
     {
@@ -7272,7 +7332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_e",
-      "community": 37,
+      "community": 68,
       "norm_label": ".e_()"
     },
     {
@@ -7292,7 +7352,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pn_g",
-      "community": 25,
+      "community": 2,
       "norm_label": ".g_()"
     },
     {
@@ -7312,7 +7372,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn",
-      "community": 0,
+      "community": 37,
       "norm_label": "mn"
     },
     {
@@ -7322,7 +7382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn_constructor",
-      "community": 0,
+      "community": 37,
       "norm_label": ".constructor()"
     },
     {
@@ -7332,7 +7392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn_f",
-      "community": 0,
+      "community": 37,
       "norm_label": ".f_()"
     },
     {
@@ -7352,7 +7412,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_constructor",
-      "community": 39,
+      "community": 42,
       "norm_label": ".constructor()"
     },
     {
@@ -7362,7 +7422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_os",
-      "community": 0,
+      "community": 25,
       "norm_label": ".os()"
     },
     {
@@ -7372,7 +7432,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_di",
-      "community": 0,
+      "community": 25,
       "norm_label": ".di()"
     },
     {
@@ -7392,7 +7452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_kr",
-      "community": 34,
+      "community": 19,
       "norm_label": ".kr()"
     },
     {
@@ -7402,7 +7462,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_bn_mh",
-      "community": 0,
+      "community": 25,
       "norm_label": ".mh()"
     },
     {
@@ -7412,7 +7472,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_wn",
-      "community": 0,
+      "community": 25,
       "norm_label": "wn()"
     },
     {
@@ -7422,7 +7482,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn",
-      "community": 47,
+      "community": 19,
       "norm_label": "gn"
     },
     {
@@ -7432,7 +7492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_constructor",
-      "community": 47,
+      "community": 19,
       "norm_label": ".constructor()"
     },
     {
@@ -7442,7 +7502,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_x",
-      "community": 47,
+      "community": 19,
       "norm_label": ".x_()"
     },
     {
@@ -7452,7 +7512,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_k",
-      "community": 47,
+      "community": 19,
       "norm_label": ".k_()"
     },
     {
@@ -7462,7 +7522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_g",
-      "community": 47,
+      "community": 19,
       "norm_label": ".g_()"
     },
     {
@@ -7472,7 +7532,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_z",
-      "community": 47,
+      "community": 19,
       "norm_label": ".z_()"
     },
     {
@@ -7482,7 +7542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_gn_q",
-      "community": 47,
+      "community": 19,
       "norm_label": ".q_()"
     },
     {
@@ -7492,7 +7552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn_iu",
-      "community": 0,
+      "community": 37,
       "norm_label": ".iu()"
     },
     {
@@ -7502,7 +7562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn_nu",
-      "community": 0,
+      "community": 37,
       "norm_label": ".nu()"
     },
     {
@@ -7512,7 +7572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_mn_su",
-      "community": 0,
+      "community": 37,
       "norm_label": ".su()"
     },
     {
@@ -7532,7 +7592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_constructor",
-      "community": 0,
+      "community": 37,
       "norm_label": ".constructor()"
     },
     {
@@ -7572,7 +7632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_mn",
-      "community": 4,
+      "community": 2,
       "norm_label": ".mn()"
     },
     {
@@ -7582,7 +7642,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_qi",
-      "community": 0,
+      "community": 4,
       "norm_label": ".qi()"
     },
     {
@@ -7602,7 +7662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_fi",
-      "community": 0,
+      "community": 51,
       "norm_label": ".fi()"
     },
     {
@@ -7612,7 +7672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ya",
-      "community": 0,
+      "community": 32,
       "norm_label": ".ya()"
     },
     {
@@ -7622,7 +7682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_xs",
-      "community": 0,
+      "community": 51,
       "norm_label": ".xs()"
     },
     {
@@ -7642,7 +7702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ku",
-      "community": 0,
+      "community": 50,
       "norm_label": ".ku()"
     },
     {
@@ -7652,7 +7712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_cu",
-      "community": 0,
+      "community": 50,
       "norm_label": ".cu()"
     },
     {
@@ -7672,7 +7732,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_i",
-      "community": 0,
+      "community": 4,
       "norm_label": ".$i()"
     },
     {
@@ -7692,7 +7752,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_it",
-      "community": 0,
+      "community": 51,
       "norm_label": ".it()"
     },
     {
@@ -7712,7 +7772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_bu",
-      "community": 0,
+      "community": 4,
       "norm_label": ".bu()"
     },
     {
@@ -7752,7 +7812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_iu",
-      "community": 0,
+      "community": 53,
       "norm_label": ".iu()"
     },
     {
@@ -7762,7 +7822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ia",
-      "community": 0,
+      "community": 51,
       "norm_label": ".ia()"
     },
     {
@@ -7782,7 +7842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ju",
-      "community": 0,
+      "community": 4,
       "norm_label": ".ju()"
     },
     {
@@ -7792,7 +7852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_uo",
-      "community": 0,
+      "community": 53,
       "norm_label": ".uo()"
     },
     {
@@ -7802,7 +7862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_qo",
-      "community": 67,
+      "community": 29,
       "norm_label": ".qo()"
     },
     {
@@ -7812,7 +7872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_yo",
-      "community": 0,
+      "community": 53,
       "norm_label": ".yo()"
     },
     {
@@ -7822,7 +7882,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_xo",
-      "community": 0,
+      "community": 53,
       "norm_label": ".xo()"
     },
     {
@@ -7832,7 +7892,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ko",
-      "community": 0,
+      "community": 4,
       "norm_label": ".ko()"
     },
     {
@@ -7842,7 +7902,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_zo",
-      "community": 0,
+      "community": 53,
       "norm_label": ".zo()"
     },
     {
@@ -7852,7 +7912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_uu",
-      "community": 0,
+      "community": 50,
       "norm_label": ".uu()"
     },
     {
@@ -7862,7 +7922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_qu",
-      "community": 0,
+      "community": 50,
       "norm_label": ".qu()"
     },
     {
@@ -7902,7 +7962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_au",
-      "community": 0,
+      "community": 4,
       "norm_label": ".au()"
     },
     {
@@ -7922,7 +7982,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_yi",
-      "community": 0,
+      "community": 4,
       "norm_label": ".yi()"
     },
     {
@@ -7932,7 +7992,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_lu",
-      "community": 0,
+      "community": 51,
       "norm_label": ".lu()"
     },
     {
@@ -7942,7 +8002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_tu",
-      "community": 0,
+      "community": 50,
       "norm_label": ".tu()"
     },
     {
@@ -7952,7 +8012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_pu",
-      "community": 0,
+      "community": 50,
       "norm_label": ".pu()"
     },
     {
@@ -7962,7 +8022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_ic",
-      "community": 0,
+      "community": 4,
       "norm_label": ".ic()"
     },
     {
@@ -7972,7 +8032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_vu",
-      "community": 0,
+      "community": 4,
       "norm_label": ".vu()"
     },
     {
@@ -7992,7 +8052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_su",
-      "community": 0,
+      "community": 37,
       "norm_label": ".su()"
     },
     {
@@ -8032,7 +8092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_hc",
-      "community": 0,
+      "community": 50,
       "norm_label": ".hc()"
     },
     {
@@ -8052,7 +8112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_hu",
-      "community": 0,
+      "community": 53,
       "norm_label": ".hu()"
     },
     {
@@ -8062,7 +8122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_u",
-      "community": 0,
+      "community": 53,
       "norm_label": ".$u()"
     },
     {
@@ -8072,7 +8132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_nu",
-      "community": 0,
+      "community": 51,
       "norm_label": ".nu()"
     },
     {
@@ -8082,7 +8142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_lc",
-      "community": 0,
+      "community": 51,
       "norm_label": ".lc()"
     },
     {
@@ -8092,7 +8152,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_sn_sc",
-      "community": 0,
+      "community": 37,
       "norm_label": ".sc()"
     },
     {
@@ -8222,7 +8282,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_kn_xt",
-      "community": 67,
+      "community": 68,
       "norm_label": ".xt()"
     },
     {
@@ -8232,7 +8292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_kn_st",
-      "community": 44,
+      "community": 65,
       "norm_label": ".st()"
     },
     {
@@ -8322,7 +8382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_fh",
-      "community": 32,
+      "community": 14,
       "norm_label": ".fh()"
     },
     {
@@ -8332,7 +8392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_sa",
-      "community": 14,
+      "community": 34,
       "norm_label": ".sa()"
     },
     {
@@ -8392,7 +8452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ec",
-      "community": 11,
+      "community": 2,
       "norm_label": ".ec()"
     },
     {
@@ -8402,7 +8462,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ic",
-      "community": 11,
+      "community": 2,
       "norm_label": ".ic()"
     },
     {
@@ -8432,7 +8492,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_nc",
-      "community": 14,
+      "community": 12,
       "norm_label": ".nc()"
     },
     {
@@ -8462,7 +8522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_jc",
-      "community": 4,
+      "community": 2,
       "norm_label": ".jc()"
     },
     {
@@ -8492,7 +8552,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_k",
-      "community": 14,
+      "community": 32,
       "norm_label": ".k_()"
     },
     {
@@ -8502,7 +8562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_c",
-      "community": 37,
+      "community": 14,
       "norm_label": ".c_()"
     },
     {
@@ -8512,7 +8572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_t",
-      "community": 37,
+      "community": 32,
       "norm_label": ".t_()"
     },
     {
@@ -8532,7 +8592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_r",
-      "community": 37,
+      "community": 14,
       "norm_label": ".r_()"
     },
     {
@@ -8542,7 +8602,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_d",
-      "community": 37,
+      "community": 14,
       "norm_label": ".d_()"
     },
     {
@@ -8552,7 +8612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_a",
-      "community": 37,
+      "community": 14,
       "norm_label": ".a_()"
     },
     {
@@ -8562,7 +8622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_uc",
-      "community": 0,
+      "community": 4,
       "norm_label": ".uc()"
     },
     {
@@ -8592,7 +8652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_gc",
-      "community": 32,
+      "community": 14,
       "norm_label": ".gc()"
     },
     {
@@ -8632,7 +8692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_mt",
-      "community": 67,
+      "community": 10,
       "norm_label": ".mt()"
     },
     {
@@ -8642,7 +8702,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_td",
-      "community": 14,
+      "community": 65,
       "norm_label": ".td()"
     },
     {
@@ -8652,7 +8712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ql",
-      "community": 37,
+      "community": 14,
       "norm_label": ".ql()"
     },
     {
@@ -8662,7 +8722,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_nd",
-      "community": 34,
+      "community": 19,
       "norm_label": ".nd()"
     },
     {
@@ -8702,7 +8762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_s",
-      "community": 41,
+      "community": 38,
       "norm_label": ".s()"
     },
     {
@@ -8712,7 +8772,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_sd",
-      "community": 29,
+      "community": 10,
       "norm_label": ".sd()"
     },
     {
@@ -8732,7 +8792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_f",
-      "community": 29,
+      "community": 13,
       "norm_label": ".f_()"
     },
     {
@@ -8752,7 +8812,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hd",
-      "community": 41,
+      "community": 32,
       "norm_label": ".hd()"
     },
     {
@@ -8762,7 +8822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hl",
-      "community": 25,
+      "community": 2,
       "norm_label": ".hl()"
     },
     {
@@ -8772,7 +8832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_qu",
-      "community": 41,
+      "community": 14,
       "norm_label": ".qu()"
     },
     {
@@ -8782,7 +8842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_ld",
-      "community": 30,
+      "community": 14,
       "norm_label": ".ld()"
     },
     {
@@ -8792,7 +8852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_zn",
-      "community": 43,
+      "community": 14,
       "norm_label": ".zn()"
     },
     {
@@ -8812,7 +8872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_jn",
-      "community": 67,
+      "community": 29,
       "norm_label": ".jn()"
     },
     {
@@ -8852,7 +8912,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_od",
-      "community": 10,
+      "community": 67,
       "norm_label": ".od()"
     },
     {
@@ -8862,7 +8922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_q",
-      "community": 68,
+      "community": 67,
       "norm_label": ".q()"
     },
     {
@@ -8882,7 +8942,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_hc",
-      "community": 37,
+      "community": 14,
       "norm_label": ".hc()"
     },
     {
@@ -8902,7 +8962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_an_oc",
-      "community": 37,
+      "community": 14,
       "norm_label": ".oc()"
     },
     {
@@ -8982,7 +9042,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn",
-      "community": 30,
+      "community": 73,
       "norm_label": "fn"
     },
     {
@@ -8992,7 +9052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn_constructor",
-      "community": 30,
+      "community": 73,
       "norm_label": ".constructor()"
     },
     {
@@ -9002,7 +9062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fn_f",
-      "community": 30,
+      "community": 73,
       "norm_label": ".f_()"
     },
     {
@@ -9012,7 +9072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_jn",
-      "community": 11,
+      "community": 39,
       "norm_label": "jn()"
     },
     {
@@ -9062,7 +9122,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_zn_preprocessdata",
-      "community": 43,
+      "community": 30,
       "norm_label": ".preprocessdata()"
     },
     {
@@ -9182,7 +9242,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ss",
-      "community": 67,
+      "community": 68,
       "norm_label": "ss()"
     },
     {
@@ -9212,7 +9272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ls",
-      "community": 35,
+      "community": 45,
       "norm_label": "ls()"
     },
     {
@@ -9332,7 +9392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_fs",
-      "community": 67,
+      "community": 68,
       "norm_label": "fs()"
     },
     {
@@ -9612,7 +9672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_xs",
-      "community": 6,
+      "community": 65,
       "norm_label": "xs()"
     },
     {
@@ -9622,7 +9682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ys",
-      "community": 46,
+      "community": 2,
       "norm_label": "ys()"
     },
     {
@@ -9652,7 +9712,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_s",
-      "community": 29,
+      "community": 13,
       "norm_label": ".s()"
     },
     {
@@ -9662,7 +9722,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_jv",
-      "community": 68,
+      "community": 67,
       "norm_label": ".jv()"
     },
     {
@@ -9702,7 +9762,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_yv",
-      "community": 67,
+      "community": 29,
       "norm_label": ".yv()"
     },
     {
@@ -9722,7 +9782,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ji",
-      "community": 29,
+      "community": 13,
       "norm_label": ".ji()"
     },
     {
@@ -9732,7 +9792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_at",
-      "community": 4,
+      "community": 2,
       "norm_label": ".at()"
     },
     {
@@ -9772,7 +9832,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ep",
-      "community": 52,
+      "community": 35,
       "norm_label": ".ep()"
     },
     {
@@ -9782,7 +9842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_gt",
-      "community": 0,
+      "community": 68,
       "norm_label": ".gt()"
     },
     {
@@ -9792,7 +9852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_vv",
-      "community": 68,
+      "community": 32,
       "norm_label": ".vv()"
     },
     {
@@ -9802,7 +9862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_ev",
-      "community": 68,
+      "community": 32,
       "norm_label": ".ev()"
     },
     {
@@ -9812,7 +9872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_iv",
-      "community": 68,
+      "community": 32,
       "norm_label": ".iv()"
     },
     {
@@ -9832,7 +9892,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_nv",
-      "community": 68,
+      "community": 10,
       "norm_label": ".nv()"
     },
     {
@@ -9892,7 +9952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_hp",
-      "community": 33,
+      "community": 68,
       "norm_label": ".hp()"
     },
     {
@@ -9942,7 +10002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ks_uv",
-      "community": 18,
+      "community": 68,
       "norm_label": ".uv()"
     },
     {
@@ -9952,7 +10012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ts",
-      "community": 67,
+      "community": 12,
       "norm_label": "ts()"
     },
     {
@@ -9972,7 +10032,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_s",
-      "community": 29,
+      "community": 13,
       "norm_label": ".s()"
     },
     {
@@ -10002,7 +10062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_jv",
-      "community": 12,
+      "community": 67,
       "norm_label": ".jv()"
     },
     {
@@ -10022,7 +10082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_rp",
-      "community": 11,
+      "community": 39,
       "norm_label": ".rp()"
     },
     {
@@ -10032,7 +10092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_v",
-      "community": 12,
+      "community": 35,
       "norm_label": ".v_()"
     },
     {
@@ -10042,7 +10102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_p",
-      "community": 14,
+      "community": 12,
       "norm_label": ".p_()"
     },
     {
@@ -10212,7 +10272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_br",
-      "community": 12,
+      "community": 65,
       "norm_label": ".br()"
     },
     {
@@ -10232,7 +10292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_yv",
-      "community": 67,
+      "community": 29,
       "norm_label": ".yv()"
     },
     {
@@ -10242,7 +10302,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_up",
-      "community": 46,
+      "community": 2,
       "norm_label": ".up()"
     },
     {
@@ -10272,7 +10332,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_zv",
-      "community": 67,
+      "community": 12,
       "norm_label": ".zv()"
     },
     {
@@ -10302,7 +10362,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_qv",
-      "community": 67,
+      "community": 12,
       "norm_label": ".qv()"
     },
     {
@@ -10312,7 +10372,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_mp",
-      "community": 29,
+      "community": 13,
       "norm_label": ".mp()"
     },
     {
@@ -10332,7 +10392,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_yp",
-      "community": 67,
+      "community": 68,
       "norm_label": ".yp()"
     },
     {
@@ -10342,7 +10402,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_xp",
-      "community": 67,
+      "community": 12,
       "norm_label": ".xp()"
     },
     {
@@ -10352,7 +10412,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_kp",
-      "community": 67,
+      "community": 12,
       "norm_label": ".kp()"
     },
     {
@@ -10362,7 +10422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_qp",
-      "community": 67,
+      "community": 12,
       "norm_label": ".qp()"
     },
     {
@@ -10372,7 +10432,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_jp",
-      "community": 67,
+      "community": 12,
       "norm_label": ".jp()"
     },
     {
@@ -10382,7 +10442,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ds_pp",
-      "community": 29,
+      "community": 10,
       "norm_label": ".pp()"
     },
     {
@@ -10532,7 +10592,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_zv",
-      "community": 45,
+      "community": 68,
       "norm_label": ".zv()"
     },
     {
@@ -10552,7 +10612,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_os_ep",
-      "community": 52,
+      "community": 45,
       "norm_label": ".ep()"
     },
     {
@@ -10602,7 +10662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_jv",
-      "community": 10,
+      "community": 38,
       "norm_label": ".jv()"
     },
     {
@@ -10762,7 +10822,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_mm",
-      "community": 67,
+      "community": 29,
       "norm_label": ".mm()"
     },
     {
@@ -10782,7 +10842,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_gt",
-      "community": 32,
+      "community": 34,
       "norm_label": ".gt()"
     },
     {
@@ -10792,7 +10852,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_sp",
-      "community": 52,
+      "community": 35,
       "norm_label": ".sp()"
     },
     {
@@ -10802,7 +10862,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_ep",
-      "community": 52,
+      "community": 35,
       "norm_label": ".ep()"
     },
     {
@@ -10812,7 +10872,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_zv",
-      "community": 67,
+      "community": 10,
       "norm_label": ".zv()"
     },
     {
@@ -10822,7 +10882,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_km",
-      "community": 67,
+      "community": 10,
       "norm_label": ".km()"
     },
     {
@@ -10862,7 +10922,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_cm",
-      "community": 67,
+      "community": 10,
       "norm_label": ".cm()"
     },
     {
@@ -10892,7 +10952,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_es_uv",
-      "community": 10,
+      "community": 68,
       "norm_label": ".uv()"
     },
     {
@@ -10942,7 +11002,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_constructor",
-      "community": 11,
+      "community": 47,
       "norm_label": ".constructor()"
     },
     {
@@ -10952,7 +11012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_qt",
-      "community": 68,
+      "community": 32,
       "norm_label": ".qt()"
     },
     {
@@ -10962,7 +11022,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_w",
-      "community": 35,
+      "community": 10,
       "norm_label": ".w()"
     },
     {
@@ -10992,7 +11052,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_s",
-      "community": 11,
+      "community": 38,
       "norm_label": ".s()"
     },
     {
@@ -11002,7 +11062,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_qm",
-      "community": 11,
+      "community": 47,
       "norm_label": ".qm()"
     },
     {
@@ -11012,7 +11072,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_zv",
-      "community": 11,
+      "community": 39,
       "norm_label": ".zv()"
     },
     {
@@ -11022,7 +11082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_nh",
-      "community": 11,
+      "community": 47,
       "norm_label": ".nh()"
     },
     {
@@ -11032,7 +11092,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_fp",
-      "community": 11,
+      "community": 38,
       "norm_label": ".fp()"
     },
     {
@@ -11042,7 +11102,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_wp",
-      "community": 11,
+      "community": 38,
       "norm_label": ".wp()"
     },
     {
@@ -11052,7 +11112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_wc",
-      "community": 11,
+      "community": 47,
       "norm_label": ".wc()"
     },
     {
@@ -11152,7 +11212,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_jm",
-      "community": 11,
+      "community": 39,
       "norm_label": ".jm()"
     },
     {
@@ -11182,7 +11242,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_fb",
-      "community": 11,
+      "community": 41,
       "norm_label": ".fb()"
     },
     {
@@ -11192,7 +11252,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_cb",
-      "community": 11,
+      "community": 39,
       "norm_label": ".cb()"
     },
     {
@@ -11212,7 +11272,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_sc",
-      "community": 11,
+      "community": 41,
       "norm_label": ".sc()"
     },
     {
@@ -11222,7 +11282,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_ub",
-      "community": 11,
+      "community": 39,
       "norm_label": ".ub()"
     },
     {
@@ -11232,7 +11292,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_ym",
-      "community": 29,
+      "community": 38,
       "norm_label": ".ym()"
     },
     {
@@ -11282,7 +11342,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_xm",
-      "community": 11,
+      "community": 47,
       "norm_label": ".xm()"
     },
     {
@@ -11312,7 +11372,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_um",
-      "community": 11,
+      "community": 47,
       "norm_label": ".um()"
     },
     {
@@ -11322,7 +11382,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ns_gm",
-      "community": 11,
+      "community": 47,
       "norm_label": ".gm()"
     },
     {
@@ -11502,7 +11562,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ee",
-      "community": 6,
+      "community": 69,
       "norm_label": "ee()"
     },
     {
@@ -11512,7 +11572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_re",
-      "community": 6,
+      "community": 69,
       "norm_label": "re()"
     },
     {
@@ -11522,7 +11582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_he",
-      "community": 0,
+      "community": 4,
       "norm_label": "he()"
     },
     {
@@ -11562,7 +11622,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ue",
-      "community": 6,
+      "community": 69,
       "norm_label": "ue()"
     },
     {
@@ -11572,7 +11632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_be",
-      "community": 42,
+      "community": 9,
       "norm_label": "be()"
     },
     {
@@ -11582,7 +11642,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we",
-      "community": 11,
+      "community": 2,
       "norm_label": "we"
     },
     {
@@ -11592,7 +11652,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_constructor",
-      "community": 11,
+      "community": 2,
       "norm_label": ".constructor()"
     },
     {
@@ -11602,7 +11662,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_applyoptions",
-      "community": 11,
+      "community": 2,
       "norm_label": ".applyoptions()"
     },
     {
@@ -11612,7 +11672,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_options",
-      "community": 11,
+      "community": 2,
       "norm_label": ".options()"
     },
     {
@@ -11622,7 +11682,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_width",
-      "community": 11,
+      "community": 2,
       "norm_label": ".width()"
     },
     {
@@ -11632,7 +11692,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_we_li",
-      "community": 11,
+      "community": 2,
       "norm_label": ".li()"
     },
     {
@@ -11732,7 +11792,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_se_pricetocoordinate",
-      "community": 0,
+      "community": 3,
       "norm_label": ".pricetocoordinate()"
     },
     {
@@ -11952,7 +12012,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_s",
-      "community": 41,
+      "community": 38,
       "norm_label": ".s()"
     },
     {
@@ -12022,7 +12082,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_setvisiblelogicalrange",
-      "community": 39,
+      "community": 42,
       "norm_label": ".setvisiblelogicalrange()"
     },
     {
@@ -12052,7 +12112,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_logicaltocoordinate",
-      "community": 0,
+      "community": 51,
       "norm_label": ".logicaltocoordinate()"
     },
     {
@@ -12082,7 +12142,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_ye_coordinatetotime",
-      "community": 0,
+      "community": 4,
       "norm_label": ".coordinatetotime()"
     },
     {
@@ -12252,7 +12312,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_remove",
-      "community": 29,
+      "community": 13,
       "norm_label": ".remove()"
     },
     {
@@ -12342,7 +12402,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_removeseries",
-      "community": 31,
+      "community": 15,
       "norm_label": ".removeseries()"
     },
     {
@@ -12462,7 +12522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_options",
-      "community": 39,
+      "community": 43,
       "norm_label": ".options()"
     },
     {
@@ -12512,7 +12572,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_setcrosshairposition",
-      "community": 32,
+      "community": 15,
       "norm_label": ".setcrosshairposition()"
     },
     {
@@ -12522,7 +12582,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_te_clearcrosshairposition",
-      "community": 14,
+      "community": 15,
       "norm_label": ".clearcrosshairposition()"
     },
     {
@@ -12572,7 +12632,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "static_lightweight_charts_pe",
-      "community": 39,
+      "community": 43,
       "norm_label": "pe()"
     },
     {
@@ -13432,7 +13492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "update_prices",
-      "community": 17,
+      "community": 16,
       "norm_label": "update_prices.py"
     },
     {
@@ -13442,7 +13502,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "update_prices_main",
-      "community": 17,
+      "community": 16,
       "norm_label": "main()"
     },
     {
@@ -13566,14 +13626,14 @@
       "norm_label": "project_summary.md"
     },
     {
-      "label": "Aldervain \u2014 Project Summary",
+      "label": "Alder & Vane \u2014 Project Summary",
       "file_type": "document",
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "project_summary_aldervain_project_summary",
+      "id": "project_summary_alder_vane_project_summary",
       "community": 54,
-      "norm_label": "aldervain \u2014 project summary"
+      "norm_label": "alder & vane \u2014 project summary"
     },
     {
       "label": "1. Project Overview",
@@ -13686,14 +13746,14 @@
       "norm_label": "readme.md"
     },
     {
-      "label": "Aldervain",
+      "label": "Alder & Vane",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "readme_aldervain",
+      "id": "readme_alder_vane",
       "community": 58,
-      "norm_label": "aldervain"
+      "norm_label": "alder & vane"
     },
     {
       "label": "Run",
@@ -14349,7 +14409,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L802",
+      "source_location": "L854",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_database_get_db",
@@ -14360,7 +14420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1241",
+      "source_location": "L1307",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_database_get_db",
@@ -14371,7 +14431,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1905",
+      "source_location": "L2026",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_database_get_db",
@@ -14382,7 +14442,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L792",
+      "source_location": "L844",
       "weight": 1.0,
       "source": "backend_web_funds_by_client",
       "target": "backend_database_get_db",
@@ -14393,7 +14453,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L613",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "backend_web_get_client",
       "target": "backend_database_get_db",
@@ -14404,7 +14464,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1017",
+      "source_location": "L1076",
       "weight": 1.0,
       "source": "backend_web_get_client_calculated_holdings",
       "target": "backend_database_get_db",
@@ -14415,7 +14475,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1168",
+      "source_location": "L1234",
       "weight": 1.0,
       "source": "backend_web_get_clients_holding_stock",
       "target": "backend_database_get_db",
@@ -14426,7 +14486,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L621",
+      "source_location": "L673",
       "weight": 1.0,
       "source": "backend_web_get_or_create_client",
       "target": "backend_database_get_db",
@@ -14437,7 +14497,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1419",
+      "source_location": "L1536",
       "weight": 1.0,
       "source": "backend_web_get_pending_holding_reconciliations",
       "target": "backend_database_get_db",
@@ -14448,7 +14508,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L656",
+      "source_location": "L708",
       "weight": 1.0,
       "source": "backend_web_insert_trades",
       "target": "backend_database_get_db",
@@ -14459,7 +14519,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L787",
+      "source_location": "L839",
       "weight": 1.0,
       "source": "backend_web_payments_by_client",
       "target": "backend_database_get_db",
@@ -14481,7 +14541,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1874",
+      "source_location": "L1995",
       "weight": 1.0,
       "source": "backend_web_prior_submission",
       "target": "backend_database_get_db",
@@ -14492,7 +14552,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L767",
+      "source_location": "L819",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_database_get_db",
@@ -14503,7 +14563,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1864",
+      "source_location": "L1985",
       "weight": 1.0,
       "source": "backend_web_receipt_asset",
       "target": "backend_database_get_db",
@@ -14514,7 +14574,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1563",
+      "source_location": "L1684",
       "weight": 1.0,
       "source": "backend_web_repair_client_holdings_data",
       "target": "backend_database_get_db",
@@ -14547,7 +14607,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L895",
+      "source_location": "L947",
       "weight": 1.0,
       "source": "backend_web_sync_client_holdings_from_trades",
       "target": "backend_database_get_db",
@@ -14558,7 +14618,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1746",
+      "source_location": "L1867",
       "weight": 1.0,
       "source": "backend_web_upload_records",
       "target": "backend_database_get_db",
@@ -14624,7 +14684,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1893",
+      "source_location": "L2014",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_database_install_database",
@@ -14863,7 +14923,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4604",
+      "source_location": "L4887",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_fetch_stock_quote",
@@ -14928,7 +14988,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1407",
+      "source_location": "L1524",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_prices_invalidate_prices_cache",
@@ -14939,7 +14999,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2285",
+      "source_location": "L2423",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_invalidate_prices_cache",
@@ -14993,7 +15053,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2912",
+      "source_location": "L3089",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_is_market_hours",
@@ -15112,7 +15172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2890",
+      "source_location": "L3067",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_update_all_stock_prices",
@@ -15177,7 +15237,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2568",
+      "source_location": "L2724",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_get_cached_prices",
@@ -15209,7 +15269,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2645",
+      "source_location": "L2822",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_get_all_ledger_stocks_summary",
@@ -15241,7 +15301,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2845",
+      "source_location": "L3022",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_fetch_stock_candles",
@@ -15313,7 +15373,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L5190",
+      "source_location": "L5473",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_prices_dailypricescheduler",
@@ -15333,7 +15393,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L141",
+      "source_location": "L142",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_credential_version",
@@ -15343,7 +15403,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L146",
+      "source_location": "L147",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_csrf_token",
@@ -15353,7 +15413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L189",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_local_setup_allowed",
@@ -15363,7 +15423,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L181",
+      "source_location": "L182",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_request_is_loopback",
@@ -15373,7 +15433,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L152",
+      "source_location": "L153",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_require_csrf",
@@ -15383,7 +15443,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L197",
+      "source_location": "L198",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_safe_redirect_target",
@@ -15393,7 +15453,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L217",
+      "source_location": "L218",
       "weight": 1.0,
       "source": "backend_security",
       "target": "backend_security_secure_response",
@@ -15448,7 +15508,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1892",
+      "source_location": "L2013",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_configure_app",
@@ -15481,7 +15541,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1811",
+      "source_location": "L1932",
       "weight": 1.0,
       "source": "backend_web_scope_hash",
       "target": "backend_security_credential_version",
@@ -15503,7 +15563,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4062",
+      "source_location": "L4278",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_csrf_token",
@@ -15525,7 +15585,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1923",
+      "source_location": "L2044",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_require_csrf",
@@ -15536,7 +15596,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/security.py",
-      "source_location": "L194",
+      "source_location": "L195",
       "weight": 1.0,
       "source": "backend_security_local_setup_allowed",
       "target": "backend_security_request_is_loopback",
@@ -15558,7 +15618,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2041",
+      "source_location": "L2162",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_local_setup_allowed",
@@ -15580,7 +15640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2070",
+      "source_location": "L2191",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_safe_redirect_target",
@@ -15603,7 +15663,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/web.py",
-      "source_location": "L1894",
+      "source_location": "L2015",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_security_secure_response"
@@ -15826,7 +15886,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/web.py",
-      "source_location": "L2009",
+      "source_location": "L2130",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_storageunavailable"
@@ -15924,7 +15984,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4534",
+      "source_location": "L4817",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_validate_image",
@@ -16045,7 +16105,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3879",
+      "source_location": "L4095",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_safe_path",
@@ -16056,7 +16116,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1855",
+      "source_location": "L1976",
       "weight": 1.0,
       "source": "backend_web_receipt_asset",
       "target": "backend_storage_safe_path",
@@ -16457,7 +16517,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2318",
+      "source_location": "L2457",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_storage_get_storage",
@@ -16663,7 +16723,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4212",
+      "source_location": "L4495",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_transfer_inspect_local",
@@ -16674,7 +16734,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4214",
+      "source_location": "L4497",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_transfer_inspect_local",
@@ -16696,7 +16756,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4212",
+      "source_location": "L4495",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_transfer_migrate_local",
@@ -16707,7 +16767,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4216",
+      "source_location": "L4499",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_transfer_migrate_local",
@@ -16917,7 +16977,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1731",
+      "source_location": "L1852",
       "weight": 1.0,
       "source": "backend_web_client_values",
       "target": "backend_validation_validationerror",
@@ -16928,7 +16988,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2074",
+      "source_location": "L2195",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_validationerror",
@@ -16939,7 +16999,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1842",
+      "source_location": "L1963",
       "weight": 1.0,
       "source": "backend_web_decode_receipt",
       "target": "backend_validation_validationerror",
@@ -16950,7 +17010,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L651",
+      "source_location": "L703",
       "weight": 1.0,
       "source": "backend_web_insert_trades",
       "target": "backend_validation_validationerror",
@@ -16961,7 +17021,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1789",
+      "source_location": "L1910",
       "weight": 1.0,
       "source": "backend_web_json_object",
       "target": "backend_validation_validationerror",
@@ -16972,7 +17032,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L751",
+      "source_location": "L803",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_validation_validationerror",
@@ -17038,7 +17098,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1815",
+      "source_location": "L1936",
       "weight": 1.0,
       "source": "backend_web_authorize_upload",
       "target": "backend_validation_text",
@@ -17049,7 +17109,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1734",
+      "source_location": "L1855",
       "weight": 1.0,
       "source": "backend_web_client_values",
       "target": "backend_validation_text",
@@ -17060,7 +17120,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3819",
+      "source_location": "L4035",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_text",
@@ -17071,7 +17131,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L746",
+      "source_location": "L798",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_validation_text",
@@ -17093,7 +17153,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2209",
+      "source_location": "L2330",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_client_name",
@@ -17104,7 +17164,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L620",
+      "source_location": "L672",
       "weight": 1.0,
       "source": "backend_web_get_or_create_client",
       "target": "backend_validation_client_name",
@@ -17148,7 +17208,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1736",
+      "source_location": "L1857",
       "weight": 1.0,
       "source": "backend_web_client_values",
       "target": "backend_validation_number",
@@ -17159,7 +17219,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2342",
+      "source_location": "L2481",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_number",
@@ -17192,7 +17252,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1251",
+      "source_location": "L1314",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_validation_valid_date",
@@ -17203,7 +17263,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2100",
+      "source_location": "L2221",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_valid_date",
@@ -17214,7 +17274,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L748",
+      "source_location": "L800",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_validation_valid_date",
@@ -17236,7 +17296,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2380",
+      "source_location": "L2520",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_identifier",
@@ -17247,7 +17307,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L743",
+      "source_location": "L795",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_validation_identifier",
@@ -17269,7 +17329,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4096",
+      "source_location": "L4312",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_submission_uuid",
@@ -17291,7 +17351,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L2208",
+      "source_location": "L2329",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_trade_values",
@@ -17313,7 +17373,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1727",
+      "source_location": "L1848",
       "weight": 1.0,
       "source": "backend_web_client_values",
       "target": "backend_validation_rule_values",
@@ -17324,7 +17384,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L3906",
+      "source_location": "L4122",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "backend_validation_rule_values",
@@ -17344,7 +17404,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L796",
+      "source_location": "L848",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_aggregate_clients_sql",
@@ -17354,7 +17414,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1232",
+      "source_location": "L1298",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_apply_sale_fifo",
@@ -17364,7 +17424,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1814",
+      "source_location": "L1935",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_authorize_upload",
@@ -17374,7 +17434,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L579",
+      "source_location": "L631",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_clean_phone_number",
@@ -17384,7 +17444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L598",
+      "source_location": "L650",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_cleanup_existing_client_phones",
@@ -17394,7 +17454,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L493",
+      "source_location": "L545",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_cleanup_stock_aliases_table",
@@ -17414,7 +17474,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1726",
+      "source_location": "L1847",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_client_values",
@@ -17424,7 +17484,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1885",
+      "source_location": "L2006",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_create_app",
@@ -17444,7 +17504,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1840",
+      "source_location": "L1961",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_decode_receipt",
@@ -17464,7 +17524,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L700",
+      "source_location": "L752",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_enrich",
@@ -17504,7 +17564,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L791",
+      "source_location": "L843",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_funds_by_client",
@@ -17524,7 +17584,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L612",
+      "source_location": "L664",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_client",
@@ -17534,7 +17594,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1015",
+      "source_location": "L1074",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_client_calculated_holdings",
@@ -17544,7 +17604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L407",
+      "source_location": "L459",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_client_entered_stocks",
@@ -17554,7 +17614,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1165",
+      "source_location": "L1231",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_clients_holding_stock",
@@ -17564,7 +17624,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L371",
+      "source_location": "L423",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_known_stocks",
@@ -17574,7 +17634,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L619",
+      "source_location": "L376",
+      "weight": 1.0,
+      "source": "backend_web",
+      "target": "backend_web_get_matching_stock_variants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L671",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_or_create_client",
@@ -17584,7 +17654,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1411",
+      "source_location": "L1528",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_pending_holding_reconciliations",
@@ -17594,7 +17664,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L526",
+      "source_location": "L578",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_get_stock_suggestions",
@@ -17604,7 +17674,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L645",
+      "source_location": "L697",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_insert_trade",
@@ -17614,7 +17684,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L649",
+      "source_location": "L701",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_insert_trades",
@@ -17634,7 +17704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1784",
+      "source_location": "L1905",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_json_object",
@@ -17654,7 +17724,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1793",
+      "source_location": "L1914",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_owner_hash",
@@ -17674,7 +17744,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1836",
+      "source_location": "L1957",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_payment_signer",
@@ -17684,7 +17754,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L786",
+      "source_location": "L838",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_payments_by_client",
@@ -17714,7 +17784,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1873",
+      "source_location": "L1994",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_prior_submission",
@@ -17724,7 +17794,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L739",
+      "source_location": "L791",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_query_trades",
@@ -17734,7 +17804,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1854",
+      "source_location": "L1975",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_receipt_asset",
@@ -17744,7 +17814,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1832",
+      "source_location": "L1953",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_receipt_signer",
@@ -17754,7 +17824,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1559",
+      "source_location": "L1680",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_repair_client_holdings_data",
@@ -17774,7 +17844,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1716",
+      "source_location": "L1837",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_rule_label",
@@ -17784,7 +17854,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1799",
+      "source_location": "L413",
+      "weight": 1.0,
+      "source": "backend_web",
+      "target": "backend_web_safe_sell_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1920",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_scope_hash",
@@ -17824,7 +17904,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1753",
+      "source_location": "L1874",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_sheet",
@@ -17844,7 +17924,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L770",
+      "source_location": "L404",
+      "weight": 1.0,
+      "source": "backend_web",
+      "target": "backend_web_stock_in_clause",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L822",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_summarize",
@@ -17854,7 +17944,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L891",
+      "source_location": "L943",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_sync_client_holdings_from_trades",
@@ -17864,7 +17954,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1195",
+      "source_location": "L1261",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_sync_trade_profits_to_funds",
@@ -17874,7 +17964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1740",
+      "source_location": "L1861",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_upload_records",
@@ -17884,7 +17974,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1772",
+      "source_location": "L1893",
       "weight": 1.0,
       "source": "backend_web",
       "target": "backend_web_workbook_response",
@@ -17961,7 +18051,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L803",
+      "source_location": "L855",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_web_setting",
@@ -17972,7 +18062,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1818",
+      "source_location": "L1939",
       "weight": 1.0,
       "source": "backend_web_authorize_upload",
       "target": "backend_web_setting",
@@ -17994,7 +18084,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1421",
+      "source_location": "L1538",
       "weight": 1.0,
       "source": "backend_web_get_pending_holding_reconciliations",
       "target": "backend_web_setting",
@@ -18016,7 +18106,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1649",
+      "source_location": "L1770",
       "weight": 1.0,
       "source": "backend_web_repair_client_holdings_data",
       "target": "backend_web_setting",
@@ -18027,7 +18117,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1805",
+      "source_location": "L1926",
       "weight": 1.0,
       "source": "backend_web_scope_hash",
       "target": "backend_web_setting",
@@ -18049,7 +18139,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1663",
+      "source_location": "L1784",
       "weight": 1.0,
       "source": "backend_web_repair_client_holdings_data",
       "target": "backend_web_set_setting",
@@ -18133,7 +18223,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1803",
+      "source_location": "L1924",
       "weight": 1.0,
       "source": "backend_web_scope_hash",
       "target": "backend_web_admin_credentials",
@@ -18144,7 +18234,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L854",
+      "source_location": "L906",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_web_dec",
@@ -18155,7 +18245,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1246",
+      "source_location": "L1309",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_dec",
@@ -18177,7 +18267,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L705",
+      "source_location": "L757",
       "weight": 1.0,
       "source": "backend_web_enrich",
       "target": "backend_web_dec",
@@ -18188,7 +18278,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L793",
+      "source_location": "L845",
       "weight": 1.0,
       "source": "backend_web_funds_by_client",
       "target": "backend_web_dec",
@@ -18199,7 +18289,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1053",
+      "source_location": "L1112",
       "weight": 1.0,
       "source": "backend_web_get_client_calculated_holdings",
       "target": "backend_web_dec",
@@ -18210,7 +18300,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1501",
+      "source_location": "L1622",
       "weight": 1.0,
       "source": "backend_web_get_pending_holding_reconciliations",
       "target": "backend_web_dec",
@@ -18221,7 +18311,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L788",
+      "source_location": "L840",
       "weight": 1.0,
       "source": "backend_web_payments_by_client",
       "target": "backend_web_dec",
@@ -18232,7 +18322,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1580",
+      "source_location": "L1701",
       "weight": 1.0,
       "source": "backend_web_repair_client_holdings_data",
       "target": "backend_web_dec",
@@ -18243,7 +18333,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1719",
+      "source_location": "L1840",
       "weight": 1.0,
       "source": "backend_web_rule_label",
       "target": "backend_web_dec",
@@ -18254,7 +18344,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L948",
+      "source_location": "L1018",
       "weight": 1.0,
       "source": "backend_web_sync_client_holdings_from_trades",
       "target": "backend_web_dec",
@@ -18265,7 +18355,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1216",
+      "source_location": "L1282",
       "weight": 1.0,
       "source": "backend_web_sync_trade_profits_to_funds",
       "target": "backend_web_dec",
@@ -18276,7 +18366,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L715",
+      "source_location": "L767",
       "weight": 1.0,
       "source": "backend_web_enrich",
       "target": "backend_web_effective_rule",
@@ -18287,7 +18377,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L654",
+      "source_location": "L706",
       "weight": 1.0,
       "source": "backend_web_insert_trades",
       "target": "backend_web_effective_rule",
@@ -18298,7 +18388,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L496",
+      "source_location": "L548",
       "weight": 1.0,
       "source": "backend_web_cleanup_stock_aliases_table",
       "target": "backend_web_ensure_stock_aliases_table",
@@ -18320,7 +18410,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L409",
+      "source_location": "L461",
       "weight": 1.0,
       "source": "backend_web_get_client_entered_stocks",
       "target": "backend_web_ensure_stock_aliases_table",
@@ -18331,7 +18421,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L380",
+      "source_location": "L432",
       "weight": 1.0,
       "source": "backend_web_get_known_stocks",
       "target": "backend_web_ensure_stock_aliases_table",
@@ -18342,7 +18432,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1406",
+      "source_location": "L1523",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_invalidate_stock_caches",
@@ -18353,7 +18443,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L521",
+      "source_location": "L573",
       "weight": 1.0,
       "source": "backend_web_cleanup_stock_aliases_table",
       "target": "backend_web_invalidate_stock_caches",
@@ -18364,7 +18454,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1243",
+      "source_location": "L1361",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_get_alias_mapping",
@@ -18375,7 +18465,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1029",
+      "source_location": "L1088",
       "weight": 1.0,
       "source": "backend_web_get_client_calculated_holdings",
       "target": "backend_web_get_alias_mapping",
@@ -18386,7 +18476,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1172",
+      "source_location": "L1238",
       "weight": 1.0,
       "source": "backend_web_get_clients_holding_stock",
       "target": "backend_web_get_alias_mapping",
@@ -18397,7 +18487,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1431",
+      "source_location": "L381",
+      "weight": 1.0,
+      "source": "backend_web_get_matching_stock_variants",
+      "target": "backend_web_get_alias_mapping",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1548",
       "weight": 1.0,
       "source": "backend_web_get_pending_holding_reconciliations",
       "target": "backend_web_get_alias_mapping",
@@ -18408,7 +18509,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L533",
+      "source_location": "L585",
       "weight": 1.0,
       "source": "backend_web_get_stock_suggestions",
       "target": "backend_web_get_alias_mapping",
@@ -18430,7 +18531,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L897",
+      "source_location": "L949",
       "weight": 1.0,
       "source": "backend_web_sync_client_holdings_from_trades",
       "target": "backend_web_get_alias_mapping",
@@ -18441,18 +18542,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1245",
-      "weight": 1.0,
-      "source": "backend_web_apply_sale_fifo",
-      "target": "backend_web_resolve_canonical_stock",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/web.py",
-      "source_location": "L1171",
+      "source_location": "L1237",
       "weight": 1.0,
       "source": "backend_web_get_clients_holding_stock",
       "target": "backend_web_resolve_canonical_stock",
@@ -18463,19 +18553,93 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L658",
+      "source_location": "L710",
       "weight": 1.0,
       "source": "backend_web_insert_trades",
       "target": "backend_web_resolve_canonical_stock",
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1317",
+      "weight": 1.0,
+      "source": "backend_web_apply_sale_fifo",
+      "target": "backend_web_get_matching_stock_variants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1610",
+      "weight": 1.0,
+      "source": "backend_web_get_pending_holding_reconciliations",
+      "target": "backend_web_get_matching_stock_variants",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L408",
+      "source_location": "L377",
       "weight": 1.0,
-      "source": "backend_web_rationale_408",
+      "source": "backend_web_rationale_377",
+      "target": "backend_web_get_matching_stock_variants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1514",
+      "weight": 1.0,
+      "source": "backend_web_apply_sale_fifo",
+      "target": "backend_web_stock_in_clause",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L405",
+      "weight": 1.0,
+      "source": "backend_web_rationale_405",
+      "target": "backend_web_stock_in_clause",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L1427",
+      "weight": 1.0,
+      "source": "backend_web_apply_sale_fifo",
+      "target": "backend_web_safe_sell_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L414",
+      "weight": 1.0,
+      "source": "backend_web_rationale_414",
+      "target": "backend_web_safe_sell_date",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/web.py",
+      "source_location": "L460",
+      "weight": 1.0,
+      "source": "backend_web_rationale_460",
       "target": "backend_web_get_client_entered_stocks",
       "confidence_score": 1.0
     },
@@ -18483,9 +18647,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L494",
+      "source_location": "L546",
       "weight": 1.0,
-      "source": "backend_web_rationale_494",
+      "source": "backend_web_rationale_546",
       "target": "backend_web_cleanup_stock_aliases_table",
       "confidence_score": 1.0
     },
@@ -18493,9 +18657,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L527",
+      "source_location": "L579",
       "weight": 1.0,
-      "source": "backend_web_rationale_527",
+      "source": "backend_web_rationale_579",
       "target": "backend_web_get_stock_suggestions",
       "confidence_score": 1.0
     },
@@ -18504,7 +18668,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L603",
+      "source_location": "L655",
       "weight": 1.0,
       "source": "backend_web_cleanup_existing_client_phones",
       "target": "backend_web_clean_phone_number",
@@ -18515,7 +18679,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1729",
+      "source_location": "L1850",
       "weight": 1.0,
       "source": "backend_web_client_values",
       "target": "backend_web_clean_phone_number",
@@ -18526,7 +18690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L623",
+      "source_location": "L675",
       "weight": 1.0,
       "source": "backend_web_get_or_create_client",
       "target": "backend_web_clean_phone_number",
@@ -18536,9 +18700,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L580",
+      "source_location": "L632",
       "weight": 1.0,
-      "source": "backend_web_rationale_580",
+      "source": "backend_web_rationale_632",
       "target": "backend_web_clean_phone_number",
       "confidence_score": 1.0
     },
@@ -18546,9 +18710,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L599",
+      "source_location": "L651",
       "weight": 1.0,
-      "source": "backend_web_rationale_599",
+      "source": "backend_web_rationale_651",
       "target": "backend_web_cleanup_existing_client_phones",
       "confidence_score": 1.0
     },
@@ -18557,7 +18721,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L654",
+      "source_location": "L706",
       "weight": 1.0,
       "source": "backend_web_insert_trades",
       "target": "backend_web_get_client",
@@ -18568,7 +18732,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L646",
+      "source_location": "L698",
       "weight": 1.0,
       "source": "backend_web_insert_trade",
       "target": "backend_web_insert_trades",
@@ -18579,7 +18743,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1304",
+      "source_location": "L1409",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_insert_trades",
@@ -18590,7 +18754,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L767",
+      "source_location": "L819",
       "weight": 1.0,
       "source": "backend_web_query_trades",
       "target": "backend_web_enrich",
@@ -18601,7 +18765,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L874",
+      "source_location": "L926",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_web_query_trades",
@@ -18612,7 +18776,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L882",
+      "source_location": "L934",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_web_summarize",
@@ -18623,7 +18787,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L858",
+      "source_location": "L910",
       "weight": 1.0,
       "source": "backend_web_aggregate_clients_sql",
       "target": "backend_web_rule_label",
@@ -18633,9 +18797,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L797",
+      "source_location": "L849",
       "weight": 1.0,
-      "source": "backend_web_rationale_797",
+      "source": "backend_web_rationale_849",
       "target": "backend_web_aggregate_clients_sql",
       "confidence_score": 1.0
     },
@@ -18644,7 +18808,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1405",
+      "source_location": "L1522",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_sync_client_holdings_from_trades",
@@ -18655,7 +18819,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1021",
+      "source_location": "L1080",
       "weight": 1.0,
       "source": "backend_web_get_client_calculated_holdings",
       "target": "backend_web_sync_client_holdings_from_trades",
@@ -18665,9 +18829,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L892",
+      "source_location": "L944",
       "weight": 1.0,
-      "source": "backend_web_rationale_892",
+      "source": "backend_web_rationale_944",
       "target": "backend_web_sync_client_holdings_from_trades",
       "confidence_score": 1.0
     },
@@ -18675,9 +18839,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1166",
+      "source_location": "L1232",
       "weight": 1.0,
-      "source": "backend_web_rationale_1166",
+      "source": "backend_web_rationale_1232",
       "target": "backend_web_get_clients_holding_stock",
       "confidence_score": 1.0
     },
@@ -18686,7 +18850,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1404",
+      "source_location": "L1521",
       "weight": 1.0,
       "source": "backend_web_apply_sale_fifo",
       "target": "backend_web_sync_trade_profits_to_funds",
@@ -18696,9 +18860,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1196",
+      "source_location": "L1262",
       "weight": 1.0,
-      "source": "backend_web_rationale_1196",
+      "source": "backend_web_rationale_1262",
       "target": "backend_web_sync_trade_profits_to_funds",
       "confidence_score": 1.0
     },
@@ -18706,9 +18870,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1233",
+      "source_location": "L1299",
       "weight": 1.0,
-      "source": "backend_web_rationale_1233",
+      "source": "backend_web_rationale_1299",
       "target": "backend_web_apply_sale_fifo",
       "confidence_score": 1.0
     },
@@ -18716,9 +18880,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1412",
+      "source_location": "L1529",
       "weight": 1.0,
-      "source": "backend_web_rationale_1412",
+      "source": "backend_web_rationale_1529",
       "target": "backend_web_get_pending_holding_reconciliations",
       "confidence_score": 1.0
     },
@@ -18726,9 +18890,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1560",
+      "source_location": "L1681",
       "weight": 1.0,
-      "source": "backend_web_rationale_1560",
+      "source": "backend_web_rationale_1681",
       "target": "backend_web_repair_client_holdings_data",
       "confidence_score": 1.0
     },
@@ -18737,7 +18901,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1829",
+      "source_location": "L1950",
       "weight": 1.0,
       "source": "backend_web_authorize_upload",
       "target": "backend_web_owner_hash",
@@ -18748,7 +18912,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1859",
+      "source_location": "L1980",
       "weight": 1.0,
       "source": "backend_web_receipt_asset",
       "target": "backend_web_owner_hash",
@@ -18759,7 +18923,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1829",
+      "source_location": "L1950",
       "weight": 1.0,
       "source": "backend_web_authorize_upload",
       "target": "backend_web_scope_hash",
@@ -18770,7 +18934,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1859",
+      "source_location": "L1980",
       "weight": 1.0,
       "source": "backend_web_receipt_asset",
       "target": "backend_web_scope_hash",
@@ -18781,7 +18945,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1844",
+      "source_location": "L1965",
       "weight": 1.0,
       "source": "backend_web_decode_receipt",
       "target": "backend_web_receipt_signer",
@@ -18792,7 +18956,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L1856",
+      "source_location": "L1977",
       "weight": 1.0,
       "source": "backend_web_receipt_asset",
       "target": "backend_web_decode_receipt",
@@ -18803,7 +18967,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/web.py",
-      "source_location": "L4036",
+      "source_location": "L4252",
       "weight": 1.0,
       "source": "backend_web_create_app",
       "target": "trade_parser_parse_text",
@@ -18835,7 +18999,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1017",
+      "source_location": "L1031",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_applylivequoteupdates",
@@ -18845,7 +19009,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L384",
+      "source_location": "L398",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_cleanphonenumbervalue",
@@ -18855,7 +19019,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L798",
+      "source_location": "L812",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_completeprogress",
@@ -18865,7 +19029,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L669",
+      "source_location": "L683",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_initlazytables",
@@ -18875,7 +19039,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L405",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "static_app",
+      "target": "static_app_initnavigation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "static/app.js",
+      "source_location": "L419",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_initphoneinputs",
@@ -18885,7 +19059,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L91",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_initprivacy",
@@ -18895,7 +19069,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L452",
+      "source_location": "L466",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_initstockautocomplete",
@@ -18905,7 +19079,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L952",
+      "source_location": "L966",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_ismarketopenist",
@@ -18915,7 +19089,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L433",
+      "source_location": "L447",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_loadstocksuggestions",
@@ -18935,7 +19109,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L987",
+      "source_location": "L1001",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_polllivequotes",
@@ -18945,7 +19119,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1148",
+      "source_location": "L1162",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_recalculatetotals",
@@ -18955,17 +19129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L19",
-      "weight": 1.0,
-      "source": "static_app",
-      "target": "static_app_setmenu",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "static/app.js",
-      "source_location": "L124",
+      "source_location": "L129",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_showdialog",
@@ -18975,7 +19139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1197",
+      "source_location": "L1211",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_startpolling",
@@ -18985,7 +19149,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L792",
+      "source_location": "L806",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_startprogress",
@@ -18995,7 +19159,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1209",
+      "source_location": "L1223",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_stoppolling",
@@ -19005,7 +19169,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L54",
+      "source_location": "L69",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_toggleprivacy",
@@ -19015,7 +19179,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L964",
+      "source_location": "L978",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_updatebadgeui",
@@ -19025,7 +19189,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L27",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_updateprivacymode",
@@ -19035,7 +19199,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L266",
+      "source_location": "L274",
       "weight": 1.0,
       "source": "static_app",
       "target": "static_app_updateselection",
@@ -19046,7 +19210,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L96",
+      "source_location": "L112",
       "weight": 1.0,
       "source": "static_app_initprivacy",
       "target": "static_app_updateprivacymode",
@@ -19057,7 +19221,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L62",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "static_app_toggleprivacy",
       "target": "static_app_updateprivacymode",
@@ -19068,7 +19232,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L129",
+      "source_location": "L134",
       "weight": 1.0,
       "source": "static_app_showdialog",
       "target": "static_app_initphoneinputs",
@@ -19079,7 +19243,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L128",
+      "source_location": "L133",
       "weight": 1.0,
       "source": "static_app_showdialog",
       "target": "static_app_initstockautocomplete",
@@ -19090,7 +19254,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L413",
+      "source_location": "L427",
       "weight": 1.0,
       "source": "static_app_initphoneinputs",
       "target": "static_app_cleanphonenumbervalue",
@@ -19101,7 +19265,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L462",
+      "source_location": "L476",
       "weight": 1.0,
       "source": "static_app_initstockautocomplete",
       "target": "static_app_loadstocksuggestions",
@@ -19112,7 +19276,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L991",
+      "source_location": "L1005",
       "weight": 1.0,
       "source": "static_app_polllivequotes",
       "target": "static_app_ismarketopenist",
@@ -19123,7 +19287,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1199",
+      "source_location": "L1213",
       "weight": 1.0,
       "source": "static_app_startpolling",
       "target": "static_app_ismarketopenist",
@@ -19134,7 +19298,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L992",
+      "source_location": "L1006",
       "weight": 1.0,
       "source": "static_app_polllivequotes",
       "target": "static_app_updatebadgeui",
@@ -19145,7 +19309,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1200",
+      "source_location": "L1214",
       "weight": 1.0,
       "source": "static_app_startpolling",
       "target": "static_app_updatebadgeui",
@@ -19156,7 +19320,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1007",
+      "source_location": "L1021",
       "weight": 1.0,
       "source": "static_app_polllivequotes",
       "target": "static_app_applylivequoteupdates",
@@ -19167,7 +19331,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1202",
+      "source_location": "L1216",
       "weight": 1.0,
       "source": "static_app_startpolling",
       "target": "static_app_polllivequotes",
@@ -19178,7 +19342,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1145",
+      "source_location": "L1159",
       "weight": 1.0,
       "source": "static_app_applylivequoteupdates",
       "target": "static_app_recalculatetotals",
@@ -19189,7 +19353,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "static/app.js",
-      "source_location": "L1198",
+      "source_location": "L1212",
       "weight": 1.0,
       "source": "static_app_startpolling",
       "target": "static_app_stoppolling",
@@ -49803,7 +49967,7 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "project_summary",
-      "target": "project_summary_aldervain_project_summary",
+      "target": "project_summary_alder_vane_project_summary",
       "confidence_score": 1.0
     },
     {
@@ -49812,7 +49976,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L7",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_1_project_overview",
       "confidence_score": 1.0
     },
@@ -49822,7 +49986,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L15",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_2_technology_stack",
       "confidence_score": 1.0
     },
@@ -49832,7 +49996,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L34",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_3_directory_structure_key_files",
       "confidence_score": 1.0
     },
@@ -49842,7 +50006,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L82",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_4_financial_business_logic",
       "confidence_score": 1.0
     },
@@ -49852,7 +50016,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L122",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_5_security_authentication",
       "confidence_score": 1.0
     },
@@ -49862,7 +50026,7 @@
       "source_file": "PROJECT_SUMMARY.md",
       "source_location": "L129",
       "weight": 1.0,
-      "source": "project_summary_aldervain_project_summary",
+      "source": "project_summary_alder_vane_project_summary",
       "target": "project_summary_6_development_deployment_guidelines",
       "confidence_score": 1.0
     },
@@ -49913,7 +50077,7 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "readme",
-      "target": "readme_aldervain",
+      "target": "readme_alder_vane",
       "confidence_score": 1.0
     },
     {
@@ -49922,7 +50086,7 @@
       "source_file": "README.md",
       "source_location": "L12",
       "weight": 1.0,
-      "source": "readme_aldervain",
+      "source": "readme_alder_vane",
       "target": "readme_features",
       "confidence_score": 1.0
     },
@@ -49932,7 +50096,7 @@
       "source_file": "README.md",
       "source_location": "L21",
       "weight": 1.0,
-      "source": "readme_aldervain",
+      "source": "readme_alder_vane",
       "target": "readme_how_screenshot_reading_works_no_ai_api_calls",
       "confidence_score": 1.0
     },
@@ -49942,7 +50106,7 @@
       "source_file": "README.md",
       "source_location": "L5",
       "weight": 1.0,
-      "source": "readme_aldervain",
+      "source": "readme_alder_vane",
       "target": "readme_run",
       "confidence_score": 1.0
     },
@@ -50038,5 +50202,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a163897b58c848c1425c0bf82192520acf8b5a0b"
+  "built_at_commit": "52c86d1a63c4bcf898d90ff51b1ed4427329cadc"
 }

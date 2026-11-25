@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795582938.6529434,
-    "ast_hash": "4bb6a0d19a0a182986fa939dbbd92b4c",
+    "mtime": 1795588110.458399,
+    "ast_hash": "a1e2d8ea337c71e7a337f454b7f453f0",
     "semantic_hash": ""
   },
   "static/app.js": {
@@ -210,18 +210,18 @@
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795579027.2489858,
-    "ast_hash": "428f81900bcd417c2cac5d8082f1c6b0",
+    "mtime": 1795588143.262159,
+    "ast_hash": "accfa3c58b4573b78e074c0f323710df",
     "semantic_hash": ""
   },
   "templates/clients.html": {
-    "mtime": 1795546552.7463884,
-    "ast_hash": "e98eb0caef491ebdaf80352b1f68e16f",
+    "mtime": 1795588147.1606522,
+    "ast_hash": "a99b1dc16ed1ccad8154e72c9b3e3231",
     "semantic_hash": ""
   },
   "templates/dashboard.html": {
-    "mtime": 1795546951.0214763,
-    "ast_hash": "3d6f197b03b85d4e81a2edc37366550a",
+    "mtime": 1795588153.2045538,
+    "ast_hash": "53a84d0dd5e4176305cbf91e567ade1c",
     "semantic_hash": ""
   },
   "templates/error.html": {
@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "templates/holdings.html": {
-    "mtime": 1795546552.7497025,
-    "ast_hash": "6934d55c631438e0376472e6f7b655d0",
+    "mtime": 1795588203.159983,
+    "ast_hash": "0e05106a24aa287954aa64eee56e3b4c",
     "semantic_hash": ""
   },
   "templates/login.html": {
@@ -250,7 +250,7 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795582945.91918,
+    "mtime": 1795582970.2060027,
     "ast_hash": "a759cd6d35dcc0bbc3226d51f032516a",
     "semantic_hash": ""
   },

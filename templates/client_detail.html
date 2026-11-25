@@ -96,6 +96,106 @@
 </section>
 {% endif %}
 
+{% if holding_mismatches %}
+<section class="card" id="mismatch-audit" style="border: 1px solid #fecaca; background: #fffafa; margin-bottom: 1.5rem; border-left: 4px solid #dc2626;">
+  <div class="card-header" style="border-bottom: 1px solid #fee2e2; padding-bottom: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #fee2e2; color: #b91c1c;">
+          {{ icon('alert', 15) }}
+        </span>
+        <h2 style="font-size: 16px; margin: 0; color: #991b1b;">Trades &amp; Holdings Mismatch Detected ({{ holding_mismatches|length }})</h2>
+      </div>
+      <p style="margin: 4px 0 0 34px; font-size: 13px; color: #7f1d1d;">
+        Admin review needed: the trades recorded for {{ client.name }} do not match their current holdings below. Choose how to resolve each item.
+      </p>
+    </div>
+  </div>
+  <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    {% for m in holding_mismatches %}
+    <div style="background: var(--card); border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
+        <div style="flex: 1; min-width: 260px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+            <strong style="font-size: 15px; color: #1e293b;">{{ m.stock }}</strong>
+            <span class="badge" style="background: {{ '#fee2e2' if m.severity == 'high' else '#fef3c7' }}; color: {{ '#991b1b' if m.severity == 'high' else '#92400e' }}; font-size: 11px;">
+              {{ m.title }}
+            </span>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: #334155; line-height: 1.5;">{{ m.summary }}</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 2px;">
+          {% if m.kind == 'unapplied_sale' %}
+            <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0;">
+              {{ csrf() }}
+              <input type="hidden" name="action" value="apply_sale_fifo">
+              <input type="hidden" name="stock" value="{{ m.stock }}">
+              <input type="hidden" name="trade_id" value="{{ m.trade_id }}">
+              <button class="btn btn-sm btn-primary" type="submit" style="background: #166534; border-color: #166534; color: #ffffff;">
+                {{ icon('check', 14) }} Apply FIFO &amp; Deduct Holding
+              </button>
+            </form>
+          {% elif m.kind == 'holding_without_open_trades' %}
+            <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0;">
+              {{ csrf() }}
+              <input type="hidden" name="action" value="delete_stale_holding">
+              <input type="hidden" name="stock" value="{{ m.stock }}">
+              <button class="btn btn-sm btn-primary" type="submit" style="background: #b91c1c; border-color: #b91c1c; color: #ffffff;">
+                {{ icon('trash', 14) }} Delete Stale Holding
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0;">
+              {{ csrf() }}
+              <input type="hidden" name="action" value="create_open_trade">
+              <input type="hidden" name="stock" value="{{ m.stock }}">
+              <button class="btn btn-sm btn-secondary" type="submit">
+                {{ icon('plus', 14) }} Record Open Buy Trade
+              </button>
+            </form>
+          {% elif m.kind in ('open_trade_missing_holding', 'qty_or_price_mismatch') %}
+            <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0;">
+              {{ csrf() }}
+              <input type="hidden" name="action" value="sync_holding">
+              <input type="hidden" name="stock" value="{{ m.stock }}">
+              <button class="btn btn-sm btn-primary" type="submit">
+                {{ icon('repeat', 14) }} Sync Holding from Trades
+              </button>
+            </form>
+          {% elif m.kind == 'stock_name_mismatch' %}
+            <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              {{ csrf() }}
+              <input type="hidden" name="action" value="unify_stock_name">
+              {% for v in m.variants %}
+                <input type="hidden" name="variants" value="{{ v }}">
+              {% endfor %}
+              <select name="stock" style="font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                {% for v in m.variants %}
+                  <option value="{{ v }}" {{ 'selected' if v == m.stock }}>{{ v }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-primary" type="submit">
+                {{ icon('check', 14) }} Unify Stock Name
+              </button>
+            </form>
+          {% elif m.kind == 'sell_only_trade' %}
+            <a href="{{ url_for('trade_form', tid=m.trade_id, back=url_for('client_detail', cid=client.id)) }}" class="btn btn-sm btn-primary">
+              {{ icon('edit', 14) }} Edit Trade
+            </a>
+          {% endif %}
+          <form method="post" action="{{ url_for('client_mismatch_fix', cid=client.id) }}" style="margin: 0;">
+            {{ csrf() }}
+            <input type="hidden" name="action" value="dismiss">
+            <input type="hidden" name="mismatch_key" value="{{ m.key }}">
+            <button class="btn btn-sm btn-ghost" type="submit" style="color: #64748b;">Ignore</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <!-- ===== CLIENT PAGE SIDEBAR LAYOUT ===== -->
 <div class="client-page-layout">
   <!-- Client Page Sidebar Navigation -->

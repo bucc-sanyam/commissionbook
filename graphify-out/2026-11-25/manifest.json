@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "backend/security.py": {
-    "mtime": 1795577230.1330168,
-    "ast_hash": "1e855e72af92de2b563aafb1361d8d56",
+    "mtime": 1795577724.617873,
+    "ast_hash": "80ea619c31cfa0962ec3623ad753aefc",
     "semantic_hash": ""
   },
   "backend/storage.py": {
@@ -45,13 +45,13 @@
     "semantic_hash": ""
   },
   "backend/web.py": {
-    "mtime": 1795577230.1316793,
-    "ast_hash": "acbf002fe5ec288aa57c0478e24133e7",
+    "mtime": 1795584787.4138136,
+    "ast_hash": "7f46df055cd63364edff81f8ac09cf02",
     "semantic_hash": ""
   },
   "static/app.js": {
-    "mtime": 1795525724.7615438,
-    "ast_hash": "6ae5d96fdd319cb246d130e7471613a0",
+    "mtime": 1795579140.8870208,
+    "ast_hash": "a6fd7d0306e0cdb18cdb744f1cc5d149",
     "semantic_hash": ""
   },
   "static/dashboard.js": {
@@ -65,13 +65,13 @@
     "semantic_hash": ""
   },
   "static/manifest.json": {
-    "mtime": 1795576911.5803747,
-    "ast_hash": "4ac70fd713135aeb7235dee543674f4d",
+    "mtime": 1795582425.2005594,
+    "ast_hash": "1f7ed7375fb873564f01065b4cf1d235",
     "semantic_hash": ""
   },
   "static/sw.js": {
-    "mtime": 1795576911.5794685,
-    "ast_hash": "cdf4b0c159493aa5165407b3dee1171d",
+    "mtime": 1795582425.2314897,
+    "ast_hash": "9ea4b6404e3acc2a82ca8e4fc32fa5db",
     "semantic_hash": ""
   },
   "static/upload.js": {
@@ -155,13 +155,13 @@
     "semantic_hash": ""
   },
   ".github/workflows/market-hours-sync.yml": {
-    "mtime": 1795577230.133593,
-    "ast_hash": "d0219f591550a4a73c26d2e5da628d08",
+    "mtime": 1795577724.6173902,
+    "ast_hash": "8172902b1e53a0d9f8728b4c449dd786",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795576911.5797005,
-    "ast_hash": "514a64d6bfe67bf09c411f4b535f9b1f",
+    "mtime": 1795578459.5401628,
+    "ast_hash": "3f39c4f74510470f3a91707a2f5137d3",
     "semantic_hash": ""
   },
   "requirements-dev.txt": {
@@ -190,28 +190,28 @@
     "semantic_hash": ""
   },
   "templates/_macros.html": {
-    "mtime": 1795576943.4465408,
-    "ast_hash": "4312ebcf8e1ace4f69e0de3077390733",
+    "mtime": 1795579027.2478323,
+    "ast_hash": "6d49166695bd5ea6b685667c7aba8b90",
     "semantic_hash": ""
   },
   "templates/alerts.html": {
-    "mtime": 1795546552.7502823,
-    "ast_hash": "347e658d1b3559add3c18ee613f997ec",
+    "mtime": 1795578844.7506032,
+    "ast_hash": "8197d733b9df6bd21e920ab157c511ca",
     "semantic_hash": ""
   },
   "templates/base.html": {
-    "mtime": 1795576911.5802462,
-    "ast_hash": "5fde77f6f8f8ce00959d8ef0ae69a975",
+    "mtime": 1795582425.2836196,
+    "ast_hash": "202472a8ef388eafbf027db3554f8506",
     "semantic_hash": ""
   },
   "templates/charts.html": {
-    "mtime": 1795547499.6347878,
-    "ast_hash": "e3ae60ad55f29989800146ba9f8d4698",
+    "mtime": 1795580845.5154603,
+    "ast_hash": "492a0031ad1deb489e9cecdebd74ac4c",
     "semantic_hash": ""
   },
   "templates/client_detail.html": {
-    "mtime": 1795577230.1323965,
-    "ast_hash": "faa43f263e4e3f3ee5c29366a965cf80",
+    "mtime": 1795579027.2489858,
+    "ast_hash": "428f81900bcd417c2cac5d8082f1c6b0",
     "semantic_hash": ""
   },
   "templates/clients.html": {
@@ -235,13 +235,13 @@
     "semantic_hash": ""
   },
   "templates/login.html": {
-    "mtime": 1795576911.5776062,
-    "ast_hash": "38d2b15b9b8d4455856bad51120f14fc",
+    "mtime": 1795579027.2484736,
+    "ast_hash": "2fefc8165c9531d5b13ca8168b8d9c68",
     "semantic_hash": ""
   },
   "templates/pay.html": {
-    "mtime": 1795576911.5804615,
-    "ast_hash": "49392f8145c00441aa356d1811655c2b",
+    "mtime": 1795578459.5338926,
+    "ast_hash": "e4e0884083e97d6aca69e9eb58530f5a",
     "semantic_hash": ""
   },
   "templates/payments.html": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "templates/portal.html": {
-    "mtime": 1795547499.6394596,
-    "ast_hash": "175185ec25a3382d1a55dbfa5e00555f",
+    "mtime": 1795582970.2060027,
+    "ast_hash": "a759cd6d35dcc0bbc3226d51f032516a",
     "semantic_hash": ""
   },
   "templates/settings.html": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "templates/upload.html": {
-    "mtime": 1795576911.5782309,
-    "ast_hash": "22b4a342067ef729e1db7c5c3f4e875a",
+    "mtime": 1795578459.5372176,
+    "ast_hash": "c78fd71517793c22247e345fdfcd8823",
     "semantic_hash": ""
   },
   "templates/uploads.html": {
@@ -280,43 +280,43 @@
     "semantic_hash": ""
   },
   "static/apple-touch-icon.png": {
-    "mtime": 1795546740.510323,
-    "ast_hash": "1a71b1e65d4713167c59aa608c5b1da3",
+    "mtime": 1795582190.3222349,
+    "ast_hash": "ac9830c3f720043fece02b1e84613adc",
     "semantic_hash": ""
   },
   "static/favicon.svg": {
-    "mtime": 1795546740.5184262,
-    "ast_hash": "009ff5022d481caedaaca57b1037539f",
+    "mtime": 1795579027.2019804,
+    "ast_hash": "f9264c98838e8d48ebaa5e3f0aa2c9b0",
     "semantic_hash": ""
   },
   "static/icon-192.png": {
-    "mtime": 1795546740.504915,
-    "ast_hash": "71995ec3f4bd92c925384af93b1ff63a",
+    "mtime": 1795582190.312176,
+    "ast_hash": "84fd4072ec02d7a2221df595397d3488",
     "semantic_hash": ""
   },
   "static/icon-512.png": {
-    "mtime": 1795546740.5070581,
-    "ast_hash": "412107b0517ad99cc9683ba0ca8b2754",
+    "mtime": 1795582190.2898662,
+    "ast_hash": "db045e1b8d4305b4fa4461ac5296f495",
     "semantic_hash": ""
   },
   "static/icon-maskable-192.png": {
-    "mtime": 1795546740.5077996,
-    "ast_hash": "71995ec3f4bd92c925384af93b1ff63a",
+    "mtime": 1795582190.3172567,
+    "ast_hash": "9e1a8cbb15ca1372d6c86c424c3c9e37",
     "semantic_hash": ""
   },
   "static/icon-maskable-512.png": {
-    "mtime": 1795546740.509728,
-    "ast_hash": "412107b0517ad99cc9683ba0ca8b2754",
+    "mtime": 1795582190.306339,
+    "ast_hash": "fe5508439709c9de16a8d166d338668f",
     "semantic_hash": ""
   },
   "PROJECT_SUMMARY.md": {
-    "mtime": 1795577230.1339984,
-    "ast_hash": "c9484b0e551f9bd49a69caa477eea6e1",
+    "mtime": 1795578459.5403411,
+    "ast_hash": "14daa278b53314001e90aa4cb297e7ba",
     "semantic_hash": ""
   },
   ".githooks/post-commit": {
-    "mtime": 1795577230.1334581,
-    "ast_hash": "4577acf633ce1bf56c099a705f9bc70a",
+    "mtime": 1795577724.617207,
+    "ast_hash": "a0a326d597c15558e3a9e69aabbcab09",
     "semantic_hash": ""
   },
   "supabase/migrations/011_stock_price_targets.sql": {
@@ -330,48 +330,78 @@
     "semantic_hash": ""
   },
   "REDESIGN_ROADMAP.md": {
-    "mtime": 1795577105.0602214,
-    "ast_hash": "ed92d8021771e6d2da218eddc38b5265",
+    "mtime": 1795577724.6180594,
+    "ast_hash": "1bd04175159cb6f243b6cbf868494f13",
     "semantic_hash": ""
   },
   "static/aldervain-apple-180.png": {
-    "mtime": 1795576911.5339072,
-    "ast_hash": "156b540cf13e1683d105ba80dccb1e87",
+    "mtime": 1795579027.2025042,
+    "ast_hash": "8b06c17bb32d847ff5baf9838671cea2",
     "semantic_hash": ""
   },
   "static/aldervain-favicon-32.png": {
-    "mtime": 1795576911.5351844,
-    "ast_hash": "61d43ee385c4e48e51bfc62ea69485b1",
+    "mtime": 1795579027.2056978,
+    "ast_hash": "c2dcf3200b788d1dfa062bec5f73c2fe",
     "semantic_hash": ""
   },
   "static/aldervain-icon-192.png": {
-    "mtime": 1795576911.526509,
-    "ast_hash": "e3aa6378ea979bf2c18b772b18227029",
+    "mtime": 1795579027.2028048,
+    "ast_hash": "97f96853878f50175e9ac8465f63c8ec",
     "semantic_hash": ""
   },
   "static/aldervain-icon-512.png": {
-    "mtime": 1795576911.5285463,
-    "ast_hash": "32666fe079b926da4dda4cd4b3c5b17b",
+    "mtime": 1795579027.2041478,
+    "ast_hash": "43cc36c61b92a61d648d9991bec2ea6b",
     "semantic_hash": ""
   },
   "static/aldervain-mark.png": {
-    "mtime": 1795576911.5248415,
-    "ast_hash": "6bf6603af1b178ecf5e4b4fe75848c5a",
+    "mtime": 1795579027.205604,
+    "ast_hash": "d230a8d438199c7e288785a428ac1914",
     "semantic_hash": ""
   },
   "static/aldervain-maskable-192.png": {
-    "mtime": 1795576911.5301528,
-    "ast_hash": "e3aa6378ea979bf2c18b772b18227029",
+    "mtime": 1795579027.2042964,
+    "ast_hash": "3a75b002200016e8a21a1b1956ea01e3",
     "semantic_hash": ""
   },
   "static/aldervain-maskable-512.png": {
-    "mtime": 1795576911.5320365,
-    "ast_hash": "32666fe079b926da4dda4cd4b3c5b17b",
+    "mtime": 1795579027.2044647,
+    "ast_hash": "b22ef4046572a78c1422e97280edef7b",
     "semantic_hash": ""
   },
   "static/aldervain-preview.png": {
-    "mtime": 1795576911.5464056,
-    "ast_hash": "faff88ac77321148ea2c3c8e1c4eea31",
+    "mtime": 1795579027.2052557,
+    "ast_hash": "37d44cf702fd58a8dd206f5b11b2b4d1",
+    "semantic_hash": ""
+  },
+  "static/alder-tree-mark.png": {
+    "mtime": 1795582190.3297837,
+    "ast_hash": "e5eb21044557428b48d5cc1a96f63dc9",
+    "semantic_hash": ""
+  },
+  "static/alder-tree.webp": {
+    "mtime": 1795579027.0004578,
+    "ast_hash": "3105e90570d4f8bf203d58b043eee8d5",
+    "semantic_hash": ""
+  },
+  "static/alder-vane-preview.png": {
+    "mtime": 1795579027.0701158,
+    "ast_hash": "37d44cf702fd58a8dd206f5b11b2b4d1",
+    "semantic_hash": ""
+  },
+  "static/favicon-32.png": {
+    "mtime": 1795579027.2018013,
+    "ast_hash": "c2dcf3200b788d1dfa062bec5f73c2fe",
+    "semantic_hash": ""
+  },
+  "static/icon-1024.png": {
+    "mtime": 1795582190.2200856,
+    "ast_hash": "85607875139dcbdddbca7fa67895a124",
+    "semantic_hash": ""
+  },
+  "static/icon-maskable-1024.png": {
+    "mtime": 1795582190.269547,
+    "ast_hash": "18a4cf7b99242e9fc19c573182d0b85c",
     "semantic_hash": ""
   }
 }

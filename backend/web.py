@@ -44,7 +44,7 @@ from .prices import (
     DailyPriceScheduler, fetch_stock_quote, get_all_held_stocks,
     get_cached_prices, invalidate_prices_cache, is_market_hours,
     update_all_stock_prices, IST, get_all_ledger_stocks_summary,
-    fetch_stock_candles,
+    fetch_stock_candles, KNOWN_TICKERS,
 )
 from .security import (
     configure_app, credential_version, csrf_token, local_setup_allowed, require_csrf,
@@ -366,6 +366,59 @@ def resolve_canonical_stock(db, raw_stock):
     cleaned = raw_stock.strip().upper()
     mapping = get_alias_mapping(db)
     return mapping.get(cleaned, cleaned)
+
+
+_AMBIGUOUS_KNOWN_TICKER_KEYS = frozenset({
+    "BLS POLYMERS", "BLS POLYMERS LIMITED", "BLS POLYMERS LTD",
+    "BLS INTERNATIONAL", "BLS INTERNATIONAL SERVICES",
+})
+
+
+def get_matching_stock_variants(db, raw_stock, include_known_tickers=False):
+    """Return (canonical_stock, set_of_upper_trimmed_variants) for a stock symbol."""
+    raw_upper = (raw_stock or "").strip().upper()
+    if not raw_upper:
+        return "", set()
+    alias_map = get_alias_mapping(db)
+    canonical = alias_map.get(raw_upper, raw_upper)
+    variants = {raw_upper, canonical}
+    for alias_key, target_canon in alias_map.items():
+        if target_canon == canonical:
+            variants.add(alias_key)
+
+    if include_known_tickers and raw_upper not in _AMBIGUOUS_KNOWN_TICKER_KEYS:
+        ticker = KNOWN_TICKERS.get(raw_upper) or KNOWN_TICKERS.get(canonical)
+        if ticker:
+            for k, t in KNOWN_TICKERS.items():
+                if t != ticker or k in _AMBIGUOUS_KNOWN_TICKER_KEYS:
+                    continue
+                mapped = alias_map.get(k)
+                if mapped is None or mapped == k or mapped == canonical:
+                    variants.add(k)
+            mapped_t = alias_map.get(ticker)
+            if mapped_t is None or mapped_t == ticker or mapped_t == canonical:
+                variants.add(ticker)
+
+    return canonical, variants
+
+
+def _stock_in_clause(variants, column="stock"):
+    """Build SQL IN clause and ordered parameter tuple for case/whitespace-insensitive stock matching."""
+    ordered = tuple(sorted(v for v in variants if v))
+    if not ordered:
+        return "1=0", ()
+    placeholders = ",".join("?" for _ in ordered)
+    return f"UPPER(TRIM({column})) IN ({placeholders})", ordered
+
+
+def _safe_sell_date(sell_date, lot_buy_date=None):
+    """Ensure sell_date is valid and never precedes buy_date (required by Postgres trades_date_order)."""
+    s_date = str(sell_date)[:10] if sell_date else date.today().isoformat()
+    if lot_buy_date:
+        b_date = str(lot_buy_date)[:10]
+        if len(b_date) == 10 and s_date < b_date:
+            return b_date
+    return s_date
 
 
 def get_known_stocks(db):
@@ -896,7 +949,6 @@ def sync_client_holdings_from_trades(cid=None, db=None):
 
     alias_map = get_alias_mapping(db)
 
-    # Query all open trades for client(s)
     where_sql = "WHERE client_id=?" if cid is not None else ""
     params = (cid,) if cid is not None else ()
 
@@ -910,6 +962,18 @@ def sync_client_holdings_from_trades(cid=None, db=None):
             params
         ).fetchall()
 
+        closed_rows = db.execute(
+            f"""SELECT DISTINCT client_id, stock FROM trades
+                {where_sql} {"AND" if where_sql else "WHERE"} sell_price IS NOT NULL AND sell_price > 0""",
+            params
+        ).fetchall()
+        closed_by_client = {}
+        for cr in closed_rows:
+            raw_s = (cr["stock"] or "").strip().upper()
+            if not raw_s:
+                continue
+            closed_by_client.setdefault(cr["client_id"], set()).add(alias_map.get(raw_s, raw_s))
+
         # Group open trades by (client_id, canonical_stock)
         grouped = {}
         for ot in open_trades:
@@ -918,12 +982,19 @@ def sync_client_holdings_from_trades(cid=None, db=None):
             stk = alias_map.get(raw_s, raw_s)
             if not stk:
                 continue
-            key = (c_id, stk)
-            if key not in grouped:
-                grouped[key] = []
-            grouped[key].append(ot)
+            grouped.setdefault((c_id, stk), []).append(ot)
 
-        # Clients to process
+        # Load existing client_shares grouped by (client_id, canonical_stock)
+        cs_rows = db.execute(
+            f"SELECT id, client_id, stock, quantity FROM client_shares {where_sql} ORDER BY id ASC",
+            params
+        ).fetchall()
+        cs_by_key = {}
+        for cs in cs_rows:
+            raw_s = (cs["stock"] or "").strip().upper()
+            stk = alias_map.get(raw_s, raw_s)
+            cs_by_key.setdefault((cs["client_id"], stk), []).append(cs)
+
         if cid is not None:
             target_cids = [cid]
         else:
@@ -956,21 +1027,17 @@ def sync_client_holdings_from_trades(cid=None, db=None):
                         if t_date and (not earliest_date or t_date < earliest_date):
                             earliest_date = t_date
 
-                if total_qty > ZERO:
+                existing_cs = cs_by_key.get((target_cid, stk), [])
+                int_qty = int(round(total_qty)) if total_qty > ZERO else 0
+
+                if total_qty > ZERO and int_qty > 0:
                     avg_buy_price = (total_cost / total_qty).quantize(CENT, rounding=ROUND_HALF_UP)
                     earliest_date = earliest_date or date.today().isoformat()
-                    int_qty = int(round(total_qty))
-
-                    # Check if client_shares already has this (client_id, stock)
-                    existing_cs = db.execute(
-                        "SELECT id FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
-                        (target_cid, stk)
-                    ).fetchall()
 
                     if existing_cs:
                         db.execute(
-                            "UPDATE client_shares SET quantity=?, buy_price=?, added_on=?, deduct_from_funds=? WHERE id=?",
-                            (int_qty, avg_buy_price, earliest_date, deduct_val, existing_cs[0]["id"])
+                            "UPDATE client_shares SET stock=?, quantity=?, buy_price=?, added_on=?, deduct_from_funds=? WHERE id=?",
+                            (stk, int_qty, avg_buy_price, earliest_date, deduct_val, existing_cs[0]["id"])
                         )
                         for dup in existing_cs[1:]:
                             db.execute("DELETE FROM client_shares WHERE id=?", (dup["id"],))
@@ -980,28 +1047,21 @@ def sync_client_holdings_from_trades(cid=None, db=None):
                             (target_cid, stk, int_qty, avg_buy_price, earliest_date, deduct_val)
                         )
                 else:
-                    db.execute(
-                        "DELETE FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
-                        (target_cid, stk)
-                    )
+                    for cs in existing_cs:
+                        db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
 
             # Clean up any stocks in client_shares for this client that no longer have open trades
-            current_cs = db.execute(
-                "SELECT id, UPPER(TRIM(stock)) as stock FROM client_shares WHERE client_id=?",
-                (target_cid,)
-            ).fetchall()
-            for cs in current_cs:
-                cs_stock = alias_map.get(cs["stock"], cs["stock"])
-                if cs_stock not in seen_stocks:
-                    # Only remove from client_shares if a closed trade exists in ledger (fully sold)
-                    has_closed = db.execute(
-                        """SELECT 1 FROM trades
-                           WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))
-                             AND sell_price IS NOT NULL AND sell_price > 0 LIMIT 1""",
-                        (target_cid, cs["stock"], cs_stock)
-                    ).fetchone()
-                    if has_closed:
+            closed_stocks = closed_by_client.get(target_cid, set())
+            for (cs_cid, cs_stock), rows in cs_by_key.items():
+                if cs_cid != target_cid or cs_stock in seen_stocks:
+                    continue
+                if cs_stock in closed_stocks:
+                    for cs in rows:
                         db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
+                else:
+                    for cs in rows:
+                        if dec(cs.get("quantity") or 0) <= ZERO:
+                            db.execute("DELETE FROM client_shares WHERE id=?", (cs["id"],))
 
         db.commit()
     except Exception as exc:
@@ -1064,6 +1124,20 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=True):
             "deduct_from_funds": 1 if ot.get("deduct_from_funds") else 0,
         })
 
+    # Pre-load canonical closed stocks for this client (alias-aware)
+    closed_canonicals = set()
+    try:
+        closed_rows = db.execute(
+            "SELECT DISTINCT stock FROM trades WHERE client_id=? AND sell_price IS NOT NULL AND sell_price > 0",
+            (cid,)
+        ).fetchall()
+        for cr in closed_rows:
+            rs = (cr["stock"] or "").strip().upper()
+            if rs:
+                closed_canonicals.add(alias_map.get(rs, rs))
+    except Exception:
+        pass
+
     # Fetch accumulated positions from client_shares
     try:
         raw_shares = db.execute(
@@ -1089,14 +1163,7 @@ def get_client_calculated_holdings(cid, db=None, sync_trades=True):
         deduct_val = 1 if r.get("deduct_from_funds") else 0
         stock_lots = lots_by_stock.get(stk, [])
         if not stock_lots:
-            # Check if this holding was closed in ledger
-            closed_exists = db.execute(
-                """SELECT 1 FROM trades
-                   WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))
-                     AND sell_price IS NOT NULL AND sell_price > 0 LIMIT 1""",
-                (cid, raw_s, stk)
-            ).fetchone()
-            if closed_exists:
+            if stk in closed_canonicals:
                 try:
                     db.execute("DELETE FROM client_shares WHERE id=?", (r["id"],))
                     db.commit()
@@ -1240,9 +1307,6 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
     if db is None:
         db = get_db()
 
-    alias_map = get_alias_mapping(db)
-    raw_s = (stock or "").strip().upper()
-    stock_canonical = resolve_canonical_stock(db, alias_map.get(raw_s, raw_s))
     sell_qty = int(round(dec(sell_quantity or 0)))
     if sell_qty <= 0:
         return []
@@ -1251,49 +1315,91 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
     sell_date = valid_date(sell_date, "Sell Date") if sell_date else date.today().isoformat()
     user_notes = (notes or "").strip()
 
-    # Query all open lots for this client and stock in FIFO order (earliest buy first)
-    open_lots = db.execute(
-        """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date,
-                  COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, upload_id
-           FROM trades
-           WHERE client_id = ?
-             AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
-             AND buy_price IS NOT NULL
-             AND (sell_price IS NULL OR sell_price = 0)
-           ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
-        (client_id, raw_s, stock_canonical)
-    ).fetchall()
+    stock_canonical, variants = get_matching_stock_variants(db, stock, include_known_tickers=False)
+    if not stock_canonical:
+        return []
+
+    def _fetch_open_lots(stock_variants):
+        in_sql, in_params = _stock_in_clause(stock_variants)
+        return db.execute(
+            f"""SELECT id, stock, quantity, buy_price, buy_date as raw_buy_date,
+                       COALESCE(buy_date, created_at) as buy_date,
+                       COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, upload_id
+                FROM trades
+                WHERE client_id = ?
+                  AND {in_sql}
+                  AND buy_price IS NOT NULL
+                  AND (sell_price IS NULL OR sell_price = 0)
+                ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+            (client_id, *in_params)
+        ).fetchall()
+
+    def _fetch_cs_rows(stock_variants):
+        in_sql, in_params = _stock_in_clause(stock_variants)
+        return db.execute(
+            f"""SELECT id, stock, quantity, buy_price, added_on,
+                       COALESCE(deduct_from_funds, 0) as deduct_from_funds
+                FROM client_shares
+                WHERE client_id=? AND {in_sql}
+                ORDER BY id ASC""",
+            (client_id, *in_params)
+        ).fetchall()
+
+    open_lots = _fetch_open_lots(variants)
+    cs_rows = _fetch_cs_rows(variants)
+
+    # Fallback: if no direct/alias match exists, check unambiguous ticker equivalents (e.g. TECHNOCRAFT <-> TECHNOCRAF)
+    if not open_lots and not cs_rows:
+        fallback_canon, fallback_variants = get_matching_stock_variants(db, stock, include_known_tickers=True)
+        if fallback_variants - variants:
+            fb_lots = _fetch_open_lots(fallback_variants)
+            fb_cs = _fetch_cs_rows(fallback_variants)
+            if fb_lots or fb_cs:
+                variants = fallback_variants
+                open_lots = fb_lots
+                cs_rows = fb_cs
+                # Prefer the canonical stock used by existing open holdings/lots
+                alias_map = get_alias_mapping(db)
+                existing_raw = (
+                    (open_lots[0]["stock"] if open_lots else cs_rows[0]["stock"]) or fallback_canon
+                ).strip().upper()
+                stock_canonical = alias_map.get(existing_raw, existing_raw)
+
+    cs_qty = sum((dec(r["quantity"] or 0) for r in cs_rows if dec(r["quantity"] or 0) > ZERO), ZERO)
+    total_open_qty = sum((dec(lot["quantity"] or 0) for lot in open_lots), ZERO)
 
     # If client_shares has more shares than open trades, ensure the difference is represented in open trades
-    cs_row = db.execute(
-        """SELECT id, quantity, buy_price, added_on, deduct_from_funds FROM client_shares
-           WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))""",
-        (client_id, raw_s, stock_canonical)
-    ).fetchone()
-    cs_qty = dec(cs_row["quantity"] or 0) if cs_row else ZERO
-    total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
-
     if cs_qty > total_open_qty:
         diff_qty = int(round(cs_qty - total_open_qty))
-        bp = dec(cs_row["buy_price"] or 0)
-        b_date = str(cs_row["added_on"])[:10] if cs_row.get("added_on") else date.today().isoformat()
+        cs_cost = ZERO
+        cs_qty_for_avg = ZERO
+        earliest_added = None
+        cs_deduct = 0
+        for r in cs_rows:
+            rq = dec(r["quantity"] or 0)
+            if rq <= ZERO:
+                continue
+            rbp = dec(r["buy_price"]) if r.get("buy_price") is not None else (
+                dec(buy_price_hint) if buy_price_hint is not None else ZERO
+            )
+            cs_cost += rq * rbp
+            cs_qty_for_avg += rq
+            if r.get("deduct_from_funds"):
+                cs_deduct = 1
+            ad = str(r["added_on"])[:10] if r.get("added_on") else ""
+            if ad and (not earliest_added or ad < earliest_added):
+                earliest_added = ad
+        bp = (cs_cost / cs_qty_for_avg).quantize(CENT, rounding=ROUND_HALF_UP) if cs_qty_for_avg > ZERO else ZERO
+        b_date = earliest_added or sell_date
+        if b_date > sell_date:
+            b_date = sell_date
         db.execute(
             """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
                VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
-            (client_id, stock_canonical, diff_qty, bp, b_date, cs_row.get("deduct_from_funds", 0))
+            (client_id, stock_canonical, diff_qty, bp, b_date, cs_deduct)
         )
-        open_lots = db.execute(
-            """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date,
-                      COALESCE(deduct_from_funds, 0) as deduct_from_funds, notes, upload_id
-               FROM trades
-               WHERE client_id = ?
-                 AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
-                 AND buy_price IS NOT NULL
-                 AND (sell_price IS NULL OR sell_price = 0)
-               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
-            (client_id, raw_s, stock_canonical)
-        ).fetchall()
-        total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+        open_lots = _fetch_open_lots(variants)
+        total_open_qty = sum((dec(lot["quantity"] or 0) for lot in open_lots), ZERO)
 
     int_open_qty = int(round(total_open_qty))
     affected_ids = []
@@ -1319,11 +1425,12 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
             lot_id = lot["id"]
             existing_notes = (lot["notes"] or "").strip()
             merged_notes = f"{existing_notes} [{user_notes}]".strip() if (user_notes and user_notes not in existing_notes) else (existing_notes or user_notes or "Sold from Holdings")
+            lot_sell_date = _safe_sell_date(sell_date, lot.get("raw_buy_date"))
             db.execute(
                 """UPDATE trades
                    SET sell_price=?, sell_date=?, notes=?, upload_id=COALESCE(upload_id, ?)
                    WHERE id=?""",
-                (sell_price, sell_date, merged_notes, upload_id, lot_id)
+                (sell_price, lot_sell_date, merged_notes, upload_id, lot_id)
             )
             affected_ids.append(lot_id)
 
@@ -1336,6 +1443,7 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
             lot_qty = dec(lot["quantity"] or 0)
             existing_notes = (lot["notes"] or "").strip()
             lot_buy_date = str(lot["buy_date"])[:10] if lot["buy_date"] else sell_date
+            lot_sell_date = _safe_sell_date(sell_date, lot.get("raw_buy_date") or lot_buy_date)
 
             if lot_qty <= rem_sell:
                 # Lot is fully consumed by this sale
@@ -1344,7 +1452,7 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
                     """UPDATE trades
                        SET sell_price=?, sell_date=?, notes=?, upload_id=COALESCE(upload_id, ?)
                        WHERE id=?""",
-                    (sell_price, sell_date, merged_notes, upload_id, lot["id"])
+                    (sell_price, lot_sell_date, merged_notes, upload_id, lot["id"])
                 )
                 affected_ids.append(lot["id"])
                 rem_sell -= lot_qty
@@ -1358,13 +1466,14 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
 
                 # Insert new closed trade for the sold portion with original lot buy_price
                 sold_notes = f"{existing_notes} [{user_notes}]".strip() if (user_notes and user_notes not in existing_notes) else (existing_notes or user_notes or "Sold from Holdings")
+                lot_stock = (lot.get("stock") or stock_canonical).strip().upper()
                 new_ids = insert_trades(client_id, [{
-                    "stock": stock_canonical,
+                    "stock": lot_stock,
                     "quantity": sold_portion,
                     "buy_price": dec(lot["buy_price"]),
                     "sell_price": sell_price,
                     "buy_date": lot_buy_date,
-                    "sell_date": sell_date,
+                    "sell_date": lot_sell_date,
                     "notes": sold_notes,
                     "deduct_from_funds": lot.get("deduct_from_funds", 0),
                 }], source=source, upload_id=upload_id or lot.get("upload_id"))
@@ -1378,11 +1487,12 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
             lot_id = lot["id"]
             existing_notes = (lot["notes"] or "").strip()
             merged_notes = f"{existing_notes} [{user_notes}]".strip() if (user_notes and user_notes not in existing_notes) else (existing_notes or user_notes or "Sold from Holdings")
+            lot_sell_date = _safe_sell_date(sell_date, lot.get("raw_buy_date"))
             db.execute(
                 """UPDATE trades
                    SET sell_price=?, sell_date=?, notes=?, upload_id=COALESCE(upload_id, ?)
                    WHERE id=?""",
-                (sell_price, sell_date, merged_notes, upload_id, lot_id)
+                (sell_price, lot_sell_date, merged_notes, upload_id, lot_id)
             )
             affected_ids.append(lot_id)
 
@@ -1399,6 +1509,14 @@ def apply_sale_fifo(client_id, stock, sell_quantity, sell_price, sell_date=None,
             "deduct_from_funds": 0,
         }], source=source, upload_id=upload_id)
         affected_ids.extend(new_ids)
+
+    # Explicitly clear client_shares for this stock when all open holdings were sold
+    if int_open_qty > 0 and sell_qty >= int_open_qty:
+        in_sql, in_params = _stock_in_clause(variants)
+        db.execute(
+            f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}",
+            (client_id, *in_params),
+        )
 
     # Sync funds realized profits and recalculate client holdings
     sync_trade_profits_to_funds(db, client_id)
@@ -1454,12 +1572,11 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
         if not open_trades:
             continue
 
-        # Fetch all closed trades for client
+        # Fetch all closed/sell trades for client (including sell-only rows where buy_price IS NULL)
         closed_trades = db.execute(
             """SELECT id, stock, quantity, buy_price, sell_price, buy_date, sell_date, notes, source, upload_id, created_at
                FROM trades
                WHERE client_id = ?
-                 AND buy_price IS NOT NULL
                  AND sell_price IS NOT NULL
                  AND sell_price > 0
                ORDER BY COALESCE(sell_date, created_at) DESC, id DESC""",
@@ -1478,7 +1595,7 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
                 continue
             open_by_stock.setdefault(stk, []).append(ot)
 
-        # Group closed trades by canonical stock
+        # Group closed trades by canonical stock (matching ticker family to open stock if needed)
         closed_by_stock = {}
         for ct in closed_trades:
             if ct["id"] in dismissed_ids:
@@ -1490,6 +1607,11 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
             stk = alias_map.get(raw_s, raw_s)
             if not stk:
                 continue
+            if stk not in open_by_stock:
+                _, fb_variants = get_matching_stock_variants(db, raw_s, include_known_tickers=True)
+                matched_open = next((ostk for ostk in open_by_stock if ostk in fb_variants), None)
+                if matched_open:
+                    stk = matched_open
             closed_by_stock.setdefault(stk, []).append(ct)
 
         # Detect candidate reconciliations
@@ -1507,7 +1629,7 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
 
             for ct in cts:
                 ct_qty = dec(ct["quantity"] or 0)
-                ct_bp = dec(ct["buy_price"] or 0)
+                ct_bp = dec(ct["buy_price"]) if ct.get("buy_price") is not None else avg_open_price
                 ct_sp = dec(ct["sell_price"] or 0)
 
                 # Sold quantity cannot exceed current open holdings
@@ -1515,10 +1637,10 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
                     continue
 
                 # Matching criteria:
-                # 1) Exact quantity match (e.g. 58 == 58, 2000 == 2000)
-                # 2) Or buy price equals holding average buy price (within 10 paise) for a partial sale
+                # 1) Exact quantity match (e.g. 58 == 58, 2000 == 2000, 400 == 400)
+                # 2) Or buy price equals holding average buy price (within 10 paise) or sell-only for a partial sale
                 is_exact_qty = (int(round(ct_qty)) == int(round(total_open_qty)))
-                is_bp_match = (abs(ct_bp - avg_open_price) <= dec("0.10"))
+                is_bp_match = (ct.get("buy_price") is None) or (abs(ct_bp - avg_open_price) <= dec("0.10"))
                 is_partial = (ct_qty < total_open_qty)
 
                 if is_exact_qty or (is_bp_match and is_partial):
@@ -1554,6 +1676,353 @@ def get_pending_holding_reconciliations(db=None, client_id=None):
                     })
 
     return reconciliations
+
+
+def _ticker_family_key(raw_stock, alias_map):
+    """Group stock variants into a family key for mismatch detection (excluding ambiguous BLS sub-companies)."""
+    raw_up = (raw_stock or "").strip().upper()
+    if not raw_up:
+        return ""
+    canon = alias_map.get(raw_up, raw_up)
+    if raw_up not in _AMBIGUOUS_KNOWN_TICKER_KEYS and canon not in _AMBIGUOUS_KNOWN_TICKER_KEYS:
+        ticker = KNOWN_TICKERS.get(raw_up) or KNOWN_TICKERS.get(canon)
+        if ticker:
+            return f"TICKER:{ticker}"
+    return f"STOCK:{canon}"
+
+
+def get_trades_holdings_mismatches(db=None, client_id=None, include_dismissed=False, pending_recs=None):
+    """Audit all clients' trades vs client_shares holdings (read-only) and return actionable mismatch prompts."""
+    if db is None:
+        db = get_db()
+
+    alias_map = get_alias_mapping(db)
+    raw_dismissed = setting("dismissed_holding_mismatches", "[]")
+    try:
+        dismissed_raw = json.loads(raw_dismissed)
+        dismissed_keys = set(dismissed_raw) if isinstance(dismissed_raw, list) else set()
+    except Exception:
+        dismissed_keys = set()
+
+    if pending_recs is None:
+        pending_recs = get_pending_holding_reconciliations(db, client_id)
+    reconciled_ct_ids = {r["closed_trade"]["id"] for r in pending_recs}
+
+    where_sql = "WHERE id=?" if client_id is not None else ""
+    params = (client_id,) if client_id is not None else ()
+    clients = db.execute(f"SELECT id, name FROM clients {where_sql} ORDER BY lower(name)", params).fetchall()
+    if not clients:
+        return []
+
+    t_where = "WHERE client_id=?" if client_id is not None else ""
+    all_trades = db.execute(
+        f"""SELECT id, client_id, stock, quantity, buy_price, sell_price, buy_date, sell_date, notes, created_at
+            FROM trades {t_where}
+            ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+        params
+    ).fetchall()
+    all_shares = db.execute(
+        f"SELECT id, client_id, stock, quantity, buy_price, added_on FROM client_shares {t_where} ORDER BY id ASC",
+        params
+    ).fetchall()
+
+    trades_by_client = {}
+    for t in all_trades:
+        trades_by_client.setdefault(t["client_id"], []).append(t)
+
+    shares_by_client = {}
+    for s in all_shares:
+        shares_by_client.setdefault(s["client_id"], []).append(s)
+
+    mismatches = []
+
+    def _add(item):
+        if not include_dismissed and item["key"] in dismissed_keys:
+            return
+        mismatches.append(item)
+
+    for c in clients:
+        cid = c["id"]
+        cname = c["name"]
+        c_trades = trades_by_client.get(cid, [])
+        c_shares = [s for s in shares_by_client.get(cid, []) if dec(s.get("quantity") or 0) > ZERO]
+
+        open_by_canon = {}
+        closed_by_canon = {}
+        open_by_family = {}
+        closed_by_family = {}
+        shares_by_canon = {}
+        shares_by_family = {}
+        names_by_family = {}
+
+        for t in c_trades:
+            raw_s = (t["stock"] or "").strip().upper()
+            if not raw_s:
+                continue
+            canon = alias_map.get(raw_s, raw_s)
+            fam = _ticker_family_key(raw_s, alias_map)
+            is_closed = t.get("sell_price") is not None and dec(t["sell_price"]) > ZERO
+            is_open = t.get("buy_price") is not None and not is_closed
+            if is_open:
+                open_by_canon.setdefault(canon, []).append(t)
+                open_by_family.setdefault(fam, []).append(t)
+                names_by_family.setdefault(fam, set()).add(raw_s)
+            elif is_closed:
+                closed_by_canon.setdefault(canon, []).append(t)
+                closed_by_family.setdefault(fam, []).append(t)
+                names_by_family.setdefault(fam, set()).add(raw_s)
+
+        for s in c_shares:
+            raw_s = (s["stock"] or "").strip().upper()
+            if not raw_s:
+                continue
+            canon = alias_map.get(raw_s, raw_s)
+            fam = _ticker_family_key(raw_s, alias_map)
+            shares_by_canon.setdefault(canon, []).append(s)
+            shares_by_family.setdefault(fam, []).append(s)
+            names_by_family.setdefault(fam, set()).add(raw_s)
+
+        # 1. Stock name / alias split across trades & holdings (e.g. TECHNOCRAF vs TECHNOCRAFT)
+        for fam, raw_names in sorted(names_by_family.items()):
+            active_names = set()
+            for t in open_by_family.get(fam, []):
+                active_names.add((t["stock"] or "").strip().upper())
+            for s in shares_by_family.get(fam, []):
+                active_names.add((s["stock"] or "").strip().upper())
+            # Also check if a closed trade has a different name than active holdings/open lots
+            if active_names and len(raw_names) > 1:
+                canon_candidates = sorted({alias_map.get(n, n) for n in raw_names})
+                preferred = canon_candidates[0]
+                _add({
+                    "key": f"{cid}:stock_name_mismatch:{fam}",
+                    "client_id": cid,
+                    "client_name": cname,
+                    "stock": preferred,
+                    "kind": "stock_name_mismatch",
+                    "severity": "high",
+                    "title": "Stock Name / Alias Mismatch",
+                    "summary": (
+                        f"Trades and holdings use multiple names for the same stock: {', '.join(sorted(raw_names))}. "
+                        f"Unifying them prevents sales or deletes from missing open lots."
+                    ),
+                    "holding_qty": int(round(sum((dec(s["quantity"] or 0) for s in shares_by_family.get(fam, [])), ZERO))),
+                    "holding_buy_price": None,
+                    "open_qty": int(round(sum((dec(t["quantity"] or 0) for t in open_by_family.get(fam, [])), ZERO))),
+                    "open_avg_price": None,
+                    "trade_id": None,
+                    "variants": sorted(raw_names),
+                    "has_closed_variant": bool(closed_by_family.get(fam)),
+                    "suggested_action": "unify_stock_name",
+                })
+
+        # 2. Holdings vs open trades (missing open trades, missing holding, qty/avg price mismatch)
+        all_canons = sorted(set(open_by_canon) | set(shares_by_canon))
+        for stk in all_canons:
+            ots = open_by_canon.get(stk, [])
+            cs_list = shares_by_canon.get(stk, [])
+            fam = _ticker_family_key(stk, alias_map)
+
+            open_qty = sum((dec(t["quantity"] or 0) for t in ots), ZERO)
+            open_cost = sum((dec(t["quantity"] or 0) * dec(t["buy_price"] or 0) for t in ots), ZERO)
+            open_avg = (open_cost / open_qty).quantize(CENT, rounding=ROUND_HALF_UP) if open_qty > ZERO else ZERO
+
+            cs_qty = sum((dec(s["quantity"] or 0) for s in cs_list), ZERO)
+            cs_cost = sum((dec(s["quantity"] or 0) * dec(s.get("buy_price") or 0) for s in cs_list), ZERO)
+            cs_avg = (cs_cost / cs_qty).quantize(CENT, rounding=ROUND_HALF_UP) if cs_qty > ZERO else ZERO
+
+            if cs_qty > ZERO and open_qty <= ZERO:
+                fam_open = open_by_family.get(fam, [])
+                has_closed_var = bool(closed_by_family.get(fam))
+                if fam_open:
+                    # Covered by stock_name_mismatch above, skip duplicate
+                    continue
+                detail_msg = (
+                    f"Holdings shows {int(round(cs_qty))} shares @ ₹{cs_avg}, while Past Trades has 0 open buy lots"
+                    + (" and already has closed/sold trade(s) for this stock." if has_closed_var else " (direct holding without a trade entry).")
+                )
+                _add({
+                    "key": f"{cid}:holding_without_open_trades:{stk}",
+                    "client_id": cid,
+                    "client_name": cname,
+                    "stock": stk,
+                    "kind": "holding_without_open_trades",
+                    "severity": "high" if has_closed_var else "medium",
+                    "title": "Stale Holding (Trades Already Closed)" if has_closed_var else "Holding Missing Buy Trade",
+                    "summary": detail_msg,
+                    "holding_qty": int(round(cs_qty)),
+                    "holding_buy_price": cs_avg,
+                    "open_qty": 0,
+                    "open_avg_price": ZERO,
+                    "trade_id": None,
+                    "variants": [stk],
+                    "has_closed_variant": has_closed_var,
+                    "suggested_action": "delete_stale_holding" if has_closed_var else "create_open_trade",
+                })
+            elif open_qty > ZERO and cs_qty <= ZERO:
+                _add({
+                    "key": f"{cid}:open_trade_missing_holding:{stk}",
+                    "client_id": cid,
+                    "client_name": cname,
+                    "stock": stk,
+                    "kind": "open_trade_missing_holding",
+                    "severity": "high",
+                    "title": "Open Trade Missing from Holdings",
+                    "summary": f"Past Trades has {int(round(open_qty))} open shares @ ₹{open_avg}, but Holdings has 0 shares.",
+                    "holding_qty": 0,
+                    "holding_buy_price": ZERO,
+                    "open_qty": int(round(open_qty)),
+                    "open_avg_price": open_avg,
+                    "trade_id": None,
+                    "variants": [stk],
+                    "has_closed_variant": False,
+                    "suggested_action": "sync_holding",
+                })
+            elif open_qty > ZERO and cs_qty > ZERO:
+                qty_diff = int(round(cs_qty)) != int(round(open_qty))
+                price_diff = abs(cs_avg - open_avg) > Decimal("0.05")
+                if qty_diff or price_diff or len(cs_list) > 1:
+                    _add({
+                        "key": f"{cid}:qty_or_price_mismatch:{stk}",
+                        "client_id": cid,
+                        "client_name": cname,
+                        "stock": stk,
+                        "kind": "qty_or_price_mismatch",
+                        "severity": "high",
+                        "title": "Holdings vs Open Trades Mismatch",
+                        "summary": (
+                            f"Holdings shows {int(round(cs_qty))} sh @ ₹{cs_avg}"
+                            f"{' (duplicate rows)' if len(cs_list) > 1 else ''}, "
+                            f"but open trades total {int(round(open_qty))} sh @ ₹{open_avg}."
+                        ),
+                        "holding_qty": int(round(cs_qty)),
+                        "holding_buy_price": cs_avg,
+                        "open_qty": int(round(open_qty)),
+                        "open_avg_price": open_avg,
+                        "trade_id": None,
+                        "variants": [stk],
+                        "has_closed_variant": False,
+                        "suggested_action": "sync_holding",
+                    })
+
+        # 3. Unapplied closed/sell trades while open holdings exist (outside pending_reconciliations)
+        for fam, cts in sorted(closed_by_family.items()):
+            fam_open = open_by_family.get(fam, [])
+            fam_shares = shares_by_family.get(fam, [])
+            open_qty = sum((dec(t["quantity"] or 0) for t in fam_open), ZERO)
+            cs_qty = sum((dec(s["quantity"] or 0) for s in fam_shares), ZERO)
+            eff_open_qty = max(open_qty, cs_qty)
+            if eff_open_qty <= ZERO:
+                # Check for orphan sell-only trades without any buy price
+                for ct in cts:
+                    if ct.get("buy_price") is None:
+                        _add({
+                            "key": f"{cid}:sell_only_trade:{ct['id']}",
+                            "client_id": cid,
+                            "client_name": cname,
+                            "stock": (ct["stock"] or "").strip().upper(),
+                            "kind": "sell_only_trade",
+                            "severity": "medium",
+                            "title": "Sell Trade Missing Buy Price",
+                            "summary": f"Trade #{ct['id']} ({int(round(dec(ct['quantity'] or 0)))} sh sold @ ₹{dec(ct['sell_price'])}) has no buy price and no open holding to pair with.",
+                            "holding_qty": 0,
+                            "holding_buy_price": None,
+                            "open_qty": 0,
+                            "open_avg_price": None,
+                            "trade_id": ct["id"],
+                            "variants": [(ct["stock"] or "").strip().upper()],
+                            "has_closed_variant": True,
+                            "suggested_action": "edit_trade",
+                        })
+                continue
+
+            if fam_open:
+                open_cost = sum((dec(t["quantity"] or 0) * dec(t["buy_price"] or 0) for t in fam_open), ZERO)
+                avg_open = (open_cost / open_qty).quantize(CENT, rounding=ROUND_HALF_UP) if open_qty > ZERO else ZERO
+                earliest_open_date = min((str(t.get("buy_date") or t.get("created_at") or "")[:10] for t in fam_open), default="")
+            else:
+                cs_cost = sum((dec(s["quantity"] or 0) * dec(s.get("buy_price") or 0) for s in fam_shares), ZERO)
+                avg_open = (cs_cost / cs_qty).quantize(CENT, rounding=ROUND_HALF_UP) if cs_qty > ZERO else ZERO
+                earliest_open_date = min((str(s.get("added_on") or "")[:10] for s in fam_shares), default="")
+
+            for ct in cts:
+                if ct["id"] in reconciled_ct_ids:
+                    continue
+                ct_notes = ct.get("notes") or ""
+                if any(tag in ct_notes for tag in ("[Reconciled", "Reconciled Sale", "[Sold from Holdings]")):
+                    continue
+                ct_qty = dec(ct["quantity"] or 0)
+                ct_bp = dec(ct["buy_price"]) if ct.get("buy_price") is not None else None
+                ct_sp = dec(ct["sell_price"] or 0)
+                ct_sell_date = str(ct.get("sell_date") or ct.get("created_at") or "")[:10]
+
+                is_sell_only = ct_bp is None
+                is_after_open = (not earliest_open_date or not ct_sell_date or ct_sell_date >= earliest_open_date)
+                is_qty_match = int(round(ct_qty)) == int(round(eff_open_qty))
+                is_bp_close = (ct_bp is not None and abs(ct_bp - avg_open) <= Decimal("0.50") and ct_qty <= eff_open_qty)
+                is_direct_holding_sale = (not fam_open and cs_qty > ZERO and ct_qty <= cs_qty)
+
+                if is_sell_only or (is_after_open and (is_qty_match or is_bp_close or is_direct_holding_sale)):
+                    disp_stk = (ct["stock"] or "").strip().upper()
+                    _add({
+                        "key": f"{cid}:unapplied_sale:{ct['id']}",
+                        "client_id": cid,
+                        "client_name": cname,
+                        "stock": disp_stk,
+                        "kind": "unapplied_sale",
+                        "severity": "high",
+                        "title": "Sale Trade Not Deducted from Holdings",
+                        "summary": (
+                            f"Closed/sale Trade #{ct['id']} ({int(round(ct_qty))} sh sold @ ₹{ct_sp} on {ct_sell_date or '—'}) "
+                            f"coexists with {int(round(eff_open_qty))} open shares in holdings."
+                        ),
+                        "holding_qty": int(round(cs_qty)),
+                        "holding_buy_price": avg_open,
+                        "open_qty": int(round(eff_open_qty)),
+                        "open_avg_price": avg_open,
+                        "trade_id": ct["id"],
+                        "variants": [disp_stk],
+                        "has_closed_variant": True,
+                        "suggested_action": "apply_sale_fifo",
+                    })
+
+    return mismatches
+
+
+def summarize_mismatches_by_client(mismatches, pending_reconciliations=None):
+    """Group mismatches and pending reconciliations by client_id for admin overview banners."""
+    by_client = {}
+    for m in mismatches or []:
+        cid = m["client_id"]
+        entry = by_client.setdefault(cid, {
+            "client_id": cid,
+            "client_name": m["client_name"],
+            "mismatch_count": 0,
+            "reconcile_count": 0,
+            "stocks": [],
+        })
+        entry["mismatch_count"] += 1
+        if m["stock"] not in entry["stocks"]:
+            entry["stocks"].append(m["stock"])
+
+    for r in pending_reconciliations or []:
+        cid = r["client_id"]
+        entry = by_client.setdefault(cid, {
+            "client_id": cid,
+            "client_name": r["client_name"],
+            "mismatch_count": 0,
+            "reconcile_count": 0,
+            "stocks": [],
+        })
+        entry["reconcile_count"] += 1
+        if r["stock"] not in entry["stocks"]:
+            entry["stocks"].append(r["stock"])
+
+    summary_list = []
+    for entry in by_client.values():
+        entry["total_count"] = entry["mismatch_count"] + entry["reconcile_count"]
+        summary_list.append(entry)
+    summary_list.sort(key=lambda x: (-x["total_count"], x["client_name"].lower()))
+    return summary_list
 
 
 def repair_client_holdings_data(db=None):
@@ -2156,10 +2625,14 @@ def create_app(config=None):
             "clients": [client["name"] for client in positive],
             "client_commission": [float(round(client["commission"], 2)) for client in positive],
         }
+        pending_recs = get_pending_holding_reconciliations(get_db())
+        holding_mismatches = get_trades_holdings_mismatches(get_db(), pending_recs=pending_recs)
+        client_mismatch_summary = summarize_mismatches_by_client(holding_mismatches, pending_recs)
         return render_template(
             "dashboard.html", total=total, per_client=per_client, chart=chart,
             top_stocks=sorted(stocks.values(), key=lambda stock: stock["commission"], reverse=True)[:10],
             recent=trades[:8], args=args,
+            client_mismatch_summary=client_mismatch_summary,
         )
 
     @app.route("/trades")
@@ -2223,12 +2696,18 @@ def create_app(config=None):
             else:
                 db = get_db()
                 if values.get("sell_price") is not None:
+                    _, variants = get_matching_stock_variants(db, values["stock"], include_known_tickers=True)
+                    in_sql, in_params = _stock_in_clause(variants)
                     open_trades_exist = db.execute(
-                        """SELECT 1 FROM trades
-                           WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0) LIMIT 1""",
-                        (cid, values["stock"].upper())
+                        f"""SELECT 1 FROM trades
+                            WHERE client_id=? AND {in_sql} AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0) LIMIT 1""",
+                        (cid, *in_params)
                     ).fetchone()
-                    if open_trades_exist:
+                    open_shares_exist = db.execute(
+                        f"SELECT 1 FROM client_shares WHERE client_id=? AND {in_sql} AND quantity > 0 LIMIT 1",
+                        (cid, *in_params)
+                    ).fetchone()
+                    if open_trades_exist or open_shares_exist:
                         apply_sale_fifo(
                             client_id=cid,
                             stock=values["stock"],
@@ -2274,15 +2753,27 @@ def create_app(config=None):
     @app.route("/trades/<int:tid>/delete", methods=["POST"])
     @login_required
     def trade_delete(tid):
-        trade = get_db().execute("SELECT * FROM trades WHERE id=?", (tid,)).fetchone()
+        db = get_db()
+        trade = db.execute("SELECT * FROM trades WHERE id=?", (tid,)).fetchone()
         if not trade:
             abort(404)
         client_id = trade["client_id"]
-        get_db().execute("DELETE FROM trades WHERE id=?", (tid,))
-        get_db().execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (client_id, f"%[Trade #{tid}]%"))
-        sync_client_holdings_from_trades(client_id, get_db())
+        was_open = trade.get("sell_price") is None or dec(trade.get("sell_price") or 0) == ZERO
+        db.execute("DELETE FROM trades WHERE id=?", (tid,))
+        db.execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (client_id, f"%[Trade #{tid}]%"))
+        if was_open and trade.get("stock"):
+            _, variants = get_matching_stock_variants(db, trade["stock"], include_known_tickers=False)
+            in_sql, in_params = _stock_in_clause(variants)
+            still_open = db.execute(
+                f"SELECT 1 FROM trades WHERE client_id=? AND {in_sql} AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0) LIMIT 1",
+                (client_id, *in_params),
+            ).fetchone()
+            if not still_open:
+                db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (client_id, *in_params))
+        sync_client_holdings_from_trades(client_id, db)
         invalidate_stock_caches()
         invalidate_prices_cache()
+        db.commit()
         flash("Trade deleted.", "success")
         back = request.form.get("back") or request.referrer
         from_client = request.form.get("from_client")
@@ -2336,7 +2827,7 @@ def create_app(config=None):
             abort(404)
         if trade["buy_price"] is None:
             raise ValidationError("Add the opening buy price and date before closing this position.")
-        if trade["sell_price"] is not None:
+        if trade["sell_price"] is not None and dec(trade["sell_price"]) > ZERO:
             abort(409, description="This position is already closed. Use Edit to correct it.")
         trade.update(
             sell_price=number(request.form.get("sell_price"), "Sell price", required=True),
@@ -2365,6 +2856,7 @@ def create_app(config=None):
         sync_client_holdings_from_trades(client_id, get_db())
         invalidate_stock_caches()
         invalidate_prices_cache()
+        get_db().commit()
         flash("Position closed and profit added to bank funds.", "success")
         back = request.form.get("back") or request.referrer
         from_client = request.form.get("from_client")
@@ -2382,14 +2874,30 @@ def create_app(config=None):
             raise ValidationError("Choose at least one trade to delete.")
         if len(ids) > MAX_ROWS:
             raise ValidationError(f"Delete at most {MAX_ROWS} trades at once.")
+        db = get_db()
+        placeholders = ",".join("?" for _ in ids)
+        deleted_rows = db.execute(
+            f"SELECT id, client_id, stock, sell_price FROM trades WHERE id IN ({placeholders})", ids
+        ).fetchall()
         for tid in ids:
-            get_db().execute("DELETE FROM funds WHERE notes LIKE ?", (f"%[Trade #{tid}]%",))
-        count = get_db().execute(
-            f"DELETE FROM trades WHERE id IN ({','.join('?' for _ in ids)})", ids
+            db.execute("DELETE FROM funds WHERE notes LIKE ?", (f"%[Trade #{tid}]%",))
+        count = db.execute(
+            f"DELETE FROM trades WHERE id IN ({placeholders})", ids
         ).rowcount
-        sync_client_holdings_from_trades(None, get_db())
+        for row in deleted_rows:
+            if row.get("stock") and (row.get("sell_price") is None or dec(row.get("sell_price") or 0) == ZERO):
+                _, variants = get_matching_stock_variants(db, row["stock"], include_known_tickers=False)
+                in_sql, in_params = _stock_in_clause(variants)
+                still_open = db.execute(
+                    f"SELECT 1 FROM trades WHERE client_id=? AND {in_sql} AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0) LIMIT 1",
+                    (row["client_id"], *in_params),
+                ).fetchone()
+                if not still_open:
+                    db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (row["client_id"], *in_params))
+        sync_client_holdings_from_trades(None, db)
         invalidate_stock_caches()
         invalidate_prices_cache()
+        db.commit()
         flash(f"Deleted {count} trade(s).", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("trades_list")))
 
@@ -2566,6 +3074,18 @@ def create_app(config=None):
             })
 
         prices = get_cached_prices(db)
+        closed_pairs = set()
+        try:
+            closed_rows = db.execute(
+                "SELECT DISTINCT client_id, stock FROM trades WHERE sell_price IS NOT NULL AND sell_price > 0"
+            ).fetchall()
+            for cr in closed_rows:
+                rs = (cr["stock"] or "").strip().upper()
+                if rs:
+                    closed_pairs.add((cr["client_id"], alias_map.get(rs, rs)))
+        except Exception:
+            pass
+
         holdings = []
         total_invested = ZERO
         total_current_value = ZERO
@@ -2575,21 +3095,30 @@ def create_app(config=None):
             qty = dec(item.get("quantity"))
             buy_p = dec(item.get("buy_price"))
             cost = qty * buy_p
-            total_invested += cost
-            item["quantity"] = int(round(qty))
 
             stock_sym = (item.get("stock") or "").strip().upper()
             canon_sym = alias_map.get(stock_sym, stock_sym)
             k = (item["client_id"], canon_sym)
             stock_lots = lots_map.get(k, [])
             if not stock_lots:
-                # Stale holding with no underlying open trades — clean it up!
-                try:
-                    db.execute("DELETE FROM client_shares WHERE id=?", (item["id"],))
-                    db.commit()
-                except Exception:
-                    pass
-                continue
+                if k in closed_pairs:
+                    # Stale holding already closed in ledger — clean it up!
+                    try:
+                        db.execute("DELETE FROM client_shares WHERE id=?", (item["id"],))
+                        db.commit()
+                    except Exception:
+                        pass
+                    continue
+                stock_lots = [{
+                    "id": item["id"],
+                    "quantity": int(round(qty)),
+                    "buy_price": buy_p.quantize(CENT, rounding=ROUND_HALF_UP),
+                    "total_cost": cost.quantize(CENT, rounding=ROUND_HALF_UP),
+                    "added_on": str(item["added_on"])[:10] if item.get("added_on") else "",
+                    "notes": "Direct holding",
+                }]
+            total_invested += cost
+            item["quantity"] = int(round(qty))
             item["lots"] = stock_lots
             item["lots_count"] = len(stock_lots)
 
@@ -2625,6 +3154,10 @@ def create_app(config=None):
         total_unrealized_pnl = total_current_value - total_invested
         total_unrealized_pct = (total_unrealized_pnl / total_invested * 100) if total_invested else ZERO
 
+        pending_recs = get_pending_holding_reconciliations(get_db())
+        holding_mismatches = get_trades_holdings_mismatches(get_db(), pending_recs=pending_recs)
+        client_mismatch_summary = summarize_mismatches_by_client(holding_mismatches, pending_recs)
+
         return render_template(
             "holdings.html",
             holdings=holdings,
@@ -2635,7 +3168,8 @@ def create_app(config=None):
             total_unrealized_pct=total_unrealized_pct,
             known_stocks=get_known_stocks(get_db()),
             client_entered_stocks=get_client_entered_stocks(get_db()),
-            pending_reconciliations=get_pending_holding_reconciliations(get_db()),
+            pending_reconciliations=pending_recs,
+            client_mismatch_summary=client_mismatch_summary,
         )
 
     @app.route("/charts")
@@ -3207,6 +3741,11 @@ def create_app(config=None):
             "outstanding": sum((r["outstanding"] for r in rows), ZERO),
         }
 
+        pending_recs = get_pending_holding_reconciliations(get_db())
+        holding_mismatches = get_trades_holdings_mismatches(get_db(), pending_recs=pending_recs)
+        client_mismatch_summary = summarize_mismatches_by_client(holding_mismatches, pending_recs)
+        mismatch_by_cid = {entry["client_id"]: entry for entry in client_mismatch_summary}
+
         return render_template(
             "clients.html",
             clients=clients_page,
@@ -3216,6 +3755,8 @@ def create_app(config=None):
             per_page=per_page,
             kpi_totals=kpi_totals,
             args=request.args,
+            client_mismatch_summary=client_mismatch_summary,
+            mismatch_by_cid=mismatch_by_cid,
         )
 
     @app.route("/clients/<int:cid>", methods=["GET", "POST"])
@@ -3354,6 +3895,7 @@ def create_app(config=None):
             advisories = []
 
         pending_reconciliations = get_pending_holding_reconciliations(get_db(), cid)
+        holding_mismatches = get_trades_holdings_mismatches(get_db(), cid, pending_recs=pending_reconciliations)
 
         all_targets = {}
         try:
@@ -3376,6 +3918,7 @@ def create_app(config=None):
             merge_clients=get_db().execute("SELECT id,name FROM clients WHERE id<>? ORDER BY lower(name)", (cid,)).fetchall(),
             payment_url=public_origin + payment_path,
             pending_reconciliations=pending_reconciliations,
+            holding_mismatches=holding_mismatches,
             stock_targets=all_targets,
             show_advisory_agreement=show_advisory_agreement,
         )
@@ -3434,14 +3977,19 @@ def create_app(config=None):
         if not stock:
             abort(400)
         qty_int = int(round(quantity)) if quantity is not None else 1
+        if qty_int <= 0:
+            raise ValidationError("Quantity must be greater than zero.")
+        effective_bp = buy_price if buy_price is not None else ZERO
 
         db.execute(
             """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
                VALUES (?, ?, ?, ?, ?, 'Holding added by admin', 'manual', ?)""",
-            (cid, stock.upper(), qty_int, buy_price, date.today().isoformat(), deduct_from_funds)
+            (cid, stock.upper(), qty_int, effective_bp, date.today().isoformat(), deduct_from_funds)
         )
         sync_client_holdings_from_trades(cid, db)
         invalidate_stock_caches()
+        invalidate_prices_cache()
+        db.commit()
         flash("Holding added.", "success")
         return redirect(safe_redirect_target(request.form.get("back"), url_for("client_detail", cid=cid)))
 
@@ -3450,22 +3998,25 @@ def create_app(config=None):
     def client_share_delete(cid, sid):
         db = get_db()
         holding = db.execute("SELECT * FROM client_shares WHERE id=? AND client_id=?", (sid, cid)).fetchone()
-        deleted = db.execute("DELETE FROM client_shares WHERE id=? AND client_id=?", (sid, cid)).rowcount
-        if not deleted:
-            trade = db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (sid, cid)).fetchone()
-            if trade:
-                db.execute("DELETE FROM trades WHERE id=? AND client_id=?", (sid, cid))
-                db.execute("DELETE FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?", (cid, trade["stock"].upper()))
-        else:
-            if holding:
-                try:
-                    db.execute(
-                        "DELETE FROM trades WHERE client_id=? AND UPPER(TRIM(stock))=? AND (sell_price IS NULL OR sell_price=0)",
-                        (cid, holding["stock"].upper())
-                    )
-                except Exception:
-                    pass
+        trade = None if holding else db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (sid, cid)).fetchone()
+
+        target_stock = holding["stock"] if holding else (trade["stock"] if trade else None)
+        if target_stock:
+            _, variants = get_matching_stock_variants(db, target_stock, include_known_tickers=True)
+            in_sql, in_params = _stock_in_clause(variants)
+            db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (cid, *in_params))
+            db.execute(
+                f"DELETE FROM trades WHERE client_id=? AND {in_sql} AND (sell_price IS NULL OR sell_price=0)",
+                (cid, *in_params),
+            )
+        if holding:
+            db.execute("DELETE FROM client_shares WHERE id=? AND client_id=?", (sid, cid))
+        if trade and (trade.get("sell_price") is None or dec(trade.get("sell_price") or 0) == ZERO):
+            db.execute("DELETE FROM trades WHERE id=? AND client_id=?", (sid, cid))
+
         sync_client_holdings_from_trades(cid, db)
+        invalidate_stock_caches()
+        invalidate_prices_cache()
         db.commit()
         flash("Holding deleted.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -3483,46 +4034,62 @@ def create_app(config=None):
             abort(400)
         qty_int = int(round(quantity)) if quantity is not None else None
 
-        # 1. Update client_shares with id=sid
-        res = db.execute(
-            "UPDATE client_shares SET stock=?, quantity=?, buy_price=?, deduct_from_funds=? WHERE id=? AND client_id=?",
-            (stock.upper(), qty_int, buy_price, deduct_from_funds, sid, cid)
-        )
+        existing_holding = db.execute("SELECT * FROM client_shares WHERE id=? AND client_id=?", (sid, cid)).fetchone()
+        existing_trade = None if existing_holding else db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (sid, cid)).fetchone()
+        old_stock = existing_holding["stock"] if existing_holding else (existing_trade["stock"] if existing_trade else stock)
 
-        # 2. If no rows updated (e.g. sid was a trade ID or missing from client_shares)
-        if not getattr(res, "rowcount", 0):
-            trade_row = db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (sid, cid)).fetchone()
-            if trade_row:
-                db.execute(
-                    "UPDATE trades SET stock=?, quantity=?, buy_price=?, deduct_from_funds=? WHERE id=? AND client_id=?",
-                    (stock.upper(), qty_int, buy_price, deduct_from_funds, sid, cid)
-                )
+        _, old_variants = get_matching_stock_variants(db, old_stock, include_known_tickers=False)
+        _, new_variants = get_matching_stock_variants(db, stock, include_known_tickers=False)
+        all_variants = old_variants | new_variants
+        in_sql, in_params = _stock_in_clause(all_variants)
 
-            existing_cs = db.execute(
-                "SELECT id FROM client_shares WHERE client_id=? AND UPPER(TRIM(stock))=?",
-                (cid, stock.upper())
-            ).fetchone()
-            if existing_cs:
-                db.execute(
-                    "UPDATE client_shares SET quantity=?, buy_price=?, deduct_from_funds=? WHERE id=?",
-                    (qty_int, buy_price, deduct_from_funds, existing_cs["id"])
-                )
-            else:
-                db.execute(
-                    "INSERT INTO client_shares (client_id, stock, quantity, buy_price, deduct_from_funds) VALUES (?, ?, ?, ?, ?)",
-                    (cid, stock.upper(), qty_int, buy_price, deduct_from_funds)
-                )
+        if qty_int is not None and qty_int <= 0:
+            db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (cid, *in_params))
+            db.execute(
+                f"DELETE FROM trades WHERE client_id=? AND {in_sql} AND (sell_price IS NULL OR sell_price=0)",
+                (cid, *in_params),
+            )
+            sync_client_holdings_from_trades(cid, db)
+            invalidate_stock_caches()
+            invalidate_prices_cache()
+            db.commit()
+            flash("Holding deleted.", "success")
+            return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
+
+        effective_bp = buy_price if buy_price is not None else ZERO
+        open_trades = db.execute(
+            f"""SELECT id, quantity, buy_price FROM trades
+                WHERE client_id=? AND {in_sql} AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)
+                ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+            (cid, *in_params)
+        ).fetchall()
+
+        if open_trades:
+            first_id = open_trades[0]["id"]
+            new_qty = qty_int if qty_int is not None else int(round(dec(open_trades[0]["quantity"] or 1)))
+            new_bp = buy_price if buy_price is not None else dec(open_trades[0]["buy_price"] or 0)
+            db.execute(
+                "UPDATE trades SET stock=?, quantity=?, buy_price=?, deduct_from_funds=? WHERE id=? AND client_id=?",
+                (stock.upper(), new_qty, new_bp, deduct_from_funds, first_id, cid)
+            )
+            for extra in open_trades[1:]:
+                db.execute("DELETE FROM trades WHERE id=? AND client_id=?", (extra["id"], cid))
         else:
-            try:
-                db.execute(
-                    """UPDATE trades SET quantity=?, buy_price=?
-                       WHERE client_id=? AND UPPER(TRIM(stock))=? AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)""",
-                    (qty_int, buy_price, cid, stock.upper())
-                )
-            except Exception:
-                pass
+            new_qty = qty_int if qty_int is not None else 1
+            db.execute(
+                """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+                   VALUES (?, ?, ?, ?, ?, 'Holding updated by admin', 'manual', ?)""",
+                (cid, stock.upper(), new_qty, effective_bp, date.today().isoformat(), deduct_from_funds)
+            )
+
+        # Clean up stale client_shares rows under old aliases before syncing
+        if old_variants - new_variants:
+            old_in_sql, old_in_params = _stock_in_clause(old_variants - new_variants)
+            db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {old_in_sql}", (cid, *old_in_params))
 
         sync_client_holdings_from_trades(cid, db)
+        invalidate_stock_caches()
+        invalidate_prices_cache()
         db.commit()
         flash("Holding updated.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
@@ -3564,27 +4131,17 @@ def create_app(config=None):
         flash(f"Sold {sell_qty} shares of {holding['stock']}. Trades and holdings updated via FIFO.", "success")
         return redirect(safe_redirect_target(request.referrer, url_for("client_detail", cid=cid)))
 
-    @app.route("/clients/<int:cid>/reconcile-holding/<stock>/accept", methods=["POST"])
-    @login_required
-    def client_holding_reconcile_accept(cid, stock):
-        client = get_client(cid)
-        db = get_db()
-        alias_map = get_alias_mapping(db)
-        raw_s = (stock or "").strip().upper()
-        canonical_stock = resolve_canonical_stock(db, alias_map.get(raw_s, raw_s))
-
-        try:
-            closed_trade_id = int(request.form.get("closed_trade_id"))
-        except (ValueError, TypeError):
-            flash("Invalid trade ID for reconciliation.", "error")
-            return redirect(url_for("client_detail", cid=cid))
-
+    def _reconcile_closed_trade_fifo(db, cid, stock, closed_trade_id):
+        """Apply a closed/sale trade against open holding lots via FIFO and return (ok, message, category)."""
         ct = db.execute("SELECT * FROM trades WHERE id=? AND client_id=?", (closed_trade_id, cid)).fetchone()
         if not ct:
-            flash("Closed trade record not found.", "error")
-            return redirect(url_for("client_detail", cid=cid))
+            return False, "Closed trade record not found.", "error"
 
-        # Always add closed_trade_id to dismissed/reconciled list so it can never be flagged again
+        canonical_stock, variants = get_matching_stock_variants(db, stock, include_known_tickers=True)
+        _, ct_variants = get_matching_stock_variants(db, ct["stock"], include_known_tickers=True)
+        variants = variants | ct_variants
+        in_sql, in_params = _stock_in_clause(variants)
+
         raw_dismissed = setting("dismissed_holding_reconciliations", "[]")
         try:
             dismissed_ids = json.loads(raw_dismissed)
@@ -3595,23 +4152,20 @@ def create_app(config=None):
         if closed_trade_id not in dismissed_ids:
             dismissed_ids.append(closed_trade_id)
 
-        # Query all open lots for this stock
-        open_lots = db.execute(
-            """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date, notes, upload_id, deduct_from_funds
-               FROM trades
-               WHERE client_id = ?
-                 AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
-                 AND buy_price IS NOT NULL
-                 AND (sell_price IS NULL OR sell_price = 0)
-               ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
-            (cid, raw_s, canonical_stock)
-        ).fetchall()
+        def _fetch_reconcile_lots():
+            return db.execute(
+                f"""SELECT id, stock, quantity, buy_price, buy_date as raw_buy_date,
+                           COALESCE(buy_date, created_at) as buy_date, notes, upload_id, deduct_from_funds
+                    FROM trades
+                    WHERE client_id = ?
+                      AND {in_sql}
+                      AND buy_price IS NOT NULL
+                      AND (sell_price IS NULL OR sell_price = 0)
+                    ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
+                (cid, *in_params)
+            ).fetchall()
 
-        if not open_lots:
-            set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
-            db.commit()
-            flash(f"Holdings for {stock} are already settled.", "info")
-            return redirect(url_for("client_detail", cid=cid))
+        open_lots = _fetch_reconcile_lots()
 
         sell_qty = dec(ct["quantity"] or 0)
         sell_price = dec(ct["sell_price"] or 0)
@@ -3619,68 +4173,80 @@ def create_app(config=None):
         upload_id = ct["upload_id"]
         sale_note = "Reconciled Sale"
 
-        # Check if client_shares has more shares than open_lots in trades
-        cs_row = db.execute(
-            """SELECT id, quantity, buy_price, added_on, deduct_from_funds FROM client_shares
-               WHERE client_id=? AND (UPPER(TRIM(stock))=UPPER(TRIM(?)) OR UPPER(TRIM(stock))=UPPER(TRIM(?)))""",
-            (cid, raw_s, canonical_stock)
-        ).fetchone()
-        cs_qty = dec(cs_row["quantity"] or 0) if cs_row else ZERO
-        total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+        cs_rows = db.execute(
+            f"""SELECT id, quantity, buy_price, added_on, deduct_from_funds FROM client_shares
+                WHERE client_id=? AND {in_sql} ORDER BY id ASC""",
+            (cid, *in_params)
+        ).fetchall()
+        cs_qty = sum((dec(r["quantity"] or 0) for r in cs_rows if dec(r["quantity"] or 0) > ZERO), ZERO)
+        total_open_qty = sum((dec(lot["quantity"] or 0) for lot in open_lots), ZERO)
+
+        if not open_lots and cs_qty <= ZERO:
+            set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
+            db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (cid, *in_params))
+            sync_client_holdings_from_trades(cid, db)
+            db.commit()
+            return True, f"Holdings for {stock} are already settled.", "info"
 
         if cs_qty > total_open_qty:
             diff_qty = int(round(cs_qty - total_open_qty))
-            bp = dec(cs_row["buy_price"] or 0)
-            b_date = str(cs_row["added_on"])[:10] if cs_row.get("added_on") else date.today().isoformat()
+            cs_cost = ZERO
+            cs_qty_for_avg = ZERO
+            earliest_added = None
+            cs_deduct = 0
+            for r in cs_rows:
+                rq = dec(r["quantity"] or 0)
+                if rq <= ZERO:
+                    continue
+                rbp = dec(r["buy_price"] or 0)
+                cs_cost += rq * rbp
+                cs_qty_for_avg += rq
+                if r.get("deduct_from_funds"):
+                    cs_deduct = 1
+                ad = str(r["added_on"])[:10] if r.get("added_on") else ""
+                if ad and (not earliest_added or ad < earliest_added):
+                    earliest_added = ad
+            bp = (cs_cost / cs_qty_for_avg).quantize(CENT, rounding=ROUND_HALF_UP) if cs_qty_for_avg > ZERO else ZERO
+            b_date = earliest_added or sell_date
+            if b_date > str(sell_date)[:10]:
+                b_date = str(sell_date)[:10]
             db.execute(
                 """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
                    VALUES (?, ?, ?, ?, ?, 'Holding position', 'manual', ?)""",
-                (cid, canonical_stock, diff_qty, bp, b_date, cs_row.get("deduct_from_funds", 0))
+                (cid, canonical_stock, diff_qty, bp, b_date, cs_deduct)
             )
-            open_lots = db.execute(
-                """SELECT id, quantity, buy_price, COALESCE(buy_date, created_at) as buy_date, notes, upload_id, deduct_from_funds
-                   FROM trades
-                   WHERE client_id = ?
-                     AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
-                     AND buy_price IS NOT NULL
-                     AND (sell_price IS NULL OR sell_price = 0)
-                   ORDER BY COALESCE(buy_date, created_at) ASC, id ASC""",
-                (cid, raw_s, canonical_stock)
-            ).fetchall()
-            total_open_qty = sum(dec(lot["quantity"] or 0) for lot in open_lots)
+            open_lots = _fetch_reconcile_lots()
+            total_open_qty = sum((dec(lot["quantity"] or 0) for lot in open_lots), ZERO)
 
         if sell_qty >= total_open_qty:
-            # Full match or excess: close all open lots
             for lot in open_lots:
                 existing_notes = (lot["notes"] or "").strip()
                 merged_notes = f"{existing_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_notes) else (existing_notes or sale_note)
+                lot_sell_date = _safe_sell_date(sell_date, lot.get("raw_buy_date"))
                 db.execute(
                     """UPDATE trades
                        SET sell_price=?, sell_date=?, notes=?, upload_id=COALESCE(upload_id, ?)
                        WHERE id=?""",
-                    (sell_price, sell_date, merged_notes, upload_id, lot["id"])
+                    (sell_price, lot_sell_date, merged_notes, upload_id, lot["id"])
                 )
 
             if sell_qty == total_open_qty:
-                # Remove duplicate closed trade and its fund entry
                 db.execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (cid, f"%[Trade #{ct['id']}]%"))
                 db.execute("DELETE FROM trades WHERE id=?", (ct["id"],))
             else:
-                # Excess: reduce closed trade quantity and mark reconciled
                 new_ct_qty = int(round(sell_qty - total_open_qty))
                 existing_ct_notes = (ct["notes"] or "").strip()
                 ct_notes = f"{existing_ct_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_ct_notes) else (existing_ct_notes or sale_note)
                 db.execute("UPDATE trades SET quantity=?, notes=? WHERE id=?", (new_ct_qty, ct_notes, ct["id"]))
-
         else:
-            # Partial match: FIFO deduction across lots, split lot where needed
             rem_sell = sell_qty
             for lot in open_lots:
                 if rem_sell <= ZERO:
                     break
                 lot_qty = dec(lot["quantity"] or 0)
                 existing_notes = (lot["notes"] or "").strip()
-                lot_buy_date = str(lot["buy_date"])[:10] if lot["buy_date"] else sell_date
+                lot_buy_date = str(lot["buy_date"])[:10] if lot["buy_date"] else str(sell_date)[:10]
+                lot_sell_date = _safe_sell_date(sell_date, lot.get("raw_buy_date") or lot_buy_date)
 
                 if lot_qty <= rem_sell:
                     merged_notes = f"{existing_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_notes) else (existing_notes or sale_note)
@@ -3688,7 +4254,7 @@ def create_app(config=None):
                         """UPDATE trades
                            SET sell_price=?, sell_date=?, notes=?, upload_id=COALESCE(upload_id, ?)
                            WHERE id=?""",
-                        (sell_price, sell_date, merged_notes, upload_id, lot["id"])
+                        (sell_price, lot_sell_date, merged_notes, upload_id, lot["id"])
                     )
                     rem_sell -= lot_qty
                 else:
@@ -3698,13 +4264,14 @@ def create_app(config=None):
                     db.execute("UPDATE trades SET quantity=? WHERE id=?", (rem_open, lot["id"]))
 
                     sold_notes = f"{existing_notes} [{sale_note}]".strip() if (sale_note and sale_note not in existing_notes) else (existing_notes or sale_note)
+                    lot_stock = (lot.get("stock") or canonical_stock).strip().upper()
                     new_trade_ids = insert_trades(cid, [{
-                        "stock": canonical_stock,
+                        "stock": lot_stock,
                         "quantity": sold_portion,
                         "buy_price": dec(lot["buy_price"]),
                         "sell_price": sell_price,
                         "buy_date": lot_buy_date,
-                        "sell_date": sell_date,
+                        "sell_date": lot_sell_date,
                         "notes": sold_notes,
                         "deduct_from_funds": lot.get("deduct_from_funds", 0),
                     }], source=ct.get("source") or "portal", upload_id=upload_id or lot.get("upload_id"))
@@ -3714,42 +4281,52 @@ def create_app(config=None):
                     rem_sell = ZERO
                     break
 
-            # Remove the duplicate standalone closed trade
             db.execute("DELETE FROM funds WHERE client_id=? AND notes LIKE ?", (cid, f"%[Trade #{ct['id']}]%"))
             db.execute("DELETE FROM trades WHERE id=?", (ct["id"],))
 
         set_setting("dismissed_holding_reconciliations", json.dumps(dismissed_ids))
 
-        # Re-check open lots after FIFO work to decide whether to wipe client_shares entirely
         remaining_open = db.execute(
-            """SELECT COALESCE(SUM(quantity), 0) as total
-               FROM trades
-               WHERE client_id = ?
-                 AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))
-                 AND buy_price IS NOT NULL
-                 AND (sell_price IS NULL OR sell_price = 0)""",
-            (cid, raw_s, canonical_stock)
+            f"""SELECT COALESCE(SUM(quantity), 0) as total
+                FROM trades
+                WHERE client_id = ?
+                  AND {in_sql}
+                  AND buy_price IS NOT NULL
+                  AND (sell_price IS NULL OR sell_price = 0)""",
+            (cid, *in_params)
         ).fetchone()
         remaining_qty = dec(remaining_open["total"] or 0) if remaining_open else ZERO
 
         if remaining_qty <= ZERO:
-            # No open lots remain — directly remove the client_shares entry so it doesn't
-            # linger due to alias-resolution edge cases in the general sync function.
             db.execute(
-                """DELETE FROM client_shares
-                   WHERE client_id = ?
-                     AND (UPPER(TRIM(stock)) = UPPER(TRIM(?)) OR UPPER(TRIM(stock)) = UPPER(TRIM(?)))""",
-                (cid, raw_s, canonical_stock)
+                f"DELETE FROM client_shares WHERE client_id = ? AND {in_sql}",
+                (cid, *in_params)
             )
 
-        # Re-sync profits and holdings
         sync_trade_profits_to_funds(db, cid)
         sync_client_holdings_from_trades(cid, db)
         invalidate_stock_caches()
         invalidate_prices_cache()
         db.commit()
+        return True, f"Reconciled {canonical_stock}. Open lots closed via FIFO and holdings updated.", "success"
 
-        flash(f"Reconciled {canonical_stock} for {client['name']}. Open lots closed via FIFO and holdings updated.", "success")
+    @app.route("/clients/<int:cid>/reconcile-holding/<stock>/accept", methods=["POST"])
+    @login_required
+    def client_holding_reconcile_accept(cid, stock):
+        client = get_client(cid)
+        db = get_db()
+
+        try:
+            closed_trade_id = int(request.form.get("closed_trade_id"))
+        except (ValueError, TypeError):
+            flash("Invalid trade ID for reconciliation.", "error")
+            return redirect(url_for("client_detail", cid=cid))
+
+        ok, msg, cat = _reconcile_closed_trade_fifo(db, cid, stock, closed_trade_id)
+        if ok and cat == "success":
+            flash(f"Reconciled {stock} for {client['name']}. Open lots closed via FIFO and holdings updated.", "success")
+        else:
+            flash(msg, cat)
         return redirect(url_for("client_detail", cid=cid))
 
     @app.route("/clients/<int:cid>/reconcile-holding/<stock>/dismiss", methods=["POST"])
@@ -3775,6 +4352,110 @@ def create_app(config=None):
             get_db().commit()
 
         flash(f"Left {stock} trades unchanged as requested.", "info")
+        return redirect(url_for("client_detail", cid=cid))
+
+    @app.route("/clients/<int:cid>/mismatch/fix", methods=["POST"])
+    @login_required
+    def client_mismatch_fix(cid):
+        client = get_client(cid)
+        db = get_db()
+        action = (request.form.get("action") or "").strip()
+        stock = (request.form.get("stock") or "").strip().upper()
+        mismatch_key = (request.form.get("mismatch_key") or "").strip()
+
+        if action == "dismiss":
+            if mismatch_key:
+                raw_dismissed = setting("dismissed_holding_mismatches", "[]")
+                try:
+                    dismissed_keys = json.loads(raw_dismissed)
+                    if not isinstance(dismissed_keys, list):
+                        dismissed_keys = []
+                except Exception:
+                    dismissed_keys = []
+                if mismatch_key not in dismissed_keys:
+                    dismissed_keys.append(mismatch_key)
+                    set_setting("dismissed_holding_mismatches", json.dumps(dismissed_keys))
+                    db.commit()
+            flash("Mismatch alert dismissed.", "info")
+            return redirect(url_for("client_detail", cid=cid))
+
+        if action == "apply_sale_fifo":
+            try:
+                trade_id = int(request.form.get("trade_id"))
+            except (ValueError, TypeError):
+                flash("Invalid trade ID.", "error")
+                return redirect(url_for("client_detail", cid=cid))
+            ok, msg, cat = _reconcile_closed_trade_fifo(db, cid, stock, trade_id)
+            flash(msg, cat)
+            return redirect(url_for("client_detail", cid=cid))
+
+        if action == "delete_stale_holding":
+            _, variants = get_matching_stock_variants(db, stock, include_known_tickers=True)
+            if variants:
+                in_sql, in_params = _stock_in_clause(variants)
+                db.execute(f"DELETE FROM client_shares WHERE client_id=? AND {in_sql}", (cid, *in_params))
+                db.execute(
+                    f"DELETE FROM trades WHERE client_id=? AND {in_sql} AND (sell_price IS NULL OR sell_price=0)",
+                    (cid, *in_params),
+                )
+            sync_client_holdings_from_trades(cid, db)
+            invalidate_stock_caches()
+            invalidate_prices_cache()
+            db.commit()
+            flash(f"Removed stale holding for {stock} from {client['name']}.", "success")
+            return redirect(url_for("client_detail", cid=cid))
+
+        if action == "create_open_trade":
+            _, variants = get_matching_stock_variants(db, stock, include_known_tickers=False)
+            in_sql, in_params = _stock_in_clause(variants)
+            cs_rows = db.execute(
+                f"SELECT id, quantity, buy_price, added_on, COALESCE(deduct_from_funds, 0) as deduct_from_funds FROM client_shares WHERE client_id=? AND {in_sql}",
+                (cid, *in_params),
+            ).fetchall()
+            tot_qty = sum((dec(r["quantity"] or 0) for r in cs_rows if dec(r["quantity"] or 0) > ZERO), ZERO)
+            if tot_qty > ZERO:
+                tot_cost = sum((dec(r["quantity"] or 0) * dec(r.get("buy_price") or 0) for r in cs_rows if dec(r["quantity"] or 0) > ZERO), ZERO)
+                avg_bp = (tot_cost / tot_qty).quantize(CENT, rounding=ROUND_HALF_UP)
+                earliest = min((str(r["added_on"])[:10] for r in cs_rows if r.get("added_on")), default=date.today().isoformat())
+                deduct_val = 1 if any(r.get("deduct_from_funds") for r in cs_rows) else 0
+                db.execute(
+                    """INSERT INTO trades (client_id, stock, quantity, buy_price, buy_date, notes, source, deduct_from_funds)
+                       VALUES (?, ?, ?, ?, ?, 'Holding synced from portfolio', 'manual', ?)""",
+                    (cid, stock, int(round(tot_qty)), avg_bp, earliest, deduct_val),
+                )
+                sync_client_holdings_from_trades(cid, db)
+                invalidate_stock_caches()
+                db.commit()
+                flash(f"Recorded opening buy trade for {int(round(tot_qty))} shares of {stock}.", "success")
+            else:
+                flash(f"No holding quantity found for {stock}.", "info")
+            return redirect(url_for("client_detail", cid=cid))
+
+        if action == "sync_holding":
+            sync_client_holdings_from_trades(cid, db)
+            invalidate_stock_caches()
+            invalidate_prices_cache()
+            db.commit()
+            flash(f"Synced holdings from open trades for {client['name']}.", "success")
+            return redirect(url_for("client_detail", cid=cid))
+
+        if action == "unify_stock_name":
+            raw_variants = [v.strip().upper() for v in request.form.getlist("variants") if v and v.strip()]
+            target_stock = resolve_canonical_stock(db, stock or (raw_variants[0] if raw_variants else ""))
+            if target_stock and raw_variants:
+                in_sql, in_params = _stock_in_clause(set(raw_variants) | {target_stock})
+                db.execute(f"UPDATE trades SET stock=? WHERE client_id=? AND {in_sql}", (target_stock, cid, *in_params))
+                db.execute(f"UPDATE client_shares SET stock=? WHERE client_id=? AND {in_sql}", (target_stock, cid, *in_params))
+                sync_client_holdings_from_trades(cid, db)
+                invalidate_stock_caches()
+                invalidate_prices_cache()
+                db.commit()
+                flash(f"Unified stock names ({', '.join(raw_variants)}) to {target_stock} for {client['name']}.", "success")
+            else:
+                flash("Could not determine stock names to unify.", "error")
+            return redirect(url_for("client_detail", cid=cid))
+
+        flash("Unknown mismatch action.", "error")
         return redirect(url_for("client_detail", cid=cid))
 
     @app.route("/clients/<int:cid>/repair-sbc", methods=["GET", "POST"])
@@ -4166,10 +4847,77 @@ def create_app(config=None):
                 "UPDATE upload_assets SET upload_id=? WHERE path=? AND upload_id IS NULL",
                 (upload_id, asset["path"]),
             )
-        insert_trades(cid, validated, source="upload", upload_id=upload_id)
-        sync_trade_profits_to_funds(get_db(), cid)
-        sync_client_holdings_from_trades(cid, get_db())
+        db = get_db()
+        regular_rows = []
+        for row in validated:
+            if row.get("sell_price") is None:
+                regular_rows.append(row)
+                continue
+            if row.get("buy_price") is None:
+                apply_sale_fifo(
+                    client_id=cid,
+                    stock=row["stock"],
+                    sell_quantity=row["quantity"],
+                    sell_price=row["sell_price"],
+                    sell_date=row.get("sell_date"),
+                    buy_price_hint=None,
+                    notes=row.get("notes") or "Sold via upload",
+                    upload_id=upload_id,
+                    source="upload",
+                    db=db,
+                )
+                continue
+
+            # Closed row (both buy_price and sell_price present):
+            # Auto-apply FIFO if it matches existing open holdings by full quantity or average buy price.
+            _, variants = get_matching_stock_variants(db, row["stock"], include_known_tickers=True)
+            in_sql, in_params = _stock_in_clause(variants)
+            open_lots = db.execute(
+                f"""SELECT quantity, buy_price FROM trades
+                    WHERE client_id=? AND {in_sql} AND buy_price IS NOT NULL AND (sell_price IS NULL OR sell_price=0)""",
+                (cid, *in_params)
+            ).fetchall()
+            cs_rows = db.execute(
+                f"SELECT quantity, buy_price FROM client_shares WHERE client_id=? AND {in_sql} AND quantity > 0",
+                (cid, *in_params)
+            ).fetchall()
+
+            open_qty = sum((dec(r["quantity"] or 0) for r in open_lots), ZERO)
+            cs_qty = sum((dec(r["quantity"] or 0) for r in cs_rows), ZERO)
+            eff_open_qty = max(open_qty, cs_qty)
+
+            if eff_open_qty > ZERO:
+                if open_lots and open_qty >= cs_qty:
+                    tot_cost = sum((dec(r["quantity"] or 0) * dec(r["buy_price"] or 0) for r in open_lots), ZERO)
+                    avg_bp = (tot_cost / open_qty).quantize(CENT, rounding=ROUND_HALF_UP) if open_qty > ZERO else ZERO
+                else:
+                    tot_cost = sum((dec(r["quantity"] or 0) * dec(r["buy_price"] or 0) for r in cs_rows), ZERO)
+                    avg_bp = (tot_cost / cs_qty).quantize(CENT, rounding=ROUND_HALF_UP) if cs_qty > ZERO else ZERO
+                row_qty = dec(row["quantity"])
+                is_exact_qty = int(round(row_qty)) == int(round(eff_open_qty))
+                is_bp_match = abs(dec(row["buy_price"]) - avg_bp) <= dec("0.10")
+                if is_exact_qty or (row_qty < eff_open_qty and is_bp_match):
+                    apply_sale_fifo(
+                        client_id=cid,
+                        stock=row["stock"],
+                        sell_quantity=row["quantity"],
+                        sell_price=row["sell_price"],
+                        sell_date=row.get("sell_date"),
+                        buy_price_hint=row.get("buy_price"),
+                        notes=row.get("notes") or "Sold via upload",
+                        upload_id=upload_id,
+                        source="upload",
+                        db=db,
+                    )
+                    continue
+            regular_rows.append(row)
+
+        if regular_rows:
+            insert_trades(cid, regular_rows, source="upload", upload_id=upload_id)
+        sync_trade_profits_to_funds(db, cid)
+        sync_client_holdings_from_trades(cid, db)
         invalidate_stock_caches()
+        invalidate_prices_cache()
         return jsonify(ok=True, saved=len(validated), submission_id=submission_id)
 
     @app.cli.command("init-db")
@@ -4491,7 +5239,7 @@ def create_app(config=None):
         sell_price = None
         if raw_sp:
             try:
-                sell_price = number(raw_sp, "Sell Price")
+                sell_price = number(raw_sp, "Sell Price", positive=True)
             except Exception as exc:
                 flash(f"Invalid sell price: {exc}", "error")
                 return redirect(url_for("client_portal"))

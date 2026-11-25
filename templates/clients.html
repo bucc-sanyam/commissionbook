@@ -4,6 +4,27 @@
 {% block breadcrumb %}Clients{% endblock %}
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">THE PEOPLE BEHIND THE NUMBERS</p><h1>Your clients<span class="accent-period">.</span></h1><p>Clear statements. Personal commission rules. Better relationships.</p></div><button class="btn btn-primary" type="button" data-dialog="client-dialog">{{ icon('plus', 16) }}Add client</button></div>
+{% if client_mismatch_summary %}
+<section class="card" style="border: 1px solid #fecaca; background: #fffafa; margin-bottom: 1.25rem; border-left: 4px solid #dc2626; padding: 14px 16px;">
+  <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+    <div style="flex: 1; min-width: 240px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #991b1b; font-weight: 700; font-size: 14px; margin-bottom: 6px;">
+        {{ icon('alert', 16) }}
+        <span>Trades vs Holdings Mismatch Found in {{ client_mismatch_summary|length }} Client{{ 's' if client_mismatch_summary|length != 1 }}</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        {% for cm in client_mismatch_summary %}
+        <a href="{{ url_for('client_detail', cid=cm.client_id) }}#mismatch-audit" style="display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #fecaca; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
+          <span>{{ cm.client_name }}</span>
+          <span class="badge" style="background: #fee2e2; color: #991b1b; font-size: 10px;">{{ cm.total_count }} ({{ cm.stocks|join(', ') }})</span>
+          <span>&rarr;</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
 <div class="kpi-grid">
   <section class="card kpi"><div class="kpi-top"><h2 class="kpi-label">Your client book</h2><span class="kpi-icon">{{ icon('users', 17) }}</span></div><div class="kpi-value">{{ kpi_totals.count if kpi_totals else clients|length }}</div><div class="kpi-bottom">All clients in your workspace</div></section>
   <section class="card kpi kpi-featured"><div class="kpi-top"><h2 class="kpi-label">Commission earned</h2><span class="kpi-icon">{{ icon('trend', 17) }}</span></div><div class="kpi-value">{{ (kpi_totals.commission if kpi_totals else clients|sum(attribute='commission'))|money }}</div><div class="kpi-bottom">Across your entire client book</div></section>
@@ -23,6 +44,11 @@
             {{ avatar(c.name, c.id) }}
             <span>
               <strong>{{ c.name }}</strong>
+              {% if mismatch_by_cid and c.id in mismatch_by_cid %}
+                <span class="badge" style="background: #fee2e2; color: #991b1b; font-size: 10px; margin-left: 6px; border: 1px solid #fecaca;" title="Trades vs holdings mismatch needs admin review">
+                  {{ mismatch_by_cid[c.id].total_count }} Mismatch{{ 'es' if mismatch_by_cid[c.id].total_count != 1 }}
+                </span>
+              {% endif %}
               <small style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                 {% if c.username %}
                   <button type="button" class="btn btn-ghost btn-xs" style="padding:1px 6px; font-size:11px; font-weight:700; color:#164237; background:#eef3e8; border:1px solid #d4e2d4; border-radius:4px;" onclick="event.preventDefault(); event.stopPropagation(); openAdminUsernameModal('{{ c.id }}', '{{ c.name|escape }}', '{{ c.username|escape }}')" title="Edit client username">
