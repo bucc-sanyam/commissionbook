@@ -129,8 +129,9 @@ def configure_app(app, overrides=None):
     # Previously issued client links still use the original production domain.
     if os.environ.get("VERCEL") == "1" and base_url in {
         "https://ordervain.vercel.app", "https://aldervain.vercel.app",
+        "https://alder-vane.vercel.app",
     }:
-        trusted.extend(("ordervain.vercel.app", "commissionbook.vercel.app"))
+        trusted.extend(("aldervain.vercel.app", "ordervain.vercel.app", "commissionbook.vercel.app"))
     for key in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
         if os.environ.get(key):
             trusted.append(os.environ[key].split(":")[0])

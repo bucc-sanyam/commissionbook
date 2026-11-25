@@ -1,10 +1,10 @@
 # Aldervain redesign roadmap
 
-**Required production link change for the next authorized release:** change `https://ordervain.vercel.app` to `https://aldervain.vercel.app`. The target matches the one-word product name **Aldervain**. Assignment to the existing Vercel project and production verification are pending. Keep the old address and `commissionbook.vercel.app` working for existing client links and installed apps.
+**Production hostname:** `https://alder-vane.vercel.app`. The existing Vercel project also serves `aldervain.vercel.app`, `ordervain.vercel.app`, and `commissionbook.vercel.app` for previously shared links and installed apps.
 
 ## Implementation reviewed
 
-The local checkout already contains the Aldervain wordmark, name story, website favicon, Apple touch icon, standard and maskable PWA icons, notification artwork and a 1200 × 630 link preview. The manifest still launches at `/login` and retains its existing identity. Include the new `static/aldervain-*.png` files in the release commit. The templates, manifest and notifications refer to these currently untracked assets.
+The local checkout already contains the Aldervain wordmark, name story, website favicon, Apple touch icon, standard and maskable PWA icons, notification artwork and a 1200 × 630 link preview. The manifest still launches at `/login` and retains its existing identity. The release includes the `static/aldervain-*.png` assets referenced by templates, the manifest and notifications.
 
 The local redesign covered client detail, charts, portal tabs and admin and public forms. Previous sample-data checks exercised manual entry, signed payment including repeat submission, FIFO, deposits, withdrawals and Excel export. Desktop and phone screenshots used Chromium emulation. Physical-device icon updates, live notification delivery and third-party preview caching remain open checks. OCR is outside this pass.
 
@@ -16,15 +16,15 @@ A different hostname is a different origin. For this rollout, users who want a s
 
 ## Change the production link
 
-- [ ] **Attach the target hostname.** Upon release authorization, add `aldervain.vercel.app` to the existing production project. Confirm project ownership and that the hostname reaches the intended deployment before sending scheduled requests or credentials there.
-- [ ] **Set the public origin.** Set Vercel production `PUBLIC_BASE_URL=https://aldervain.vercel.app`. Preserve existing `TRUSTED_HOSTS` entries and explicitly include `ordervain.vercel.app` and `commissionbook.vercel.app`. The legacy-host shortcut in `backend/security.py` currently depends on the old public origin.
+- [ ] **Attach the target hostname.** Upon release authorization, add `aldervane.vercel.app` to the existing production project. Confirm project ownership and that the hostname reaches the intended deployment before sending scheduled requests or credentials there.
+- [ ] **Set the public origin.** Set Vercel production `PUBLIC_BASE_URL=https://alder-vane.vercel.app`. Preserve existing `TRUSTED_HOSTS` entries and explicitly include `aldervain.vercel.app`, `ordervain.vercel.app` and `commissionbook.vercel.app`. The legacy-host shortcut in `backend/security.py` currently depends on the old public origin.
 - [ ] **Change links clients receive.** In `templates/client_detail.html`, the WhatsApp statement and **Copy payment link** both use the hostname of the admin's request. Build the signed payment URL once from the configured public origin and reuse it for both actions. In Settings, make the newly copied submission link use the new branded origin even if an older `upload_short_url` is cached. Keep signed tokens, routes, saved shortcuts and previously shared URLs usable.
 - [ ] **Switch the scheduler and release references.** Update the GitHub repository variable `PUBLIC_BASE_URL`, the fallback in `.github/workflows/market-hours-sync.yml`, the hook message in `.githooks/post-commit`, `.env.example` and the production URL in `PROJECT_SUMMARY.md`.
-- [ ] **Verify before announcing.** From an admin session on each legacy hostname, copy a fresh payment link, WhatsApp statement and submission link. Each should use `https://aldervain.vercel.app` and open the intended page. On all three hosts, check sign-in, manifest, icons and an existing signed link. Confirm the scheduled price job succeeds against the new origin. If a production check fails, restore the previous public origin and workflow settings and redeploy with the aliases attached.
+- [ ] **Verify before announcing.** From an admin session on each legacy hostname, copy a fresh payment link, WhatsApp statement and submission link. Each should use `https://alder-vane.vercel.app` and open the intended page. On the new hostname and all legacy hosts, check sign-in, manifest, icons and an existing signed link. Confirm the scheduled price job succeeds against the new origin. If a production check fails, restore the previous public origin and workflow settings and redeploy with the aliases attached.
 
 ## Prompt for the release model
 
-> After explicit production-release authorization, change the public link from https://ordervain.vercel.app to https://aldervain.vercel.app. Follow “Change the production link” in REDESIGN_ROADMAP.md. Ship the reviewed local Aldervain branding and its PNG assets. Update generated client links, production configuration, the scheduled price job and documentation. Verify the new hostname and both legacy aliases, preserve existing signed links and PWA identity, and report the deployment and checks. Skip OCR.
+> After explicit production-release authorization, change the public link from https://aldervain.vercel.app to https://alder-vane.vercel.app. Follow “Change the production link” in REDESIGN_ROADMAP.md. Ship the reviewed local Aldervain branding and its PNG assets. Update generated client links, production configuration, the scheduled price job and documentation. Verify the new hostname and both legacy aliases, preserve existing signed links and PWA identity, and report the deployment and checks. Skip OCR.
 
 ## Design decisions
 

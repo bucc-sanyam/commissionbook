@@ -142,4 +142,4 @@ Comprehensive transaction cost breakup for client demat sales:
   ```bash
   graphify update .
   ```
-- **Vercel Deployments:** Vercel builds production from `master`. The repository syncs `main` and `master`. The public origin is `https://aldervain.vercel.app`. Existing client links on `ordervain.vercel.app` and `commissionbook.vercel.app` are supported. Background threading is disabled on Vercel serverless to prevent invocation timeout issues.
+- **Vercel Deployments:** Vercel builds production from `master`. The repository syncs `main` and `master`. The public origin is `https://alder-vane.vercel.app`. Existing client links on `aldervain.vercel.app`, `ordervain.vercel.app` and `commissionbook.vercel.app` are supported. Background threading is disabled on Vercel serverless to prevent invocation timeout issues.
