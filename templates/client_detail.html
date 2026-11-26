@@ -20,7 +20,7 @@
     </div>
   </div>
   <div class="heading-actions">
-    <button class="btn btn-secondary" type="button" onclick="openClientPopupTrade('{{ client.id }}')">{{ icon('send', 14) }} Send Pop-up Trade</button>
+    <button class="btn btn-secondary" type="button" data-dialog="global-popup-trade-dialog" data-recipient="{{ client.id }}">{{ icon('send', 14) }} Send Pop-up Trade</button>
     <a class="btn" href="{{ url_for('export_trades', client_id=client.id) }}">{{ icon('download', 15) }}Statement</a>
     <a class="btn btn-primary" href="{{ url_for('trade_form', client=client.name, back=url_for('client_detail', cid=client.id)) }}">{{ icon('plus', 16) }}Add trade</a>
   </div>
@@ -205,30 +205,30 @@
       <h3 style="margin: 2px 0 0; font-size: 14px; color: var(--ink);">{{ client.name }}</h3>
     </div>
     <nav class="client-sidebar-nav" role="tablist">
-      <button class="client-sidebar-btn active" role="tab" data-tab="tab-overview" onclick="switchClientTab(this, 'tab-overview')">
+      <button class="client-sidebar-btn active" role="tab" data-tab="tab-overview" >
         <span class="btn-left">{{ icon('pie', 15) }} <span>Overview</span></span>
       </button>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisory" onclick="switchClientTab(this, 'tab-advisory')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisory" >
         <span class="btn-left">{{ icon('shield', 15) }} <span>Advisory &amp; Charges</span></span>
         <span class="tiny-tag" style="background: #e8f5e9; color: #1b5e20;">{{ rule }}</span>
       </button>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-holdings" onclick="switchClientTab(this, 'tab-holdings')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-holdings" >
         <span class="btn-left">{{ icon('trend', 15) }} <span>Holdings</span></span>
         <span class="tiny-tag">{{ shares|length }}</span>
       </button>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-ledger" onclick="switchClientTab(this, 'tab-ledger')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-ledger" >
         <span class="btn-left">{{ icon('book', 15) }} <span>Past Trades</span></span>
         <span class="tiny-tag">{{ s.count }}</span>
       </button>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-charts" onclick="switchClientTab(this, 'tab-charts')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-charts" >
         <span class="btn-left">{{ icon('candlestick', 15) }} <span>Stock Charts</span></span>
       </button>
       <div style="border-top: 1px solid #edf1e8; margin: 6px 0; padding-top: 6px;"></div>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisories" onclick="switchClientTab(this, 'tab-advisories')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-advisories" >
         <span class="btn-left">{{ icon('send', 15) }} <span>Advisories</span></span>
         {% if advisories %}<span class="tiny-tag" style="background: #e8f4fd; color: #0366d6;">{{ advisories|length }}</span>{% endif %}
       </button>
-      <button class="client-sidebar-btn" role="tab" data-tab="tab-payments" onclick="switchClientTab(this, 'tab-payments')">
+      <button class="client-sidebar-btn" role="tab" data-tab="tab-payments" >
         <span class="btn-left">{{ icon('wallet', 15) }} <span>Payments &amp; Funds</span></span>
       </button>
     </nav>
@@ -274,7 +274,7 @@
                 </div>
               </div>
             </td>
-            <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+            <td class="r tabular"><strong>{{ (sh.quantity|num) if sh.quantity else '—' }}</strong></td>
             <td class="r tabular">
               <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
               {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
@@ -286,13 +286,13 @@
                 <button class="icon-btn edit-holding-btn" type="button" 
                   data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
                   data-stock="{{ sh.stock }}"
-                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-qty="{{ (sh.quantity) if sh.quantity else '' }}"
                   data-buy-price="{{ sh.buy_price or '' }}"
                   aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
                 <button class="icon-btn sell-holding-btn" type="button" 
                   data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
                   data-stock="{{ sh.stock }}"
-                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-qty="{{ (sh.quantity) if sh.quantity else '' }}"
                   aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
                 <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
               </div>
@@ -346,7 +346,7 @@
             <div class="mtd-grid" style="margin-bottom: 10px;">
               <div class="mtd-item">
                 <span class="mtd-label">Quantity</span>
-                <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+                <strong class="mtd-val">{{ (sh.quantity|num) if sh.quantity else '—' }} shares</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Avg Buy Price</span>
@@ -378,14 +378,14 @@
               <button class="btn btn-secondary btn-xs edit-holding-btn" type="button"
                 data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
                 data-stock="{{ sh.stock }}"
-                data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                data-qty="{{ (sh.quantity) if sh.quantity else '' }}"
                 data-buy-price="{{ sh.buy_price or '' }}">
                 {{ icon('edit', 12) }} Edit
               </button>
               <button class="btn btn-primary btn-xs sell-holding-btn" type="button"
                 data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
                 data-stock="{{ sh.stock }}"
-                data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}">
+                data-qty="{{ (sh.quantity) if sh.quantity else '' }}">
                 {{ icon('trend', 12) }} Sell
               </button>
               <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?" style="display:inline;">
@@ -407,7 +407,7 @@
             </div>
             <div class="form-grid">
               <label class="field full">Stock<input name="stock" id="dynamic-edit-holding-stock" type="text" required></label>
-              <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="1" min="0" placeholder="0"></label>
+              <label class="field">Quantity<input name="quantity" id="dynamic-edit-holding-quantity" type="number" step="0.000001" min="0" placeholder="0"></label>
               <label class="field">Buy price<input name="buy_price" id="dynamic-edit-holding-buy-price" type="number" step="any" min="0"></label>
               <label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
                 <input name="deduct_from_funds" id="dynamic-edit-holding-deduct" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;">
@@ -430,7 +430,7 @@
             </div>
             <p class="muted">This will deduct the quantity from the holding and automatically record the closed trade to calculate the commission.</p>
             <div class="form-grid">
-              <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="1" min="1" required></label>
+              <label class="field">Quantity to sell<input name="quantity" id="dynamic-sell-holding-quantity" type="number" step="0.000001" min="0.000001" required></label>
               <label class="field">Sell price<input name="sell_price" id="dynamic-sell-holding-price" type="number" step="any" min="0" required></label>
               <label class="field full">Sell date <span class="optional">Optional</span><input name="sell_date" type="date" value="{{ today }}"></label>
             </div>
@@ -451,7 +451,7 @@
           <p>Review the {{ rule }} commission, capital gains tax and broker charges at the current market price.</p>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" aria-controls="tab-advisory"
-          onclick="switchClientTab(document.querySelector('.client-sidebar-btn[data-tab=tab-advisory]'), 'tab-advisory')">
+          data-open-tab="tab-advisory">
           View breakdown {{ icon('arrow-up-right', 14) }}
         </button>
       </section>
@@ -476,14 +476,14 @@
           <div style="display: flex; align-items: center; gap: 8px;">
             {% if client.username %}
               <strong style="font-family:monospace; font-size:13px; color:#164237; background: var(--bg); padding:3px 8px; border-radius:4px;">@{{ client.username }}</strong>
-              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.username }}'); alert('Username copied!')" title="Copy username">
+              <button type="button" class="btn btn-ghost btn-xs" data-copy-text="{{ client.username }}" title="Copy username">
                 {{ icon('copy', 12) }}
               </button>
               <span class="badge" style="background:#e8f5e9; color:#1b5e20; font-size:10px;">Locked for client</span>
             {% else %}
               <span class="badge" style="background:#fff3cd; color:#856404;">Not Set (Client can set once)</span>
             {% endif %}
-            <button type="button" class="btn btn-ghost btn-xs" onclick="document.getElementById('edit-username-dialog').showModal()">
+            <button type="button" class="btn btn-ghost btn-xs" data-dialog="edit-username-dialog">
               {{ icon('edit', 12) }} {{ 'Edit Username' if client.username else 'Set Username' }}
             </button>
           </div>
@@ -493,27 +493,10 @@
           <span>Login Identifier (ID / Phone)</span>
           <strong>Client #{{ client.id }} · {{ client.phone or client.email or client.name }}</strong>
         </div>
-        <div class="details-line credentials-line">
-          <span>Current Password</span>
-          {% if client.password_plain %}
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <code id="current-pwd-val" style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 8px; background: var(--bg); color: #164237; font-family:monospace;" data-real="{{ client.password_plain }}">{{ client.password_plain }}</code>
-              <button type="button" class="icon-btn" onclick="togglePasswordVisibility('current-pwd-val', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
-                {{ icon('eye', 14) }}
-              </button>
-              <button type="button" class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('{{ client.password_plain }}'); alert('Password copied to clipboard!')" title="Copy password">
-                {{ icon('copy', 13) }} Copy
-              </button>
-            </div>
-          {% elif client.password_hash %}
-            <span class="badge badge-pos">Hash Set (Reset to view plain)</span>
-          {% else %}
-            <span class="badge" style="background:#fff3cd;color:#856404">No Password Set</span>
-          {% endif %}
-        </div>
+
         <div class="details-line">
           <span>Portal Status</span>
-          {% if client.password_hash or client.password_plain %}
+          {% if client.password_hash %}
             <span class="badge badge-pos">Access Enabled</span>
           {% else %}
             <span class="badge" style="background:#fff3cd;color:#856404">Access Disabled</span>
@@ -524,8 +507,8 @@
         <form method="post" action="{{ url_for('client_set_password', cid=client.id) }}" style="margin-top: 14px; border-top: 1px solid #edf2e5; padding-top: 14px;">
           {{ csrf() }}
           <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if (client.password_plain or client.password_hash) else 'Set Client Password' }}</span>
-            <button type="button" class="btn btn-ghost btn-xs" onclick="generateStrongPassword('detail-new-password', 'detail-confirm-password')">
+            <span style="font-size: 12px; font-weight: 700; color: #2e4438;">{{ 'Reset Client Password' if client.password_hash else 'Set Client Password' }}</span>
+            <button type="button" class="btn btn-ghost btn-xs" data-generate-password="detail-new-password detail-confirm-password">
               {{ icon('repeat', 11) }} Generate Strong
             </button>
           </div>
@@ -542,7 +525,7 @@
           </div>
 
           <button type="submit" class="btn btn-primary btn-sm btn-wide">
-            {{ icon('check', 14) }}{{ 'Save & Reset Password' if (client.password_plain or client.password_hash) else 'Save Client Password' }}
+            {{ icon('check', 14) }}{{ 'Save & Reset Password' if client.password_hash else 'Save Client Password' }}
           </button>
         </form>
       </section>
@@ -557,10 +540,10 @@
       </section>
       <section class="card card-pad">
         <div class="settings-heading"><span class="settings-glyph" style="background:#eafff3;color:#1e9752">{{ icon('message-circle', 19) }}</span><div><h2>Message summary</h2><p>Share their balance calculation.</p></div></div>
-        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and make a payment here:\n" ~ payment_url %}
-        <textarea readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
+        {% set wa_msg = "Hi " ~ client.name ~ ",\n\nHere is a summary of your account to date:\nTotal Commission: " ~ s.commission|money ~ "\nPayments Received: " ~ s.paid|money ~ "\nOutstanding Balance: " ~ s.outstanding|money ~ "\n\nYou can view your full ledger and report a payment here:\n" ~ payment_url %}
+        <textarea id="client-message-summary" readonly class="tabular" rows="8" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border-light); font-size: 12px; line-height: 1.5; resize: none; background: #fafafa; margin-bottom: 12px; font-family: inherit; color: var(--text-dark);">{{ wa_msg }}</textarea>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-primary btn-sm" style="flex:1" type="button" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); const orig = this.innerHTML; this.innerHTML = 'Copied!'; setTimeout(() => this.innerHTML = orig, 2000)">{{ icon('copy', 14) }}Copy text</button>
+          <button class="btn btn-primary btn-sm" style="flex:1" type="button" data-copy="client-message-summary">{{ icon('copy', 14) }}Copy text</button>
           {% if client.phone %}
           {% set wa_clean_phone = client.phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
           {% set wa_phone = ('91' ~ wa_clean_phone) if (wa_clean_phone|length == 10) else wa_clean_phone %}
@@ -601,7 +584,7 @@
               <span style="color:#64786a;">Type:</span> <strong>{{ client.commission_type or 'profit_pct' }}</strong>
             </div>
             <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
-              <span style="color:#64786a;">Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
+              <span style="color:#64786a;">Rate:</span> <strong>{{ client.commission_rate if client.commission_rate is not none else 10 }}%</strong>
             </div>
           </div>
           <div class="table-wrap">
@@ -620,7 +603,7 @@
               {% set ns_total_comm = namespace(val=0) %}
               {% set ns_total_pnl = namespace(val=0) %}
               {% for sh in shares %}
-              {% set comm_rate = (client.commission_rate or 10)|float %}
+              {% set comm_rate = (client.commission_rate if client.commission_rate is not none else 10)|float %}
               {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
               {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
               {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
@@ -635,7 +618,7 @@
               {% set ns_total_pnl.val = ns_total_pnl.val + profit %}
               <tr style="border-bottom:1px solid #f0f4ec;">
                 <td style="padding:7px 10px;"><strong>{{ sh.stock }}</strong></td>
-                <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|int }}</td>
+                <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|num }}</td>
                 <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
                 <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.cmp|money if sh.cmp else '—' }}</td>
                 <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:600;" class="{{ 'pos' if profit >= 0 else 'neg' }}">
@@ -662,7 +645,7 @@
         <div style="padding: 14px 18px 16px;">
           <div style="font-size: 11px; font-weight: 700; color: #3f7352; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display:flex; align-items:center; gap:8px;">
             {{ icon('pie', 13) }} Section B — Exit Price Breakup (If sold today at CMP)
-            <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of sell value&#10;• DP Charges: ₹15.34/scrip/day (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;• Stamp Duty: 0.015% of buy value (paid at purchase, shown as note)&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
+            <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery, Buy + Sell):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of buy + sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of buy + sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of buy + sell value&#10;• Stamp Duty: 0.015% of buy value (govt. tax)&#10;• DP Charges: ₹15.34/scrip/day on sell (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
           </div>
 
           {% for sh in shares %}
@@ -690,13 +673,14 @@
           {% set tax_rate = 0.125 if is_ltcg else 0.20 %}
           {% set tax = profit * tax_rate if profit > 0 else 0 %}
 
-          {# Broker charges (delivery, Zerodha/CDSL style) #}
-          {% set stt = sell_val * 0.001 %}
-          {% set exch = sell_val * 0.0000345 %}
-          {% set sebi = sell_val * 0.000001 %}
+          {# Broker charges (delivery, Zerodha/CDSL style — buy + sell) #}
+          {% set stt = (buy_val + sell_val) * 0.001 %}
+          {% set exch = (buy_val + sell_val) * 0.0000345 %}
+          {% set sebi = (buy_val + sell_val) * 0.000001 %}
+          {% set stamp_duty = buy_val * 0.00015 %}
           {% set dp = 15.34 %}  {# Standard/Male: ₹9.50 Zerodha + ₹3.50 CDSL = ₹13 + 18% GST = ₹15.34. Female holders: ₹12.75 + GST = ₹15.045 #}
           {% set gst = (exch + sebi) * 0.18 %}  {# GST only on exch + SEBI; DP already includes its GST #}
-          {% set broker_total = stt + exch + sebi + dp + gst %}
+          {% set broker_total = stt + exch + sebi + stamp_duty + dp + gst %}
 
           {% set net = profit - tax - broker_total - my_commission %}
 
@@ -712,7 +696,7 @@
                 {% endif %}
               </div>
               <div style="text-align:right; font-size:12px; color:#64786a;">
-                {{ sh.quantity|int }} shares &bull; CMP {{ sh.cmp|money }}
+                {{ sh.quantity|num }} shares &bull; CMP {{ sh.cmp|money }}
               </div>
             </div>
 
@@ -739,16 +723,20 @@
 
             <!-- Broker charges breakdown -->
             <div class="breakup-row">
-              <span class="label">STT <small style="color:#9eb09e;">(0.1% of sell value)</small></span>
+              <span class="label">STT <small style="color:#9eb09e;">(0.1% of buy + sell value)</small></span>
               <span class="value neg">−{{ stt|money }}</span>
             </div>
             <div class="breakup-row">
-              <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345%)</small></span>
+              <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345% buy + sell)</small></span>
               <span class="value neg">−{{ exch|money }}</span>
             </div>
             <div class="breakup-row">
-              <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001%)</small></span>
+              <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001% buy + sell)</small></span>
               <span class="value neg">−{{ sebi|money }}</span>
+            </div>
+            <div class="breakup-row">
+              <span class="label">Stamp Duty <small style="color:#9eb09e;">(0.015% of buy value)</small></span>
+              <span class="value neg">−{{ stamp_duty|money }}</span>
             </div>
             <div class="breakup-row">
               <span class="label">DP Charges <small style="color:#9eb09e;">(₹9.50 Zerodha + ₹3.50 CDSL = ₹13 + 18% GST = ₹15.34/scrip)
@@ -763,10 +751,6 @@
             <div class="breakup-row" style="background:#fef9ec;">
               <span class="label" style="font-weight:600;">Total Broker Charges</span>
               <span class="value neg" style="font-weight:700;">−{{ broker_total|money }}</span>
-            </div>
-            <div class="breakup-row" style="font-size:11px; color:#9eb09e; font-style:italic; background: var(--bg);">
-              <span class="label">Stamp Duty <small>(0.015% of buy value — already paid at purchase)</small></span>
-              <span class="value" style="color:#9eb09e;">note</span>
             </div>
 
             <hr class="breakup-divider">
@@ -806,8 +790,7 @@
 
           <p style="font-size:11px; color:#9eb09e; margin-top:12px; line-height:1.6;">
             * LTCG classification: buy year ≤ previous year (conservative 12-month estimate). Actual 12-month holding check applies on exact dates.
-            * Broker charges are for delivery trades (zero brokerage). STT shown for sell side only.
-            * Stamp duty (0.015% of buy value) already paid at purchase time and is excluded from net.
+            * Broker charges are for delivery trades (zero brokerage) and include both buy-side and sell-side statutory charges (STT, Exchange, SEBI, Stamp Duty, DP &amp; GST).
           </p>
         </div>
 
@@ -833,7 +816,7 @@
               <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <strong style="font-size: 14px; color: var(--ink);">{{ sh.stock }}</strong>
-                  <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
+                  <span class="muted" style="font-size: 11px;">{{ (sh.quantity|num) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
                 </div>
                 <a href="{{ url_for('charts_view', stock=sh.stock) }}" class="btn btn-ghost btn-xs" style="color: #2e7d32;">
                   {{ icon('candlestick', 12) }} Chart ↗
@@ -842,7 +825,7 @@
               <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 {% set sqty = sh.quantity|float %}
                 {% set sbp = sh.buy_price|float %}
-                {% set comm_rate = (client.commission_rate or 10)|float %}
+                {% set comm_rate = (client.commission_rate if client.commission_rate is not none else 10)|float %}
                 {% for t in tg_list %}
                 {% set tp = t.target_price|float %}
                 {% set pot_gain = (tp - sbp) * sqty %}
@@ -899,7 +882,7 @@
         <p class="muted">Live record of trade pop-ups sent to {{ client.name }} and their mandatory acknowledgment status.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-primary btn-sm" type="button" onclick="openClientPopupTrade('{{ client.id }}')">
+        <button class="btn btn-primary btn-sm" type="button" data-dialog="global-popup-trade-dialog" data-recipient="{{ client.id }}">
           {{ icon('send', 14) }} Send New Pop-up Trade
         </button>
       </div>
@@ -1021,7 +1004,7 @@
 <div class="client-tab-panel" id="tab-payments">
   <div class="detail-grid">
     <section class="card">
-      <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" onclick="navigator.clipboard.writeText('{{ payment_url }}'); alert('Payment link copied!')">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
+      <div class="card-header"><div><h2>Payments received</h2><p>A clear record of every settlement.</p></div><div style="display: flex; gap: 8px;"><button class="btn btn-sm btn-ghost" type="button" data-copy-text="{{ payment_url }}">{{ icon('link', 14) }}Copy payment link</button><button class="btn btn-sm" type="button" data-dialog="payment-dialog">{{ icon('plus', 14) }}Record payment</button></div></div>
       {% if payments %}
       <div class="desktop-detail-payments-table table-wrap"><table class="data-table" data-lazy-table="15"><thead><tr><th>Date</th><th>Method / note</th><th class="r">Amount</th><th></th></tr></thead><tbody>
       {% for p in payments %}
@@ -1070,10 +1053,10 @@
           </td>
           <td class="r {{ 'pos' if f.amount >= 0 else 'neg' }} tabular strong">{{ '+' if f.amount > 0 else '' }}{{ f.amount|money }}</td>
           <td>
-            <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+            {% if f.trade_id %}<a class="btn btn-ghost btn-xs" href="{{ url_for('trade_form', tid=f.trade_id) }}">Edit trade</a>{% else %}<form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
               {{ csrf() }}
               <button class="icon-btn icon-btn-danger" aria-label="Delete fund entry">{{ icon('trash', 15) }}</button>
-            </form>
+            </form>{% endif %}
           </td>
         </tr>
       {% endfor %}</tbody></table></div>
@@ -1092,10 +1075,10 @@
             <span class="cell-secondary">{{ f.notes.replace('[Client Deposit]', '').replace('[Client Withdrawal]', '').strip() if f.notes else 'Fund entry' }}</span>
           </div>
           <div class="mpc-actions">
-            <form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
+            {% if f.trade_id %}<a class="btn btn-ghost btn-xs" href="{{ url_for('trade_form', tid=f.trade_id) }}">Edit trade</a>{% else %}<form method="post" action="{{ url_for('fund_delete', fid=f.id) }}" data-confirm="Delete this fund entry? The client's bank balance will update.">
               {{ csrf() }}
               <button class="btn btn-ghost btn-xs text-danger">{{ icon('trash', 13) }} Delete</button>
-            </form>
+            </form>{% endif %}
           </div>
         </div>
         {% endfor %}
@@ -1153,7 +1136,7 @@
                 </div>
               </div>
             </td>
-            <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+            <td class="r tabular"><strong>{{ (sh.quantity|num) if sh.quantity else '—' }}</strong></td>
             <td class="r tabular">
               <span title="Weighted Average Buy Price">{{ sh.buy_price|money if sh.buy_price else '—' }}</span>
               {% if sh.lots and sh.lots|length > 1 %}<small class="muted" style="display: block; font-size: 9px; color: #6b7c62;">Avg</small>{% endif %}
@@ -1187,13 +1170,13 @@
                 <button class="icon-btn edit-holding-btn" type="button" 
                   data-action="{{ url_for('client_share_edit', cid=client.id, sid=sh.id) }}"
                   data-stock="{{ sh.stock }}"
-                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-qty="{{ (sh.quantity) if sh.quantity else '' }}"
                   data-buy-price="{{ sh.buy_price or '' }}"
                   aria-label="Edit holding" title="Edit holding">{{ icon('edit', 14) }}</button>
                 <button class="icon-btn sell-holding-btn" type="button" 
                   data-action="{{ url_for('client_share_sell', cid=client.id, sid=sh.id) }}"
                   data-stock="{{ sh.stock }}"
-                  data-qty="{{ (sh.quantity|int) if sh.quantity else '' }}"
+                  data-qty="{{ (sh.quantity) if sh.quantity else '' }}"
                   aria-label="Sell holding" title="Sell holding" style="color: #1e9752;">{{ icon('trend', 14) }}</button>
                 <form method="post" action="{{ url_for('client_share_delete', cid=client.id, sid=sh.id) }}" data-confirm="Delete this holding?">{{ csrf() }}<button class="icon-btn icon-btn-danger" aria-label="Delete holding" title="Delete holding">{{ icon('trash', 14) }}</button></form>
               </div>
@@ -1276,11 +1259,11 @@
                   class="btn btn-sm client-chart-pill {% if loop.first %}btn-primary active{% else %}btn-secondary{% endif %}"
                   data-stock="{{ sh.stock }}"
                   data-tv-symbol="{{ sh.tv_symbol or ('NSE:' ~ sh.stock) }}"
-                  data-qty="{{ sh.quantity|int }}"
+                  data-qty="{{ sh.quantity }}"
                   data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
                   data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
-                  onclick="selectAdminClientChartStock(this, this.dataset.stock)">
-            {{ sh.stock }} ({{ sh.quantity|int }})
+                  data-chart-stock>
+            {{ sh.stock }} ({{ sh.quantity|num }})
           </button>
           {% endfor %}
         </div>
@@ -1291,7 +1274,7 @@
         <div>
           <span id="admin-chart-active-symbol" style="font-size: 18px; font-weight: 800; color: var(--ink);">{{ shares[0].stock }}</span>
           <span class="muted" style="font-size: 13px; margin-left: 8px;">
-            Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
+            Qty: <strong id="admin-chart-active-qty">{{ shares[0].quantity|num }}</strong> &bull; Avg Buy: <span id="admin-chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="admin-chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
           </span>
         </div>
       </div>
@@ -1397,7 +1380,7 @@
         <iframe id="admin-client-chart-iframe"
           src="https://s.tradingview.com/widgetembed/?symbol={{ (shares[0].tv_symbol or ('NSE:' ~ shares[0].stock))|urlencode if shares else '' }}&amp;interval=D&amp;hidesidetoolbar=1&amp;symboledit=0&amp;saveimage=0&amp;toolbarbg=f4f8f1&amp;theme=light&amp;style=1&amp;timezone=Asia%2FKolkata&amp;studies=%5B%5D&amp;locale=en" 
           style="width: 100%; height: 100%; border: none;" 
-          loading="lazy" 
+          loading="lazy" sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer"
           title="TradingView chart">
         </iframe>
       </div>
@@ -1421,7 +1404,7 @@
 </footer>
 <dialog class="modal" id="payment-dialog"><form method="post" action="{{ url_for('payments_list') }}" class="modal-inner"><div class="modal-heading"><div><span class="eyebrow">ANOTHER ONE SETTLED</span><h2>Record a payment</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div>{{ payment_fields([], amount=s.outstanding, locked_client=client, back=url_for('client_detail', cid=client.id)) }}<div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Record payment</button></div></form></dialog>
 <dialog class="modal" id="fund-dialog"><form method="post" action="{{ url_for('add_fund') }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="client_id" value="{{ client.id }}"><input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">ADD CAPITAL</span><h2>Record a deposit</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field">Amount<input name="amount" type="number" step="0.01" required min="0.01" placeholder="0.00"></label><label class="field">Date<input name="added_on" type="date" required value="{{ today }}"></label><label class="field full">Notes<input name="notes" maxlength="200" placeholder="Optional details"></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Add funds</button></div></form></dialog>
-<dialog class="modal" id="share-dialog"><form method="post" action="{{ url_for('client_share_add', cid=client.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">PORTFOLIO TRACKING</span><h2>Record a holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" class="stock-autocomplete-input" type="text" required placeholder="e.g. RELIANCE, TCS, SBC" autocomplete="off" style="text-transform: uppercase;"></label><label class="field">Quantity <span class="optional">Optional</span><input name="quantity" type="number" step="1" min="0" placeholder="0"></label><label class="field">Buy price <span class="optional">Optional</span><input name="buy_price" type="number" step="any" min="0" placeholder="0.00"></label><label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;"><input name="deduct_from_funds" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;"><span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
+<dialog class="modal" id="share-dialog"><form method="post" action="{{ url_for('client_share_add', cid=client.id) }}" class="modal-inner">{{ csrf() }}<input type="hidden" name="back" value="1"><div class="modal-heading"><div><span class="eyebrow">PORTFOLIO TRACKING</span><h2>Record a holding</h2></div><button type="button" class="icon-btn" data-dialog-close aria-label="Cancel">{{ icon('x') }}</button></div><div class="form-grid"><label class="field full">Stock<input name="stock" class="stock-autocomplete-input" type="text" required placeholder="e.g. RELIANCE, TCS, SBC" autocomplete="off" style="text-transform: uppercase;"></label><label class="field">Quantity <span class="optional">Optional</span><input name="quantity" type="number" step="0.000001" min="0" placeholder="0"></label><label class="field">Buy price <span class="optional">Optional</span><input name="buy_price" type="number" step="any" min="0" placeholder="0.00"></label><label class="field full" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;"><input name="deduct_from_funds" type="checkbox" value="1" style="width: 16px; height: 16px; accent-color: #0f172a;"><span style="font-size: 13px; font-weight: 500;">Deduct from funds (Available Cash)</span></label></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-dialog-close>Cancel</button><button class="btn btn-primary">{{ icon('check', 15) }}Save holding</button></div></form></dialog>
 
 <!-- Dedicated Edit/Create Username Modal (Admin full control) -->
 <dialog class="modal modal-sm" id="edit-username-dialog">
@@ -1479,61 +1462,7 @@
 <form method="post" action="{{ url_for('client_delete', cid=client.id) }}" data-confirm="Permanently delete {{ client.name }} and all their trades and payments? This cannot be undone." class="actions" style="margin-top:25px">{{ csrf() }}<a class="btn btn-ghost btn-sm" href="{{ url_for('clients_list') }}">{{ icon('arrow-left', 13) }}All clients</a><button class="btn btn-ghost btn-sm">{{ icon('trash', 13) }}Delete this client</button></form>
 {% endblock %}
 {% block scripts %}
-<script>
-function openClientPopupTrade(cid) {
-  const modal = document.getElementById('global-popup-trade-dialog');
-  if (!modal) return;
-  const select = document.getElementById('popup-trade-client-select');
-  if (select) select.value = cid;
-  modal.showModal();
-}
-
-function togglePasswordVisibility(id, btn) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (el.dataset.hidden === 'true') {
-    el.textContent = el.dataset.real;
-    el.dataset.hidden = 'false';
-  } else {
-    el.dataset.real = el.textContent;
-    el.textContent = '••••••••';
-    el.dataset.hidden = 'true';
-  }
-}
-
-function generateStrongPassword(...targetIds) {
-  if (window.generateStrongPassword) {
-    return window.generateStrongPassword(...targetIds);
-  }
-  const lowers = 'abcdefghjkmnpqrstuvwxyz';
-  const uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const nums = '23456789';
-  const syms = '!@#$%&*';
-  const all = lowers + uppers + nums + syms;
-  let pwd = [
-    lowers[Math.floor(Math.random() * lowers.length)],
-    uppers[Math.floor(Math.random() * uppers.length)],
-    nums[Math.floor(Math.random() * nums.length)],
-    syms[Math.floor(Math.random() * syms.length)],
-  ];
-  for (let i = pwd.length; i < 14; i++) {
-    pwd.push(all[Math.floor(Math.random() * all.length)]);
-  }
-  for (let i = pwd.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
-  }
-  const result = pwd.join('');
-  targetIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = result;
-  });
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(result);
-  }
-  return result;
-}
-
+<script nonce="{{ g.csp_nonce }}">
 
 function selectAdminClientChartStock(btn, stock) {
   document.querySelectorAll('.client-chart-pill').forEach(b => {
@@ -1594,6 +1523,10 @@ function switchClientTab(btn, tabId) {
   } catch(e) {}
 }
 
+document.querySelectorAll('.client-sidebar-btn[data-tab], .client-tab-btn[data-tab], [data-open-tab]').forEach(button =>
+  button.addEventListener('click', () => switchClientTab(button, button.dataset.tab || button.dataset.openTab)));
+document.querySelectorAll('[data-chart-stock]').forEach(button =>
+  button.addEventListener('click', () => selectAdminClientChartStock(button, button.dataset.stock)));
 function restoreTabFromHash() {
   const tabId = location.hash.slice(1);
   const btn = Array.from(document.querySelectorAll('.client-sidebar-btn')).find(button => button.dataset.tab === tabId);

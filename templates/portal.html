@@ -24,7 +24,7 @@
         <span class="portal-sidebar-handle">@{{ client.username }}</span>
         {% else %}
         <button type="button" class="btn btn-ghost btn-xs"
-          onclick="document.getElementById('claim-username-dialog').showModal()"
+          data-dialog="claim-username-dialog"
           style="font-size: 10px; padding: 1px 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600; margin-top: 2px;">
           + Set @username
         </button>
@@ -35,31 +35,31 @@
 
     <p class="nav-label">Portfolio</p>
     <nav class="portal-sidebar-nav" role="tablist">
-      <button class="portal-nav-btn active" role="tab" data-tab="portal-tab-overview" onclick="switchPortalTab(this, 'portal-tab-overview')">
+      <button class="portal-nav-btn active" role="tab" data-tab="portal-tab-overview" >
         <span class="btn-left">{{ icon('pie', 16) }} <span>Overview</span></span>
       </button>
-      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-holdings" onclick="switchPortalTab(this, 'portal-tab-holdings')">
+      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-holdings" >
         <span class="btn-left">{{ icon('trend', 16) }} <span>Current Holdings</span></span>
         <span class="tiny-tag">{{ shares|length }}</span>
       </button>
-      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-trades" onclick="switchPortalTab(this, 'portal-tab-trades')">
+      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-trades" >
         <span class="btn-left">{{ icon('book', 16) }} <span>Past Trades</span></span>
         <span class="tiny-tag">{{ trades|length }}</span>
       </button>
-      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-charts" onclick="switchPortalTab(this, 'portal-tab-charts')">
+      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-charts" >
         <span class="btn-left">{{ icon('candlestick', 16) }} <span>Stock Charts</span></span>
       </button>
-      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-advisory" onclick="switchPortalTab(this, 'portal-tab-advisory')">
+      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-advisory" >
         <span class="btn-left">{{ icon('shield', 16) }} <span>Advisory &amp; Charges</span></span>
       </button>
-      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-todays-trade" onclick="switchPortalTab(this, 'portal-tab-todays-trade')">
+      <button class="portal-nav-btn" role="tab" data-tab="portal-tab-todays-trade" >
         <span class="btn-left">{{ icon('calendar', 16) }} <span>Today's Trade</span></span>
         {% if todays_trades_alerts %}<span class="tiny-tag">{{ todays_trades_alerts|length }}</span>{% endif %}
       </button>
     </nav>
 
     <div class="portal-sidebar-bottom" style="margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-      <button type="button" class="portal-sidebar-action-btn" onclick="document.getElementById('update-password-dialog').showModal()">
+      <button type="button" class="portal-sidebar-action-btn" data-dialog="update-password-dialog">
         {{ icon('lock', 14) }} <span>Change Password</span>
       </button>
       <form method="post" action="{{ url_for('logout') }}" style="margin: 4px 0 0;">
@@ -87,7 +87,7 @@
         <span class="portal-breadcrumb-handle">@{{ client.username }}</span>
         {% else %}
         <button type="button" class="btn btn-ghost btn-xs"
-          onclick="document.getElementById('claim-username-dialog').showModal()"
+          data-dialog="claim-username-dialog"
           style="font-size: 10px; padding: 1px 6px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; font-weight: 600;">
           + Set @username
         </button>
@@ -95,9 +95,12 @@
       </div>
     </div>
     <div class="portal-user-actions">
-      <!-- Web Push Notifications Button (Removed once activated) -->
+      <button type="button" id="privacy-toggle" class="icon-btn" aria-label="Toggle privacy mode" title="Hide or show numbers" aria-pressed="false">
+        <span class="privacy-icon-off">{{ icon('eye-off', 16) }}</span>
+        <span class="privacy-icon-on" style="display:none">{{ icon('eye', 16) }}</span>
+      </button>
       <button type="button" class="btn btn-ghost btn-sm" id="client-push-toggle"
-        onclick="toggleClientPushNotifications()" aria-label="Enable trade alert notifications"
+         aria-label="Enable trade alert notifications"
         title="Get notified when trade recommendations are posted"
         style="display: none; gap: 5px; color: #1b5e20; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 6px 10px; font-size: 12px; font-weight: 600; flex-shrink: 0;">
         <span class="push-icon-inactive">{{ icon('send', 13) }}</span>
@@ -125,13 +128,13 @@
                 style="background: #e65100; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Required</span>
             </div>
             <p style="margin: 4px 0 0; font-size: 13px; color: #5d4037; line-height: 1.4;">
-              You are signed in with the default temporary password (<code>Client@1234</code>). Please set your personal
+              You are signed in with a temporary password. Please set your personal
               password to protect your account.
             </p>
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-sm"
-          onclick="document.getElementById('update-password-dialog').showModal()"
+          data-dialog="update-password-dialog"
           style="white-space: nowrap; background: #e65100; border-color: #e65100;">
           {{ icon('lock', 14) }} Set Personal Password
         </button>
@@ -160,7 +163,7 @@
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-sm"
-          onclick="document.getElementById('claim-username-dialog').showModal()" style="white-space: nowrap;">
+          data-dialog="claim-username-dialog" style="white-space: nowrap;">
           {{ icon('user', 14) }} Choose Username
         </button>
       </div>
@@ -208,7 +211,7 @@
             <div class="metric-card">
               <span class="metric-label">REALISED P&amp;L (TRADES)</span>
               <div class="metric-value {{ 'pos' if s.pnl >= 0 else 'neg' }}">{{ s.pnl|money }}</div>
-              <div class="metric-sub muted">{{ trades|length }} closed trade{{ 's' if trades|length != 1 }}</div>
+              <div class="metric-sub muted">{{ s.closed }} closed trade{{ 's' if s.closed != 1 }}</div>
             </div>
           </section>
 
@@ -219,7 +222,7 @@
                 <h2 style="margin: 0;">What You Are Holding</h2>
                 <p class="muted">Summary of shares currently in your Demat portfolio.</p>
               </div>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="switchPortalTab(document.querySelector('.portal-nav-btn[data-tab=\'portal-tab-holdings\']'), 'portal-tab-holdings')">
+              <button type="button" class="btn btn-secondary btn-sm" data-open-tab="portal-tab-holdings">
                 {{ icon('trend', 14) }} Detailed Holdings View &rarr;
               </button>
             </div>
@@ -241,7 +244,7 @@
                   {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
                   <tr>
                     <td><strong>{{ sh.stock }}</strong></td>
-                    <td class="r tabular"><strong>{{ (sh.quantity|int) if sh.quantity else '—' }}</strong></td>
+                    <td class="r tabular"><strong>{{ (sh.quantity|num) if sh.quantity else '—' }}</strong></td>
                     <td class="r tabular">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
                     <td class="r tabular"><strong>{{ sh.cmp|money if sh.cmp else '—' }}</strong></td>
                     <td class="r tabular">{{ sh.current_value|money }}</td>
@@ -267,7 +270,7 @@
                       <strong>{{ sh.stock }}</strong>
                     </div>
                     <div class="mts-dates">
-                      <span class="tabular">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
+                      <span class="tabular">{{ (sh.quantity|num) if sh.quantity else '—' }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
                     </div>
                   </div>
                   <div class="mts-right">
@@ -282,7 +285,7 @@
                   <div class="mtd-grid">
                     <div class="mtd-item">
                       <span class="mtd-label">Quantity</span>
-                      <strong class="mtd-val">{{ (sh.quantity|int) if sh.quantity else '—' }} shares</strong>
+                      <strong class="mtd-val">{{ (sh.quantity|num) if sh.quantity else '—' }} shares</strong>
                     </div>
                     <div class="mtd-item">
                       <span class="mtd-label">Avg Buy Price</span>
@@ -330,10 +333,10 @@
                   3:45 PM IST).</p>
               </div>
               <div class="header-actions" style="display: flex; gap: 8px;">
-                <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+                <button type="button" class="btn btn-primary btn-sm" data-add-portal-trade>
                   {{ icon('plus', 14) }} Add Trade
                 </button>
-                <a href="{{ url_for('public_upload', token=public_token, phone=client.phone) }}"
+                <a href="{{ url_for('public_upload') }}"
                   class="btn btn-secondary btn-sm">
                   {{ icon('upload', 14) }} Upload Trade Proof
                 </a>
@@ -386,7 +389,7 @@
                   </div>
                 </div>
               </td>
-              <td class="r tabular"><strong>{{ (h.quantity|int) if h.quantity else '—' }}</strong></td>
+              <td class="r tabular"><strong>{{ (h.quantity|num) if h.quantity else '—' }}</strong></td>
               <td class="r tabular">
                 <span title="Weighted Average Price">{{ h.buy_price|money if h.buy_price else '—' }}</span>
                 {% if h.lots and h.lots|length > 1 %}<small class="muted"
@@ -473,7 +476,7 @@
                 </span>
               </div>
               <div class="mts-dates">
-                <span class="tabular">{{ (h.quantity|int) if h.quantity else '—' }} shares</span> &bull; Added {{
+                <span class="tabular">{{ (h.quantity|num) if h.quantity else '—' }} shares</span> &bull; Added {{
                 h.added_on[:10] }}
               </div>
             </div>
@@ -489,7 +492,7 @@
             <div class="mtd-grid">
               <div class="mtd-item">
                 <span class="mtd-label">Quantity</span>
-                <strong class="mtd-val">{{ (h.quantity|int) if h.quantity else '—' }} shares</strong>
+                <strong class="mtd-val">{{ (h.quantity|num) if h.quantity else '—' }} shares</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Avg Buy Price</span>
@@ -553,7 +556,7 @@
           <p class="muted">Your recorded trades and closed transactions.</p>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="openAddTradeModal()">
+          <button type="button" class="btn btn-primary btn-sm" data-add-portal-trade>
             {{ icon('plus', 14) }} Add Trade
           </button>
         </div>
@@ -579,7 +582,7 @@
             {% for t in trades %}
             <tr>
               <td><strong>{{ t.stock }}</strong></td>
-              <td class="r tabular">{{ (t.quantity|int) if t.quantity else '—' }}</td>
+              <td class="r tabular">{{ (t.quantity|num) if t.quantity else '—' }}</td>
               <td class="r tabular">{{ t.buy_price|money if t.buy_price else '—' }}</td>
               <td class="r tabular">
                 {% if t.sell_price %}
@@ -601,7 +604,7 @@
                     style="display:inline-flex; width:26px; height:26px;">{{ icon('image', 13) }}</a>
                   <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}"
                     style="display:inline-flex; margin:0;"
-                    onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+                    data-confirm="Remove proof screenshot for {{ t.stock }}?">
                     {{ csrf() }}
                     <button class="icon-btn icon-btn-danger" type="submit" title="Delete screenshot proof"
                       style="display:inline-flex; width:26px; height:26px; color:#c53030; cursor:pointer;"
@@ -643,7 +646,7 @@
               {% else %}
               <div class="mts-pnl muted">
                 <strong>Open</strong>
-                <small class="tabular">{{ (t.quantity|int) if t.quantity else '—' }} shares</small>
+                <small class="tabular">{{ (t.quantity|num) if t.quantity else '—' }} shares</small>
               </div>
               {% endif %}
               <span class="mts-chevron">{{ icon('chevron-down', 16) }}</span>
@@ -653,7 +656,7 @@
             <div class="mtd-grid">
               <div class="mtd-item">
                 <span class="mtd-label">Quantity</span>
-                <strong class="mtd-val">{{ (t.quantity|int) if t.quantity else '—' }} shares</strong>
+                <strong class="mtd-val">{{ (t.quantity|num) if t.quantity else '—' }} shares</strong>
               </div>
               <div class="mtd-item">
                 <span class="mtd-label">Buy Price</span>
@@ -700,7 +703,7 @@
               </div>
               <form method="post" action="{{ url_for('portal_trade_delete_screenshot', trade_id=t.id) }}"
                 style="display:inline-flex; margin:0;"
-                onsubmit="return confirm('Remove proof screenshot for {{ t.stock }}?');">
+                data-confirm="Remove proof screenshot for {{ t.stock }}?">
                 {{ csrf() }}
                 <button type="submit" class="btn btn-ghost btn-sm"
                   style="color: #c53030; font-size:11px; padding: 2px 8px;" title="Delete proof screenshot">
@@ -800,11 +803,11 @@
                     class="btn btn-sm chart-stock-pill {% if loop.first %}btn-primary active{% else %}btn-secondary{% endif %}"
                     data-stock="{{ sh.stock }}"
                     data-tv-symbol="{{ sh.tv_symbol or ('NSE:' ~ sh.stock) }}"
-                    data-qty="{{ sh.quantity|int }}"
+                    data-qty="{{ sh.quantity }}"
                     data-buy="{{ sh.buy_price|money if sh.buy_price else '—' }}"
                     data-cmp="{{ sh.cmp|money if sh.cmp else '—' }}"
-                    onclick="selectChartStock(this, this.dataset.stock)">
-              {{ sh.stock }} ({{ sh.quantity|int }})
+                    data-chart-stock>
+              {{ sh.stock }} ({{ sh.quantity|num }})
             </button>
             {% endfor %}
           </div>
@@ -815,7 +818,7 @@
           <div>
             <span id="chart-active-symbol" style="font-size: 18px; font-weight: 800; color: var(--ink);">{{ shares[0].stock }}</span>
             <span id="chart-active-meta" class="muted" style="font-size: 13px; margin-left: 8px;">
-              Qty: <strong id="chart-active-qty">{{ shares[0].quantity|int }}</strong> &bull; Avg Buy: <span id="chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
+              Qty: <strong id="chart-active-qty">{{ shares[0].quantity|num }}</strong> &bull; Avg Buy: <span id="chart-active-buy">{{ shares[0].buy_price|money if shares[0].buy_price else '—' }}</span> &bull; Current CMP: <strong id="chart-active-cmp">{{ shares[0].cmp|money if shares[0].cmp else '—' }}</strong>
             </span>
           </div>
           <div>
@@ -1053,7 +1056,7 @@
                   <span style="color:#64786a;">Rule:</span> <strong>{{ rule }}</strong>
                 </div>
                 <div style="background: var(--bg); border:1px solid #d6e8cf; border-radius:8px; padding:8px 14px; font-size:12px;">
-                  <span style="color:#64786a;">Commission Rate:</span> <strong>{{ client.commission_rate or 10 }}%</strong>
+                  <span style="color:#64786a;">Commission Rate:</span> <strong>{{ client.commission_rate if client.commission_rate is not none else 10 }}%</strong>
                 </div>
               </div>
               <div class="portal-desktop-table-wrap table-wrap">
@@ -1072,7 +1075,7 @@
                     {% set ns_total_comm = namespace(val=0) %}
                     {% set ns_total_pnl = namespace(val=0) %}
                     {% for sh in shares %}
-                    {% set comm_rate = (client.commission_rate or 10)|float %}
+                    {% set comm_rate = (client.commission_rate if client.commission_rate is not none else 10)|float %}
                     {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
                     {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
                     {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
@@ -1087,7 +1090,7 @@
                     {% set ns_total_pnl.val = ns_total_pnl.val + profit %}
                     <tr style="border-bottom:1px solid #f0f4ec;">
                       <td style="padding:7px 10px;"><strong>{{ sh.stock }}</strong></td>
-                      <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|int }}</td>
+                      <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.quantity|num }}</td>
                       <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.buy_price|money if sh.buy_price else '—' }}</td>
                       <td style="padding:7px 10px; text-align:right; font-family:monospace;">{{ sh.cmp|money if sh.cmp else '—' }}</td>
                       <td style="padding:7px 10px; text-align:right; font-family:monospace; font-weight:600;" class="{{ 'pos' if profit >= 0 else 'neg' }}">
@@ -1113,7 +1116,7 @@
               <!-- Mobile Expandable Commission Slab (Zero Horizontal Scroll) -->
               <div class="mobile-holdings-list">
                 {% for sh in shares %}
-                {% set comm_rate = (client.commission_rate or 10)|float %}
+                {% set comm_rate = (client.commission_rate if client.commission_rate is not none else 10)|float %}
                 {% set sell_val = (sh.quantity|float) * (sh.cmp|float) if sh.cmp else 0 %}
                 {% set buy_val = (sh.quantity|float) * (sh.buy_price|float) if sh.buy_price else 0 %}
                 {% set profit = sh.unrealized_pnl|float if sh.cmp else 0 %}
@@ -1131,7 +1134,7 @@
                         <strong>{{ sh.stock }}</strong>
                       </div>
                       <div class="mts-dates">
-                        <span class="tabular">{{ sh.quantity|int }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
+                        <span class="tabular">{{ sh.quantity|num }} shares</span> &bull; CMP {{ sh.cmp|money if sh.cmp else '—' }}
                       </div>
                     </div>
                     <div class="mts-right">
@@ -1146,7 +1149,7 @@
                     <div class="mtd-grid">
                       <div class="mtd-item">
                         <span class="mtd-label">Quantity</span>
-                        <strong class="mtd-val">{{ sh.quantity|int }} shares</strong>
+                        <strong class="mtd-val">{{ sh.quantity|num }} shares</strong>
                       </div>
                       <div class="mtd-item">
                         <span class="mtd-label">Avg Buy</span>
@@ -1180,12 +1183,12 @@
               <summary>Exit charges by holding {{ icon('chevron-down', 16) }}</summary>
               <div class="charge-section-body">
               <div class="charge-estimate-note">Estimated proceeds if sold at the current market price
-                <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of sell value&#10;• DP Charges: ₹15.34/scrip/day (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;• Stamp Duty: 0.015% of buy value (paid at purchase, shown as note)&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
+                <button type="button" class="breakup-info-btn" title="Broker charges used in this breakup (Zerodha / Groww — Delivery, Buy + Sell):&#10;&#10;• Brokerage: ₹0 (free for delivery)&#10;• STT: 0.1% of buy + sell value (govt. tax)&#10;• Exchange Txn Charges: 0.00345% of buy + sell value (NSE)&#10;• SEBI Turnover Fee: 0.0001% of buy + sell value&#10;• Stamp Duty: 0.015% of buy value (govt. tax)&#10;• DP Charges: ₹15.34/scrip/day on sell (standard holder) · ₹15.045 for female primary holder&#10;  → Zerodha ₹9.50 + CDSL ₹3.50 = ₹13 + 18% GST&#10;• GST: 18% on (Exchange + SEBI) only — DP charge already includes its GST&#10;&#10;Capital Gains Tax (Budget 2024):&#10;• STCG (held ≤ 12 months): 20% under Sec 111A&#10;• LTCG (held > 12 months): 12.5% under Sec 112A (first ₹1.25L/yr exempt)&#10;&#10;All figures are estimates. Actual charges may vary by broker and exchange.">ⓘ</button>
               </div>
 
               {% for sh in shares %}
               {% if sh.cmp and sh.buy_price %}
-              {% set comm_rate = (client.commission_rate or 10)|float %}
+              {% set comm_rate = (client.commission_rate if client.commission_rate is not none else 10)|float %}
               {% set qty = sh.quantity|float %}
               {% set sell_val = qty * (sh.cmp|float) %}
               {% set buy_val = qty * (sh.buy_price|float) %}
@@ -1206,12 +1209,13 @@
               {% set tax_rate = 0.125 if is_ltcg else 0.20 %}
               {% set tax = profit * tax_rate if profit > 0 else 0 %}
 
-              {% set stt = sell_val * 0.001 %}
-              {% set exch = sell_val * 0.0000345 %}
-              {% set sebi = sell_val * 0.000001 %}
+              {% set stt = (buy_val + sell_val) * 0.001 %}
+              {% set exch = (buy_val + sell_val) * 0.0000345 %}
+              {% set sebi = (buy_val + sell_val) * 0.000001 %}
+              {% set stamp_duty = buy_val * 0.00015 %}
               {% set dp = 15.34 %}
               {% set gst = (exch + sebi) * 0.18 %}
-              {% set broker_total = stt + exch + sebi + dp + gst %}
+              {% set broker_total = stt + exch + sebi + stamp_duty + dp + gst %}
 
               {% set net = profit - tax - broker_total - my_commission %}
 
@@ -1227,7 +1231,7 @@
                     {% endif %}
                   </div>
                   <div style="text-align:right; font-size:12px; color:#64786a;">
-                    {{ sh.quantity|int }} shares &bull; CMP {{ sh.cmp|money }}
+                    {{ sh.quantity|num }} shares &bull; CMP {{ sh.cmp|money }}
                   </div>
                 </div>
 
@@ -1251,16 +1255,20 @@
                 <hr class="breakup-divider">
 
                 <div class="breakup-row">
-                  <span class="label">STT <small style="color:#9eb09e;">(0.1% of sell value)</small></span>
+                  <span class="label">STT <small style="color:#9eb09e;">(0.1% of buy + sell value)</small></span>
                   <span class="value neg">−{{ stt|money }}</span>
                 </div>
                 <div class="breakup-row">
-                  <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345%)</small></span>
+                  <span class="label">Exchange Transaction Charges <small style="color:#9eb09e;">(0.00345% buy + sell)</small></span>
                   <span class="value neg">−{{ exch|money }}</span>
                 </div>
                 <div class="breakup-row">
-                  <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001%)</small></span>
+                  <span class="label">SEBI Turnover Fee <small style="color:#9eb09e;">(0.0001% buy + sell)</small></span>
                   <span class="value neg">−{{ sebi|money }}</span>
+                </div>
+                <div class="breakup-row">
+                  <span class="label">Stamp Duty <small style="color:#9eb09e;">(0.015% of buy value)</small></span>
+                  <span class="value neg">−{{ stamp_duty|money }}</span>
                 </div>
                 <div class="breakup-row">
                   <span class="label">DP Charges <small style="color:#9eb09e;">(₹9.50 Zerodha + ₹3.50 CDSL = ₹13 + 18% GST = ₹15.34/scrip)
@@ -1310,7 +1318,7 @@
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <strong style="font-size: 14px; color: var(--ink);">{{ sh.stock }}</strong>
-                      <span class="muted" style="font-size: 11px;">{{ (sh.quantity|int) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
+                      <span class="muted" style="font-size: 11px;">{{ (sh.quantity|num) }} shares · Avg {{ sh.buy_price|money }} · CMP {{ sh.cmp|money if sh.cmp else '—' }}</span>
                     </div>
                   </div>
                   <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -1377,7 +1385,7 @@
       </div>
       <div class="pma-card-actions">
         <button type="button" class="btn btn-secondary pma-btn"
-          onclick="document.getElementById('update-password-dialog').showModal()">
+          data-dialog="update-password-dialog">
           {{ icon('lock', 15) }}
           <span>Change Password</span>
         </button>
@@ -1438,7 +1446,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label class="field" for="trade-qty-input" style="margin-bottom: 0;">
           <span class="field-title">Quantity <span class="field-req">*</span></span>
-          <input id="trade-qty-input" type="number" name="quantity" step="1" min="1" required inputmode="numeric"
+          <input id="trade-qty-input" type="number" name="quantity" step="0.000001" min="0.000001" required inputmode="decimal"
             placeholder="Shares count">
         </label>
         <label class="field" for="trade-notes" style="margin-bottom: 0;">
@@ -1481,10 +1489,10 @@
           Trade Screenshot Proof <span class="optional">(Optional)</span>
         </span>
         <div class="sell-upload-dropzone" id="trade-upload-dropzone"
-          onclick="document.getElementById('trade-proof-file').click()" role="button" tabindex="0"
+          data-choose-proof role="button" tabindex="0"
           style="padding: 10px; border-radius: 8px;">
           <input type="file" id="trade-proof-file" name="proof_image" accept="image/png,image/jpeg,image/webp"
-            style="display: none;" onchange="handleTradeProofSelect(this)">
+            style="display: none;" >
           <div id="trade-dropzone-empty" style="text-align: center; padding: 6px;">
             <span style="color: #4a5568; display: inline-block;">{{ icon('upload', 18) }}</span>
             <div style="font-size: 12px; font-weight: 600; color: #2d3748;">Tap to attach broker screenshot</div>
@@ -1499,7 +1507,7 @@
                 screenshot.png</div>
               <div id="trade-file-size" class="muted" style="font-size: 10px;">0 KB</div>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); removeTradeProof();"
+            <button type="button" class="btn btn-ghost btn-sm" data-remove-proof aria-label="Remove screenshot"
               style="color: #e53e3e; padding: 2px 6px;">
               {{ icon('x', 14) }}
             </button>
@@ -1659,13 +1667,17 @@
     </div>
     <p class="muted">
       {% if not client.password_changed %}
-      Create your own private password to replace the temporary default password (<code>Client@1234</code>).
+      Create your own private password to replace your temporary password.
       {% else %}
       Update the private password used to sign into your portfolio.
       {% endif %}
     </p>
 
     <div class="form-grid">
+      <label class="field full">
+        Current Password
+        <input name="current_password" type="password" required autocomplete="current-password">
+      </label>
       <label class="field full">
         New Password
         <div class="password-wrap">
@@ -1767,12 +1779,12 @@
       </div>
 
       <div class="advisory-timestamp muted" style="font-size:11px; margin-bottom:1.25rem; text-align:center;">
-        Issued on {{ alert.created_at[:16] }} IST · Real-time delivery
+        Issued on {{ alert.created_at|ist('date_time') }} IST · Real-time delivery
       </div>
 
       <div class="modal-actions" style="margin-top: 1rem;">
         <button class="btn btn-primary btn-wide" id="btn-ack-{{ alert.id }}" type="button"
-          onclick="acknowledgeAlert({{ alert.id }})"
+          data-ack-alert="{{ alert.id }}"
           style="padding:14px; font-size:15px; font-weight:700; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">
           {{ icon('check', 18) }} Acknowledge Trade Advisory
         </button>
@@ -1783,7 +1795,7 @@
 </dialog>
 {% endif %}
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
   const chargeBreakdown = document.getElementById('client-charge-breakdown');
   const advisoryTabId = 'portal-tab-advisory';
 
@@ -1796,7 +1808,7 @@
       button.classList.toggle('active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
-    chargeBreakdown.open = tabId === advisoryTabId;
+    if (chargeBreakdown) chargeBreakdown.open = tabId === advisoryTabId;
     history.replaceState(null, '', '#' + tabId);
     if (tabId === 'portal-tab-charts') initPortalCandleChart();
   };
@@ -2006,7 +2018,7 @@
     const changeColor = isPos ? "#236146" : "#913e42";
 
     hud.innerHTML = `
-      <span style="font-weight:700; color: var(--ink); margin-right:6px;">${dateStr}</span>
+      <span style="font-weight:700; color: var(--ink); margin-right:6px;" data-candle-date></span>
       <span class="muted" style="margin-right:8px;">O <strong style="color:#222;">₹${Number(c.open).toFixed(2)}</strong></span>
       <span class="muted" style="margin-right:8px;">H <strong style="color:#222;">₹${Number(c.high).toFixed(2)}</strong></span>
       <span class="muted" style="margin-right:8px;">L <strong style="color:#222;">₹${Number(c.low).toFixed(2)}</strong></span>
@@ -2014,6 +2026,7 @@
       <span style="font-weight:700; color:${changeColor}; margin-right:8px;">${sign}₹${Number(change).toFixed(2)} (${sign}${Number(changePct).toFixed(2)}%)</span>
       <span class="muted">Vol <strong style="color:#222;">${Number(c.volume || 0).toLocaleString("en-IN")}</strong></span>
     `;
+    hud.querySelector('[data-candle-date]').textContent = dateStr;
   }
 
   function clearPortalPriceLines() {
@@ -2052,8 +2065,15 @@
     });
   }
 
+  let latestPortalRequest = 0;
   function loadPortalCandles(stock, range, interval) {
     if (!stock) return;
+    const requestId = ++latestPortalRequest;
+    portalCurrentCandles = [];
+    portalCandleSeries?.setData([]);
+    portalVolumeSeries?.setData([]);
+    clearPortalPriceLines();
+    updatePortalLegend(null);
     const loader = document.getElementById('portal-lw-chart-loading');
     if (loader) {
       loader.textContent = 'Loading candlestick data...';
@@ -2063,6 +2083,7 @@
     fetch('/api/stocks/' + encodeURIComponent(stock) + '/candles?range=' + range + '&interval=' + interval)
       .then(res => res.json())
       .then(data => {
+        if (requestId !== latestPortalRequest) return;
         if (loader) loader.style.display = 'none';
         if (data && data.candles && data.candles.length) {
           portalCurrentCandles = data.candles;
@@ -2098,6 +2119,7 @@
         }
       })
       .catch(err => {
+        if (requestId !== latestPortalRequest) return;
         console.error('Portal candle fetch error:', err);
         if (loader) {
           loader.textContent = 'Could not load candlestick history.';
@@ -2173,6 +2195,23 @@
     });
 
   });
+
+  document.querySelectorAll('.portal-nav-btn[data-tab], [data-open-tab]').forEach(button =>
+    button.addEventListener('click', () => switchPortalTab(button, button.dataset.tab || button.dataset.openTab)));
+  document.querySelectorAll('[data-chart-stock]').forEach(button =>
+    button.addEventListener('click', () => selectChartStock(button, button.dataset.stock)));
+  document.querySelectorAll('[data-add-portal-trade]').forEach(button =>
+    button.addEventListener('click', () => openAddTradeModal()));
+  document.querySelector('[data-choose-proof]')?.addEventListener('click', () => document.getElementById('trade-proof-file').click());
+  const proofFile = document.getElementById('trade-proof-file');
+  proofFile?.addEventListener('change', () => handleTradeProofSelect(proofFile));
+  document.querySelector('[data-remove-proof]')?.addEventListener('click', event => {
+    event.stopPropagation();
+    removeTradeProof();
+  });
+  document.querySelectorAll('[data-ack-alert]').forEach(button =>
+    button.addEventListener('click', () => acknowledgeAlert(button.dataset.ackAlert)));
+  document.getElementById('client-push-toggle')?.addEventListener('click', toggleClientPushNotifications);
 
   function restoreTabFromHash() {
     const tabId = location.hash.slice(1);
@@ -2319,7 +2358,7 @@
     if (buyPriceInput && buyDateInput) {
       buyPriceInput.addEventListener('input', function () {
         if (buyPriceInput.value.trim() && !buyDateInput.value) {
-          buyDateInput.value = "{{ today }}";
+          buyDateInput.value = {{ today | tojson }};
         }
       });
     }
@@ -2327,7 +2366,7 @@
     if (sellPriceInput && sellDateInput) {
       sellPriceInput.addEventListener('input', function () {
         if (sellPriceInput.value.trim() && !sellDateInput.value) {
-          sellDateInput.value = "{{ today }}";
+          sellDateInput.value = {{ today | tojson }};
         }
       });
     }
@@ -2349,8 +2388,8 @@
   // -------------------------------------------------------------
   // Web Push Notifications Client Registration
   // -------------------------------------------------------------
-  const VAPID_PUBLIC_KEY = "{{ config.VAPID_PUBLIC_KEY }}";
-  const CSRF_TOKEN = "{{ csrf_token() }}";
+  const VAPID_PUBLIC_KEY = {{ config.VAPID_PUBLIC_KEY | tojson }};
+  const CSRF_TOKEN = {{ csrf_token() | tojson }};
 
   function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -2363,111 +2402,119 @@
     return outputArray;
   }
 
-  async function checkPushSubscriptionStatus() {
-    const toggleBtn = document.getElementById('client-push-toggle');
-    if (!toggleBtn) return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      toggleBtn.remove();
-      return;
-    }
+  const pushButton = document.getElementById('client-push-toggle');
+  let pushActive = false;
+  const supportsPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
-    try {
-      if (window.Notification && Notification.permission === 'granted') {
-        const reg = await navigator.serviceWorker.getRegistration('/sw.js');
-        if (reg) {
-          const sub = await reg.pushManager.getSubscription();
-          if (sub) {
-            toggleBtn.remove();
-            return;
-          }
-        }
-      }
-
-      const reg = await navigator.serviceWorker.getRegistration('/sw.js');
-      if (reg) {
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          toggleBtn.remove();
-          return;
-        }
-      }
-      toggleBtn.style.display = 'inline-flex';
-    } catch (e) {
-      toggleBtn.style.display = 'inline-flex';
-    }
+  function updatePushBtnState(active) {
+    pushActive = active;
+    pushButton.setAttribute('aria-pressed', String(active));
+    const label = active ? 'Disable alerts' : 'Enable alerts';
+    pushButton.querySelector('.push-label').textContent = label;
+    pushButton.setAttribute('aria-label', label + ' on this device');
+    pushButton.title = label + ' on this device';
+    pushButton.style.display = 'inline-flex';
   }
 
-  function updatePushBtnState(isActive) {
-    const toggleBtn = document.getElementById('client-push-toggle');
-    if (!toggleBtn) return;
+  async function sendPushRequest(path, payload) {
+    const response = await fetch(path, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) throw new Error('The device setting could not be saved. Try again.');
+    return response.json();
+  }
 
-    if (isActive) {
-      // User has activated notifications: REMOVE THE BUTTON completely!
-      toggleBtn.remove();
-    } else {
-      toggleBtn.style.display = 'inline-flex';
+  async function currentSubscription() {
+    const registration = await navigator.serviceWorker.getRegistration('/');
+    return registration ? registration.pushManager.getSubscription() : null;
+  }
+
+  async function checkPushSubscriptionStatus() {
+    if (!pushButton || !supportsPush) return;
+    pushButton.disabled = true;
+    try {
+      const subscription = await currentSubscription();
+      if (subscription) {
+        const {active} = await sendPushRequest('/portal/push/status', {endpoint: subscription.endpoint});
+        if (!active) await subscription.unsubscribe();
+        if (active || VAPID_PUBLIC_KEY) updatePushBtnState(active);
+      } else if (VAPID_PUBLIC_KEY) {
+        updatePushBtnState(false);
+      }
+    } catch {
+      if (VAPID_PUBLIC_KEY) updatePushBtnState(false);
+    } finally {
+      pushButton.disabled = false;
     }
   }
 
   async function toggleClientPushNotifications() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('Web Push notifications are not supported by this browser. If on iPhone/iOS, tap Share > "Add to Home Screen" first to enable notifications.');
-      return;
-    }
-
-    const toggleBtn = document.getElementById('client-push-toggle');
-    const label = toggleBtn ? toggleBtn.querySelector('.push-label') : null;
-
+    if (!supportsPush || pushButton.disabled) return;
+    pushButton.disabled = true;
     try {
-      let reg = await navigator.serviceWorker.getRegistration('/sw.js');
-      if (!reg) {
-        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      }
-
-      let sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        toggleBtn.remove();
+      // Request from the click event so mobile browsers preserve user activation.
+      if (!pushActive && await Notification.requestPermission() !== 'granted') {
+        window.BookUI.notify('Allow notifications for this site in your browser settings.', true);
         return;
       }
-
-      if (label) label.textContent = 'Subscribing...';
-
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        updatePushBtnState(false);
-        if (permission === 'denied') {
-          alert('Notifications are blocked by your browser settings. Please allow notifications for this site to receive trade alerts.');
+      let subscription = await currentSubscription();
+      if (pushActive) {
+        if (subscription) {
+          await sendPushRequest('/portal/push/unsubscribe', {endpoint: subscription.endpoint});
+          await subscription.unsubscribe();
         }
+        updatePushBtnState(false);
         return;
       }
-
-      const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      const newSub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey
-      });
-
-      const response = await fetch('{{ url_for("portal_push_subscribe") }}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': CSRF_TOKEN
-        },
-        body: JSON.stringify(newSub)
-      });
-
-      if (response.ok) {
-        updatePushBtnState(true);
-        alert('🎉 Instant trade alerts enabled! You will now receive push notifications directly to this device whenever recommendations are posted.');
-      } else {
-        throw new Error('Failed to save subscription to server.');
+      if (subscription) {
+        const {active} = await sendPushRequest('/portal/push/status', {endpoint: subscription.endpoint});
+        if (active) { updatePushBtnState(true); return; }
+        await subscription.unsubscribe();
       }
-    } catch (err) {
-      console.error('Push subscription failed:', err);
-      updatePushBtnState(false);
-      alert('Could not enable push alerts: ' + (err.message || err));
+      await navigator.serviceWorker.register('/sw.js', {scope: '/'});
+      const registration = await navigator.serviceWorker.ready;
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+      try {
+        await sendPushRequest('/portal/push/subscribe', subscription.toJSON());
+      } catch (error) {
+        await subscription.unsubscribe();
+        throw error;
+      }
+      updatePushBtnState(true);
+    } catch (error) {
+      window.BookUI.notify(error.message || 'Could not update notifications.', true);
+    } finally {
+      pushButton.disabled = false;
     }
   }
+
+  document.querySelectorAll('form[action="{{ url_for("logout") }}"]').forEach(form => {
+    form.addEventListener('submit', async event => {
+      if (!supportsPush) return;
+      event.preventDefault();
+      form.querySelector('button[type="submit"]').disabled = true;
+      try {
+        await Promise.race([
+          (async () => {
+            const subscription = await currentSubscription();
+            if (subscription) {
+              await Promise.allSettled([
+                sendPushRequest('/portal/push/unsubscribe', { endpoint: subscription.endpoint }),
+                subscription.unsubscribe(),
+              ]);
+            }
+          })(),
+          new Promise(resolve => setTimeout(resolve, 1200)),
+        ]);
+      } finally {
+        HTMLFormElement.prototype.submit.call(form);
+      }
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', () => {
     checkPushSubscriptionStatus();
